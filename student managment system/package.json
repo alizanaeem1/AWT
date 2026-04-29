@@ -1,0 +1,78 @@
+{
+  "name": "student-management-desktop",
+  "version": "1.0.0",
+  "description": "Student management desktop app: semesters, courses, assignments, and GPA.",
+  "author": "Student Management System",
+  "private": true,
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev:web": "vite",
+    "dev:electron": "wait-on tcp:5173 && electron .",
+    "dev": "concurrently -k \"npm:dev:web\" \"npm:dev:electron\"",
+    "rebuild:native": "electron-rebuild -f -w better-sqlite3",
+    "build:web": "vite build",
+    "start": "electron .",
+    "build:win": "npm run build:web && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false node ./node_modules/electron-builder/cli.js --win",
+    "dist": "npm run build:win"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "11.8.1",
+    "date-fns": "^4.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "cross-env": "^10.1.0",
+    "electron": "^34.2.0",
+    "electron-builder": "^26.0.12",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.2.1",
+    "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.studentmanagement.desktop",
+    "productName": "Student Management System",
+    "copyright": "Copyright © 2026",
+    "directories": {
+      "output": "release"
+    },
+    "forceCodeSigning": false,
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
