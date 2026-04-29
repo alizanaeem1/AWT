@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Advanced Web Technologies — CSC337 | Lectures</title>
+<meta name="description" content="CSC337 Advanced Web Technologies — lectures 1–15 index." />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --card: #161a22;
+    --border: #252b38;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #7c3aed;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font-head: 'Sora', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-head);
+    padding: 48px 24px 80px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 229, 255, 0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 50%, rgba(124, 58, 237, 0.06), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .top-right-link {
+    position: absolute;
+    top: 170px;
+    right: 24px;
+    z-index: 10;
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.6px;
+    color: var(--accent);
+    border: 2px solid rgba(0, 229, 255, 0.35);
+    background: rgba(0, 229, 255, 0.08);
+    border-radius: 999px;
+    padding: 12px 20px;
+    transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+  }
+
+  .top-right-link:hover {
+    transform: translateY(-2px);
+    background: rgba(0, 229, 255, 0.16);
+    border-color: rgba(0, 229, 255, 0.5);
+  }
+
+  @media (max-width: 900px) {
+    .top-right-link {
+      position: static;
+      display: inline-block;
+      margin: 0 auto 20px;
+    }
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header .kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  header h1 {
+    font-size: clamp(26px, 4vw, 40px);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  header h1 span {
+    color: var(--accent);
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+
+  a.card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-decoration: none;
+    color: inherit;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 20px;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  a.card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.06), transparent);
+    transition: opacity 0.25s;
+  }
+
+  a.card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 229, 255, 0.35);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  a.card:hover::before { opacity: 1; }
+
+  a.card .num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  a.card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  a.card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    position: relative;
+  }
+
+  a.card .open-hint {
+    margin-top: 14px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--accent2);
+    position: relative;
+  }
+
+  .card.disabled {
+    pointer-events: none;
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .card.disabled .open-hint {
+    color: var(--muted);
+  }
+
+  .contributors {
+    margin-top: 56px;
+    text-align: center;
+  }
+
+  .contributors h2 {
+    font-size: clamp(22px, 3vw, 30px);
+    margin-bottom: 8px;
+  }
+
+  .contributors .contributors-subtext {
+    color: var(--muted);
+    margin-bottom: 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .contributors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+  }
+
+  .contributor-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    animation: cardFadeUp 0.65s ease both;
+  }
+
+  .contributor-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.06), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+
+  .contributor-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 229, 255, 0.35);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .contributor-card:hover::before { opacity: 1; }
+
+  .avatar {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 14px;
+    border: 2px solid rgba(0, 229, 255, 0.3);
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+  }
+
+  .contributor-card:hover .avatar img {
+    transform: scale(1.07);
+  }
+
+  .contributor-card.aliza:hover .avatar img {
+    transform: none;
+  }
+
+  .avatar.ma { background: linear-gradient(140deg, rgba(0, 229, 255, 0.2), rgba(0, 229, 255, 0.08)); }
+  .avatar.fc { background: linear-gradient(140deg, rgba(124, 58, 237, 0.28), rgba(124, 58, 237, 0.1)); }
+  .avatar.an { background: linear-gradient(140deg, rgba(255, 107, 53, 0.28), rgba(255, 107, 53, 0.1)); }
+
+  .avatar img.aliza-img {
+    object-position: center top;
+    image-rendering: auto;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  .avatar.aliza-avatar {
+    width: 104px;
+    height: 104px;
+  }
+
+  .contributor-card h3 {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .contributor-role {
+    display: inline-block;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    border-radius: 999px;
+    padding: 6px 12px;
+    margin-bottom: 12px;
+  }
+
+  .contributor-card p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 44px;
+  }
+
+  .portfolio-link {
+    margin-top: 16px;
+    display: inline-block;
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    color: var(--accent2);
+    border: 1px solid rgba(255, 107, 53, 0.35);
+    background: rgba(255, 107, 53, 0.08);
+    padding: 10px 14px;
+    border-radius: 999px;
+    transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+  }
+
+  .portfolio-link:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 107, 53, 0.14);
+    border-color: rgba(255, 107, 53, 0.5);
+  }
+
+  .contributors-grid .contributor-card:nth-child(1) { animation-delay: 0.05s; }
+  .contributors-grid .contributor-card:nth-child(2) { animation-delay: 0.16s; }
+  .contributors-grid .contributor-card:nth-child(3) { animation-delay: 0.27s; }
+
+  @keyframes cardFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contributor-card,
+    .portfolio-link,
+    .avatar img,
+    a.card {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="top-right-link" href="https://labmanual-awt.vercel.app" target="_blank" rel="noopener noreferrer">Lab Manual →</a>
+    <header>
+      <div class="kicker">Course • CSC337</div>
+      <h1><span>Advanced Web Technologies</span><br />Lecture index</h1>
+      <p>Neechay har card par click karke corresponding lecture HTML open ho jati hai. Wapas is page par ane ke liye lecture ke top-right corner par <strong>Advanced Web Technologies</strong> link use karein.</p>
+    </header>
+
+    <div class="grid" id="lecture-grid">
+      <a class="card" href="lecture%201.html">
+        <span class="num">Lecture 01</span>
+        <h2>Course intro &amp; foundations</h2>
+        <p>Advanced Web Technologies — opening lecture notes.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="lecture_02_nodejs.html">
+        <span class="num">Lecture 02</span>
+        <h2>Node.js architecture</h2>
+        <p>Runtime, event loop, modules — CSC337.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="lecture_03_http_url_fs.html">
+        <span class="num">Lecture 03</span>
+        <h2>HTTP server, URL &amp; FS</h2>
+        <p>Building blocks for web servers in Node.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="express_lecture%204.html">
+        <span class="num">Lecture 04</span>
+        <h2>Express.js lecture notes</h2>
+        <p>Framework basics — CSC337.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_05_Express_Architecture.html">
+        <span class="num">Lecture 05</span>
+        <h2>Express.js architecture</h2>
+        <p>Middleware, routing, structure — Roman Urdu notes.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_06_App_Dev_REST_Principles.html">
+        <span class="num">Lecture 06</span>
+        <h2>App dev &amp; REST principles</h2>
+        <p>Views, Bootstrap, REST, URIs.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Module_07_REST_API_Design_Implementation_Security.html">
+        <span class="num">Lecture 07</span>
+        <h2>REST API — design, build &amp; secure</h2>
+        <p>Module 7 (PDFs 7.1–7.3): Express, Postman, CORS, JWT overview.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_08_JWT_REST_APIs.html">
+        <span class="num">Lecture 08</span>
+        <h2>JWT in REST APIs</h2>
+        <p>Tokens, Bearer, security practices.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_09_TypeScript_Classes_Inheritance_Interfaces.html">
+        <span class="num">Lecture 09</span>
+        <h2>TypeScript — classes &amp; interfaces</h2>
+        <p>Inheritance, implements, modifiers.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="lecture%2010.html">
+        <span class="num">Lecture 10</span>
+        <h2>Angular Seekhain</h2>
+        <p>Angular basics — Roman Urdu notes (CSC337).</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="lecture11-angular-core-mastery.html">
+        <span class="num">Lecture 11</span>
+        <h2>Angular core mastery</h2>
+        <p>Components, DI, routing — CSC337.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_12_MEAN_Stack_ReactJS.html">
+        <span class="num">Lecture 12</span>
+        <h2>MEAN-style stack + React</h2>
+        <p>REST, Express, Mongo, React concepts.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_13_JSX_Routing_Forms_Hooks.html">
+        <span class="num">Lecture 13</span>
+        <h2>JSX, router, forms &amp; hooks</h2>
+        <p>React foundations — Roman Urdu notes.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_14_REST_API_Redux_Thunk.html">
+        <span class="num">Lecture 14</span>
+        <h2>REST + Redux &amp; Thunk</h2>
+        <p>Fetch/Axios, async state.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+      <a class="card" href="Lecture_15_React_API_Redux.html">
+        <span class="num">Lecture 15</span>
+        <h2>React testing &amp; MERN</h2>
+        <p>Testing &amp; stack integration — CSC337.</p>
+        <span class="open-hint">Open →</span>
+      </a>
+    </div>
+
+    <section class="contributors">
+      <h2>Project Contributors</h2>
+      <p class="contributors-subtext">Is project ki development mein in contributors ka important role raha hai.</p>
+      <div class="contributors-grid">
+        <article class="contributor-card">
+          <div class="avatar ma">
+            <img src="pics/pic1.jpeg" alt="Muhammad Abdullah" loading="lazy" />
+          </div>
+          <h3>Muhammad Abdullah</h3>
+          <div class="contributor-role">Super Admin &amp; Lead Developer</div>
+          <p>Project architecture, full-stack integration, and team leadership.</p>
+          <a class="portfolio-link" href="https://muhammadabdullahwali.vercel.app/" target="_blank" rel="noopener noreferrer">View Portfolio</a>
+        </article>
+
+        <article class="contributor-card aliza">
+          <div class="avatar fc aliza-avatar">
+            <img class="aliza-img" src="pics/pic3.jpg" alt="Aliza Naeem" loading="lazy" />
+          </div>
+          <h3>Aliza Naeem</h3>
+          <div class="contributor-role">Lead Developer</div>
+          <p>Frontend interfaces, backend services, robust database design, and core API integrations.</p>
+          <a class="portfolio-link" href="https://alizanaeem-portfolio.vercel.app/" target="_blank" rel="noopener noreferrer">View Portfolio</a>
+        </article>
+
+        <article class="contributor-card">
+          <div class="avatar an">
+            <img src="pics/pic2.jpeg" alt="Fatima Choudhry" loading="lazy" />
+          </div>
+          <h3>Fatima Choudhry</h3>
+          <div class="contributor-role">Lead Developer</div>
+          <p>Frontend architecture, user experience design, and seamless animations.</p>
+          <a class="portfolio-link" href="https://fatimachouhry.vercel.app/" target="_blank" rel="noopener noreferrer">View Portfolio</a>
+        </article>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

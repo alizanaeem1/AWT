@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lecture 14 — REST API (Fetch &amp; Axios) + Redux &amp; Thunk | CSC337</title>
+<meta name="description" content="Fetch, Axios, Redux store, Redux Thunk async flow — Roman Urdu lecture notes." />
+<meta name="topic" content="REST API Calling (Fetch &amp; Axios) in React.js + Redux + Redux Thunk (Async Middleware)" />
+<meta name="subject" content="Advanced Web Technologies (CSC337)" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0a0c10;
+    --surface:   #111318;
+    --card:      #161a22;
+    --border:    #252b38;
+    --accent:    #00e5ff;
+    --accent2:   #ff6b35;
+    --accent3:   #7c3aed;
+    --green:     #22c55e;
+    --yellow:    #facc15;
+    --red:       #ef4444;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --text3:     #475569;
+    --sidebar-w: 270px;
+    --font-head: 'Sora', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-head);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    z-index: 100;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sidebar-logo .tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+  .sidebar-logo h2 {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  .nav-group-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 8px 24px 4px;
+    font-family: var(--font-mono);
+  }
+
+  #sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 400;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+  #sidebar a .icon { font-size: 15px; flex-shrink: 0; }
+  #sidebar a:hover { color: var(--text); background: rgba(0,229,255,.05); }
+  #sidebar a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(0,229,255,.08);
+    font-weight: 600;
+  }
+
+  #hamburger {
+    display: none;
+    position: fixed;
+    top: 16px; left: 16px;
+    z-index: 200;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0 48px 80px;
+    max-width: calc(100% - var(--sidebar-w));
+  }
+
+  #hero {
+    padding: 80px 0 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  #hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,229,255,.1);
+    border: 1px solid rgba(0,229,255,.2);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .hero-badge::before { content: '◉'; font-size: 8px; }
+  #hero h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+  #hero h1 span { color: var(--accent); }
+  #hero p {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 680px;
+    line-height: 1.8;
+    animation: fadeDown 0.6s 0.2s ease both;
+  }
+  .hero-meta {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 680px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    animation: fadeDown 0.6s 0.25s ease both;
+  }
+  .hero-meta strong { color: var(--text); display: block; margin-bottom: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-mono); color: var(--accent); }
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+    animation: fadeDown 0.6s 0.3s ease both;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  section {
+    padding: 60px 0 20px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .section-icon {
+    width: 40px; height: 40px;
+    background: rgba(0,229,255,.1);
+    border: 1px solid rgba(0,229,255,.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .section-header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(0,229,255,.05), transparent);
+    transition: opacity 0.3s;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(0,229,255,.3); }
+  .card:hover::before { opacity: 1; }
+  .card-icon { font-size: 28px; margin-bottom: 14px; }
+  .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+  .card .tag-pill {
+    display: inline-block;
+    background: rgba(0,229,255,.1);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+  }
+
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead tr { background: rgba(0,229,255,.07); }
+  th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  td { padding: 14px 18px; border-top: 1px solid var(--border); color: var(--muted); }
+  tr:hover td { background: rgba(255,255,255,.02); color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge.green { background: rgba(34,197,94,.1); color: var(--green); }
+  .badge.yellow { background: rgba(250,204,21,.1); color: var(--yellow); }
+  .badge.red { background: rgba(239,68,68,.1); color: var(--red); }
+  .badge.blue { background: rgba(0,229,255,.1); color: var(--accent); }
+
+  .alert {
+    display: flex;
+    gap: 14px;
+    padding: 18px 20px;
+    border-radius: 12px;
+    border-left: 4px solid;
+    margin-bottom: 16px;
+    animation: fadeLeft 0.4s ease both;
+  }
+  .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert p { font-size: 14px; line-height: 1.7; }
+  .alert strong { display: block; margin-bottom: 4px; font-size: 13px; }
+  .alert.info { background: rgba(0,229,255,.06); border-color: var(--accent); }
+  .alert.info strong, .alert.info .alert-icon { color: var(--accent); }
+  .alert.warn { background: rgba(250,204,21,.06); border-color: var(--yellow); }
+  .alert.warn strong, .alert.warn .alert-icon { color: var(--yellow); }
+  .alert.error { background: rgba(239,68,68,.06); border-color: var(--red); }
+  .alert.error strong, .alert.error .alert-icon { color: var(--red); }
+  .alert.success { background: rgba(34,197,94,.06); border-color: var(--green); }
+  .alert.success strong, .alert.success .alert-icon { color: var(--green); }
+
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(255,255,255,.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  pre {
+    padding: 20px 18px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.8;
+    font-family: var(--font-mono);
+  }
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .cm { color: #6272a4; font-style: italic; }
+
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex;
+    gap: 20px;
+    position: relative;
+  }
+  .step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 44px;
+    bottom: -10px;
+    width: 2px;
+    background: var(--border);
+  }
+  .step-num {
+    width: 40px; height: 40px;
+    background: rgba(0,229,255,.1);
+    border: 2px solid rgba(0,229,255,.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .step-body { padding: 8px 0 32px; }
+  .step-body h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .step-body p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+
+  #quiz-section .quiz-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .quiz-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .quiz-progress span {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 16px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .question-block { display: none; }
+  .question-block.active { display: block; animation: fadeUp 0.3s ease; }
+  .question-block h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .question-block h3 .qnum {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .opt-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 18px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 14px;
+    font-family: var(--font-head);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .opt-btn .opt-letter {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+  .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0,229,255,.05); }
+  .opt-btn.correct { border-color: var(--green); background: rgba(34,197,94,.08); }
+  .opt-btn.correct .opt-letter { background: var(--green); color: #000; }
+  .opt-btn.wrong { border-color: var(--red); background: rgba(239,68,68,.08); }
+  .opt-btn.wrong .opt-letter { background: var(--red); color: #fff; }
+  .opt-btn:disabled { cursor: not-allowed; }
+  .feedback-msg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .feedback-msg.show { display: block; }
+  .feedback-msg.correct { background: rgba(34,197,94,.1); color: var(--green); }
+  .feedback-msg.wrong { background: rgba(239,68,68,.1); color: var(--red); }
+  .quiz-nav {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-head);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #29ecff; transform: translateY(-2px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .quiz-result {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .quiz-result.show { display: block; animation: fadeUp 0.4s ease; }
+  .result-score {
+    font-size: 72px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  .result-msg { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .result-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  .hw-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .hw-list li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .hw-list li:hover { border-color: var(--accent2); color: var(--text); }
+  .hw-num {
+    background: rgba(255,107,53,.1);
+    color: var(--accent2);
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .recap-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .recap-item:hover { border-color: var(--accent3); color: var(--text); transform: scale(1.02); }
+  .recap-item .ri { font-size: 26px; margin-bottom: 10px; }
+  .recap-item strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+
+  .mini-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .mini-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .mini-card:hover { border-color: rgba(124,58,237,.4); transform: translateY(-2px); }
+  .mini-card h4 { font-size: 14px; margin-bottom: 8px; color: var(--accent3); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (max-width: 820px) {
+    :root { --sidebar-w: 0px; }
+    #sidebar { transform: translateX(-270px); width: 270px; }
+    #sidebar.open { transform: translateX(0); }
+    #hamburger { display: flex; }
+    #main { margin-left: 0; padding: 0 20px 80px; max-width: 100%; }
+    #hero { padding-top: 70px; }
+    .hero-stats { gap: 20px; }
+  }
+
+  /* lec-index-nav */
+  a.lec-back-home {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 250;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 8px 14px;
+    background: var(--card, var(--surface2, rgba(22, 26, 34, 0.95)));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-head, inherit);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+  a.lec-back-home:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+</style>
+
+<a href="index.html" class="lec-back-home">← Advanced Web Technologies</a>
+</head>
+<body>
+
+<button id="hamburger" onclick="toggleSidebar()" title="Menu">☰</button>
+
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="tag">Lecture 14 • CSC337</div>
+    <h2>Fetch • Axios •<br>Redux • Thunk</h2>
+  </div>
+
+  <div class="nav-group-label">Start</div>
+  <a href="#hero" class="active"><span class="icon">🏠</span> Hero</a>
+  <a href="#schedule"><span class="icon">⏱️</span> Class Flow</a>
+
+  <div class="nav-group-label">APIs</div>
+  <a href="#motivation"><span class="icon">🎯</span> Kyun API + Redux?</a>
+  <a href="#fetch-part"><span class="icon">🌐</span> Fetch API</a>
+  <a href="#axios-part"><span class="icon">⚡</span> Axios</a>
+  <a href="#compare-fetch-axios"><span class="icon">⚖️</span> Fetch vs Axios</a>
+
+  <div class="nav-group-label">Redux</div>
+  <a href="#redux-core"><span class="icon">🏪</span> Redux Core</a>
+  <a href="#redux-thunk"><span class="icon">🔗</span> Redux Thunk</a>
+  <a href="#flow-visual"><span class="icon">📐</span> Flow Diagrams</a>
+
+  <div class="nav-group-label">Practice</div>
+  <a href="#activities"><span class="icon">🎯</span> Activities</a>
+  <a href="#code-examples"><span class="icon">💻</span> Code</a>
+  <a href="#errors"><span class="icon">🐛</span> Errors &amp; Debug</a>
+  <a href="#quiz-section"><span class="icon">🧠</span> Quiz</a>
+  <a href="#homework"><span class="icon">📝</span> Homework</a>
+  <a href="#lab-project"><span class="icon">🧪</span> Lab</a>
+  <a href="#recap"><span class="icon">✅</span> Recap</a>
+</nav>
+
+<main id="main">
+
+  <section id="hero">
+    <div class="hero-badge">Advanced Web Technologies (CSC337) • Unit 7 React</div>
+    <h1>Lecture 14:<br><span>REST APIs + Redux + Thunk</span></h1>
+    <p>Fetch aur Axios se backend call karna, loading/error states, phir Redux mein shared state — Redux Thunk se async dispatch pattern. Roman Urdu teaching — CLO-4 / CLO-6 aligned.</p>
+    <div class="hero-meta">
+      <strong>Topic:</strong>
+      REST API Calling (Fetch &amp; Axios) in React.js + Redux + Redux Thunk (Async Middleware)
+      <br><br>
+      <strong>Subject:</strong>
+      Advanced Web Technologies (CSC337) — ~2 Hours • Mixed (Theory + Practical + Live Coding)
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">GET</span><span class="stat-label">Fetch/Axios</span></div>
+      <div class="stat"><span class="stat-num">RTK?</span><span class="stat-label">Store pattern</span></div>
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Quiz</span></div>
+      <div class="stat"><span class="stat-num">→</span><span class="stat-label">Thunk flow</span></div>
+    </div>
+    <p style="margin-top:16px;font-size:12px;color:var(--text3);">Syllabus: REST in React + Redux + Thunk application.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="schedule">
+    <div class="section-header">
+      <div class="section-icon">⏱️</div>
+      <div><h2>Lecture At-a-Glance</h2><p>PDF timetable</p></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Section</th><th>Method</th><th>Outcome</th></tr></thead>
+        <tbody>
+          <tr><td>0–10</td><td>Warm-up — API + Redux kyun?</td><td>Discussion</td><td>Big picture data flow</td></tr>
+          <tr><td>10–35</td><td>Fetch GET/POST</td><td>Live demo</td><td>Headers, body, errors</td></tr>
+          <tr><td>35–55</td><td>Axios</td><td>Comparison demo</td><td>Axios vs Fetch choice</td></tr>
+          <tr><td>55–65</td><td>Activity 1 — broken API debug</td><td>Challenge</td><td>Real errors diagnose</td></tr>
+          <tr><td>65–85</td><td>Redux basics</td><td>Board + mini code</td><td>Provider, hooks</td></tr>
+          <tr><td>85–105</td><td>Redux Thunk async</td><td>Step build</td><td>Thunk lifecycle</td></tr>
+          <tr><td>105–115</td><td>Activity 2 — fetch → thunk refactor</td><td>Pair work</td><td>Local → Redux async</td></tr>
+          <tr><td>115–120</td><td>Recap + quiz + homework</td><td>Wrap-up</td><td>Next steps clear</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="motivation">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div><h2>Context — Kyun API + Redux?</h2><p>Frontend data “own” nahi karta</p></div>
+    </div>
+    <div class="card-grid">
+      <div class="card"><div class="card-icon">📡</div><h3>UI needs</h3><p>Har call par loading, success, error — teen states model karo.</p><span class="tag-pill">UX</span></div>
+      <div class="card"><div class="card-icon">🔽</div><h3>Scaling</h3><p>Prop drilling + duplicate fetch — masla barhta hai.</p><span class="tag-pill">pain</span></div>
+      <div class="card"><div class="card-icon">🏪</div><h3>Redux</h3><p>Shared predictable state — ek store.</p><span class="tag-pill">global</span></div>
+      <div class="card"><div class="card-icon">⚙️</div><h3>Thunk</h3><p>Async side-effects Redux world mein structured.</p><span class="tag-pill">async</span></div>
+    </div>
+    <div class="alert info"><span class="alert-icon">🛒</span><div><strong>Example:</strong><p>E-commerce — products, cart, user, token — kai screens same data.</p></div></div>
+    <p style="color:var(--muted);font-size:14px;margin-top:12px;"><strong>Mini map:</strong> Fetch/Axios = backend se baat • Redux = shared state ki jagah • Thunk = async logic Redux ke rules ke andar.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="fetch-part">
+    <div class="section-header">
+      <div class="section-icon">🌐</div>
+      <div><h2>Fetch API</h2><p>Built-in — manual JSON + error discipline</p></div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body"><h4>fetch(url)</h4><p>Call karo — promise return.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><h4>response.ok</h4><p><strong>404/500 par fetch reject NAHI karta</strong> — hamesha check karo.</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h4>response.json()</h4><p>await — parse body.</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><h4>State / dispatch</h4><p>Data UI ya Redux ko do.</p></div></div>
+    </div>
+    <div class="alert success"><span class="alert-icon">✅</span><div><strong>Headers:</strong><p>POST ke liye <code>Content-Type: application/json</code> + body stringify.</p></div></div>
+    <div class="alert warn"><span class="alert-icon">🔁</span><div><strong>StrictMode (dev):</strong><p>Effects do dafa chal sakte — duplicate fetch rokne ke liye guard / AbortController cancel.</p></div></div>
+    <div class="alert error"><span class="alert-icon">⚠️</span><div><strong>Mistakes:</strong><p><code>await json()</code> bhoolna • POST headers missing • unmount ke baad setState (cleanup / abort).</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="axios-part">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div><h2>Axios</h2><p>Library — defaults + interceptors</p></div>
+    </div>
+    <div class="card-grid">
+      <div class="card"><div class="card-icon">📦</div><h3>response.data</h3><p>Auto JSON — direct data field.</p></div>
+      <div class="card"><div class="card-icon">🔐</div><h3>Interceptors</h3><p>Har request par <code>Authorization: Bearer …</code> attach.</p></div>
+      <div class="card"><div class="card-icon">⏱️</div><h3>Config</h3><p>timeout, baseURL — app barhe to Axio zyada suvidha.</p></div>
+    </div>
+    <div class="alert warn"><span class="alert-icon">⚠️</span><div><strong>Mistakes:</strong><p><code>baseURL</code> set na karna → har jagah URL repeat • <code>err.response</code> vs <code>err.request</code> confuse.</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="compare-fetch-axios">
+    <div class="section-header">
+      <div class="section-icon">⚖️</div>
+      <div><h2>Fetch vs Axios — Quick Table</h2><p>Exam / viva</p></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Feature</th><th>Fetch</th><th>Axios</th></tr></thead>
+        <tbody>
+          <tr><td>Built-in</td><td>✅ Browser</td><td>❌ npm install</td></tr>
+          <tr><td>Auto JSON</td><td>❌ Manual parse</td><td>✅ response.data</td></tr>
+          <tr><td>404/500 handling</td><td>manual <code>ok</code></td><td>easier patterns</td></tr>
+          <tr><td>Interceptors</td><td>❌</td><td>✅</td></tr>
+          <tr><td>Upload progress</td><td>mushkil</td><td>asan</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="alert success"><span class="alert-icon">📝</span><div><strong>Exam:</strong><p>“Axios over Fetch?” — interceptors, defaults, JSON, cleaner errors.</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="redux-core">
+    <div class="section-header">
+      <div class="section-icon">🏪</div>
+      <div><h2>Redux + React — Core</h2><p>Predictable global state</p></div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li><strong>Store</strong> — single source of truth.</li>
+      <li><strong>Reducer</strong> — pure function <code>(state, action) → newState</code>. API calls yahan NAHI.</li>
+      <li><strong>Action</strong> — plain object <code>{ type, payload }</code>.</li>
+      <li><strong>React:</strong> <code>&lt;Provider store=&#123;store&#125;&gt;</code> • <code>useSelector</code> read • <code>useDispatch</code> send.</li>
+    </ul>
+    <div class="alert info"><span class="alert-icon">📌</span><div><strong>Immutability:</strong><p>Reducer mein state mutate mat karo — nayi copy return karo.</p></div></div>
+    <div class="alert error"><span class="alert-icon">❌</span><div><strong>Mistakes:</strong><p>Reducer mein mutation • galat key <code>useSelector</code> mein • wrong <code>action.type</code>.</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="redux-thunk">
+    <div class="section-header">
+      <div class="section-icon">🔗</div>
+      <div><h2>Redux Thunk — Async</h2><p>dispatch function — API yahan</p></div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body"><h4>FETCH_START</h4><p>loading true, error clear.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><h4>API call</h4><p>fetch/axios thunk ke andar.</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h4>SUCCESS / FAIL</h4><p>data ya error dispatch — reducer update.</p></div></div>
+    </div>
+    <div class="alert success"><span class="alert-icon">🎯</span><div><strong>Exam line:</strong><p>Thunk middleware lets you dispatch functions receiving <code>(dispatch, getState)</code> — async actions.</p></div></div>
+    <p style="color:var(--muted);font-size:14px;margin-top:12px;"><strong>Login example:</strong> dispatch start → API → dispatch success(user/token).</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="flow-visual">
+    <div class="section-header">
+      <div class="section-icon">📐</div>
+      <div><h2>Flows (Board / Slide)</h2><p>PDF visuals</p></div>
+    </div>
+    <div class="mini-grid">
+      <div class="mini-card"><h4>Thunk chain</h4><p>UI click → dispatch(thunk) → API → success/fail dispatch → reducer → store → UI.</p></div>
+      <div class="mini-card"><h4>HTTP</h4><p>Browser → Fetch/Axios → REST API → JSON → state update.</p></div>
+      <div class="mini-card"><h4>Timeline</h4><p>START loading → SUCCESS data / FAIL error — teen states.</p></div>
+    </div>
+    <div class="alert warn"><span class="alert-icon">⚠️</span><div><strong>Anti-patterns:</strong><p>API reducer ke andar • finally na ho to loading stuck • success dispatch lekin purana error clear na ho.</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="activities">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div><h2>Activities</h2><p>PDF schedule</p></div>
+    </div>
+    <div class="card-grid">
+      <div class="card"><div class="card-icon">🔧</div><h3>1 — Debug API</h3><p>“Loading stuck?” — missing return, finally, response.ok.</p><span class="tag-pill">10 min</span></div>
+      <div class="card"><div class="card-icon">♻️</div><h3>2 — Refactor</h3><p>useEffect fetch → thunk + reducer; component sirf dispatch/select.</p><span class="tag-pill">10 min</span></div>
+      <div class="card"><div class="card-icon">🔮</div><h3>3 — Optional</h3><p>Thunk mein do dispatches — final state predict karo.</p><span class="tag-pill">8 min</span></div>
+      <div class="card"><div class="card-icon">💬</div><h3>4 — Debate</h3><p>“Redux kab NA use karein?” — choti app = Context/local OK.</p><span class="tag-pill">8 min</span></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="code-examples">
+    <div class="section-header">
+      <div class="section-icon">💻</div>
+      <div><h2>Code Examples</h2><p>Simplified snippets</p></div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Fetch GET + ok check</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/products'</span>);
+<span class="kw">if</span> (!res.ok) <span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'HTTP '</span> + res.status);
+<span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();</pre>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Axios</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><span class="kw">const</span> &#123; data &#125; = <span class="kw">await</span> axios.<span class="fn">get</span>(<span class="str">'/api/products'</span>);
+<span class="cm">// data === parsed JSON</span></pre>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Thunk shape (concept)</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><span class="kw">const</span> <span class="fn">loadProducts</span> = () => <span class="kw">async</span> (dispatch) => &#123;
+  dispatch(&#123; type: <span class="str">'PRODUCTS_PENDING'</span> &#125;);
+  <span class="kw">try</span> &#123;
+    <span class="kw">const</span> data = <span class="kw">await</span> api.<span class="fn">getProducts</span>();
+    dispatch(&#123; type: <span class="str">'PRODUCTS_SUCCESS'</span>, payload: data &#125;);
+  &#125; <span class="kw">catch</span> (e) &#123;
+    dispatch(&#123; type: <span class="str">'PRODUCTS_FAIL'</span>, error: e.message &#125;);
+  &#125;
+&#125;;</pre>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="errors">
+    <div class="section-header">
+      <div class="section-icon">🐛</div>
+      <div><h2>Debugging Checklist</h2><p>PDF + CLO items</p></div>
+    </div>
+    <div class="alert error"><span class="alert-icon">🌍</span><div><strong>CORS</strong><p>Browser cross-origin block — backend CORS headers.</p></div></div>
+    <div class="alert warn"><span class="alert-icon">🔄</span><div><strong>Stale / double fetch</strong><p>StrictMode dev • missing useEffect deps • guard lagao.</p></div></div>
+    <div class="alert info"><span class="alert-icon">📋</span><div><strong>General</strong><p>Fetch <code>ok</code> • Axios <code>err.response</code> • loading finally • Redux pure reducers.</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="quiz-section">
+    <div class="section-header">
+      <div class="section-icon">🧠</div>
+      <div><h2>Mini Quiz</h2><p>5 MCQs — PDF</p></div>
+    </div>
+    <div class="quiz-wrap">
+      <div class="quiz-progress">
+        <span id="q-counter">1 / 5</span>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+        <span id="score-display">Score: 0</span>
+      </div>
+
+      <div class="question-block active" data-answer="1">
+        <h3><span class="qnum">Q1</span>In Fetch API, which condition should be checked for HTTP 404/500?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> response.json()</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> response.ok</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> response.statusText</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> response.headers</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="2">
+        <h3><span class="qnum">Q2</span>Axios typically returns response data in:</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> response.body</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> response.json()</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> response.data</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> response.payload</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="1">
+        <h3><span class="qnum">Q3</span>Which Redux rule is correct?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> Reducers can call APIs</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Reducers must be pure</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> Reducers can mutate state freely</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> Reducers run only once</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="3">
+        <h3><span class="qnum">Q4</span>Redux Thunk allows dispatching:</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> Only strings</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Only arrays</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> Only promises</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> Functions</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="1">
+        <h3><span class="qnum">Q5</span>A correct async pattern in Redux is:</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> Dispatch only success</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Dispatch start → success/fail</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> Update store directly from component</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> Call API in reducer</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="showResult()" disabled>Natija Dekho 🎉</button></div>
+      </div>
+
+      <div class="quiz-result" id="quiz-result">
+        <div class="result-score" id="result-score">0/5</div>
+        <div class="result-msg" id="result-msg"></div>
+        <div class="result-sub" id="result-sub"></div>
+        <button type="button" class="btn btn-primary" onclick="restartQuiz()">Dobara Try Karo 🔄</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="homework">
+    <div class="section-header">
+      <div class="section-icon">📝</div>
+      <div><h2>Homework — Fetch vs Axios</h2><p>Same feature do tareeqon se</p></div>
+    </div>
+    <ul class="hw-list">
+      <li><span class="hw-num">1</span><code>UsersPage</code> — GET users with <strong>Fetch</strong> (loading + error).</li>
+      <li><span class="hw-num">2</span><code>UsersPageAxios</code> — same GET with <strong>Axios</strong>.</li>
+      <li><span class="hw-num">3</span>Simple POST (fake ya apni API) JSON body.</li>
+      <li><span class="hw-num">4</span>Submit: ZIP / Git — dono components same UI behaviour.</li>
+      <li><span class="hw-num">5</span>Theory: Axios ke 2 fayde • reducers pure kyun • Thunk full flow likho.</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="lab-project">
+    <div class="section-header">
+      <div class="section-icon">🧪</div>
+      <div><h2>Lab — Redux Thunk Product Dashboard</h2><p>MERN-oriented</p></div>
+    </div>
+    <ol style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li>Vite/CRA app.</li>
+      <li>Store: products slice — <code>items: []</code>, <code>loading: false</code>, <code>error: null</code>.</li>
+      <li><code>fetchProducts</code> thunk: start → API → success/fail.</li>
+      <li>UI: Load button, loader, error banner, list cards, Refresh.</li>
+      <li>Filter (e.g. search name) local ya store.</li>
+      <li>Bonus: Axios interceptor + token — console mein headers.</li>
+    </ol>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="recap">
+    <div class="section-header">
+      <div class="section-icon">✅</div>
+      <div><h2>Quick Recap</h2><p>5 takeaways</p></div>
+    </div>
+    <div class="recap-grid">
+      <div class="recap-item"><div class="ri">🌐</div><strong>Fetch</strong>Manual ok + JSON.</div>
+      <div class="recap-item"><div class="ri">⚡</div><strong>Axios</strong>data, interceptors, config.</div>
+      <div class="recap-item"><div class="ri">🏪</div><strong>Redux</strong>Central shared state.</div>
+      <div class="recap-item"><div class="ri">🔗</div><strong>Thunk</strong>Async via middleware.</div>
+      <div class="recap-item"><div class="ri">📊</div><strong>States</strong>loading / data / error.</div>
+      <div class="recap-item"><div class="ri">🎓</div><strong>Exam</strong>Compare 4 points + Thunk lifecycle.</div>
+    </div>
+    <div class="alert info" style="margin-top:28px;"><span class="alert-icon">❓</span><div><strong>Viva:</strong><p>Fetch 404 throw kyun nahi? Middleware ka role? Side effects reducer mein kyun nahi?</p></div></div>
+  </section>
+
+</main>
+
+<script>
+  const links = document.querySelectorAll('#sidebar a');
+  const sections = document.querySelectorAll('section[id], #hero');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector('#sidebar a[href="#' + entry.target.id + '"]');
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+  document.getElementById('main').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+  });
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  }
+
+  let currentQ = 0;
+  let score = 0;
+  const questions = document.querySelectorAll('.question-block');
+  const feedbacks = [
+    'Sahi! Fetch mein HTTP errors ke liye response.ok check zaroori.',
+    'Theek! Axios parsed body response.data mein deta hai.',
+    'Bilkul! Reducer pure — side effects nahi.',
+    'Perfect! Thunk functions dispatch kar sakta hai.',
+    'Great! Pehle pending/start, phir success ya fail — sahi async pattern.'
+  ];
+  const wrongs = [
+    'Nahi — json() parse hai; error status ke liye ok check.',
+    'Nahi — Axios main field response.data hai.',
+    'Nahi — API calls reducer mein nahi; thunk/side-effect layer.',
+    'Nahi — Thunk specifically functions (async thunks) allow karta hai.',
+    'Nahi — start/success/fail pattern + reducer update; API reducer mein nahi.'
+  ];
+
+  function answer(btn, selected) {
+    const qBlock = btn.closest('.question-block');
+    const correct = parseInt(qBlock.dataset.answer, 10);
+    const btns = qBlock.querySelectorAll('.opt-btn');
+    const fb = qBlock.querySelector('.feedback-msg');
+    const nextBtn = qBlock.querySelector('.btn-primary');
+
+    btns.forEach(b => { b.disabled = true; });
+
+    if (selected === correct) {
+      btn.classList.add('correct');
+      fb.textContent = '\u2705 ' + feedbacks[currentQ];
+      fb.className = 'feedback-msg show correct';
+      score++;
+      document.getElementById('score-display').textContent = 'Score: ' + score;
+    } else {
+      btn.classList.add('wrong');
+      btns[correct].classList.add('correct');
+      fb.textContent = '\u274c ' + wrongs[currentQ];
+      fb.className = 'feedback-msg show wrong';
+    }
+    nextBtn.disabled = false;
+  }
+
+  function nextQ() {
+    questions[currentQ].classList.remove('active');
+    currentQ++;
+    if (currentQ < questions.length) {
+      questions[currentQ].classList.add('active');
+      document.getElementById('q-counter').textContent = (currentQ + 1) + ' / 5';
+      document.getElementById('progress-fill').style.width = ((currentQ + 1) * 20) + '%';
+    }
+  }
+
+  function showResult() {
+    questions[currentQ].classList.remove('active');
+    document.getElementById('quiz-result').classList.add('show');
+    document.getElementById('result-score').textContent = score + '/5';
+    const msgs = ['Koshish dobara! 💪', 'Practice! 📚', 'Theek hai 👍', 'Acha! 🔥', 'Bahut acha! 🌟', 'Perfect! API + Redux solid 🎉'];
+    document.getElementById('result-msg').textContent = msgs[score];
+    document.getElementById('result-sub').textContent = score >= 4 ? 'Fetch, Axios, Thunk flow clear!' : 'Notes dubara — ok check + thunk lifecycle.';
+    document.getElementById('q-counter').textContent = '5 / 5';
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('score-display').textContent = 'Score: ' + score;
+  }
+
+  function restartQuiz() {
+    currentQ = 0;
+    score = 0;
+    document.getElementById('quiz-result').classList.remove('show');
+    document.getElementById('score-display').textContent = 'Score: 0';
+    document.getElementById('q-counter').textContent = '1 / 5';
+    document.getElementById('progress-fill').style.width = '20%';
+    questions.forEach(q => {
+      q.classList.remove('active');
+      q.querySelectorAll('.opt-btn').forEach(b => {
+        b.classList.remove('correct', 'wrong');
+        b.disabled = false;
+      });
+      const fb = q.querySelector('.feedback-msg');
+      fb.className = 'feedback-msg';
+      q.querySelector('.btn-primary').disabled = true;
+    });
+    questions[0].classList.add('active');
+  }
+</script>
+</body>
+</html>

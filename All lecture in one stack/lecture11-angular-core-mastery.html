@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angular Core Mastery — CSC337 Lecture 11</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#e63946;--green:#06d6a0;--blue:#118ab2;--yellow:#ffd166;
+  --dark:#0d1117;--darker:#080d13;--card:#161b22;--card2:#1e2530;
+  --text:#e6edf3;--muted:#8b949e;--border:#30363d;--accent:#58a6ff;
+  --sidebar-w:270px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--darker);color:var(--text);font-family:'Nunito',sans-serif;display:flex;min-height:100vh;}
+
+/* PROGRESS */
+.pb{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--red),var(--accent),var(--green));z-index:9999;width:0%;transition:width .1s;}
+
+/* STARS */
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--dur) infinite var(--delay) ease-in-out;}
+@keyframes twinkle{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.9;transform:scale(1.6)}}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);
+  position:fixed;top:0;left:0;bottom:0;z-index:200;
+  display:flex;flex-direction:column;overflow-y:auto;transition:transform .3s ease;
+}
+.sb-logo{padding:1.4rem 1.2rem 1rem;border-bottom:1px solid var(--border);}
+.sb-badge{display:inline-block;background:linear-gradient(135deg,var(--blue),#0a6a9a);color:#fff;font-size:.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:.22rem .8rem;border-radius:999px;margin-bottom:.5rem;}
+.sb-logo h1{font-family:'Baloo Bhaijaan 2',cursive;font-size:1.25rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;}
+.sb-logo p{font-size:.72rem;color:var(--muted);margin-top:.3rem;}
+.nav-lbl{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:.9rem 1.2rem .25rem;}
+.nav-item{display:flex;align-items:center;gap:.65rem;padding:.55rem 1.2rem;cursor:pointer;border-left:3px solid transparent;transition:all .2s;text-decoration:none;color:var(--muted);font-size:.86rem;font-weight:600;}
+.nav-item:hover{background:rgba(88,166,255,.08);color:var(--text);border-left-color:var(--accent);}
+.nav-item.active{background:rgba(88,166,255,.13);color:var(--accent);border-left-color:var(--accent);}
+.nav-item .ic{font-size:.95rem;width:20px;text-align:center;flex-shrink:0;}
+.nav-item .dot{width:6px;height:6px;border-radius:50%;background:var(--border);margin-left:auto;flex-shrink:0;transition:background .2s;}
+.nav-item.active .dot,.nav-item:hover .dot{background:var(--accent);}
+.sb-foot{margin-top:auto;padding:.9rem 1.2rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);text-align:center;}
+
+/* MOBILE */
+.mob-btn{display:none;position:fixed;top:1rem;left:1rem;z-index:500;background:var(--card);border:1px solid var(--border);color:var(--text);width:40px;height:40px;border-radius:10px;font-size:1.1rem;cursor:pointer;align-items:center;justify-content:center;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:150;}
+.overlay.show{display:block;}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+
+/* HERO */
+.hero{position:relative;z-index:1;min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 2rem;background:radial-gradient(ellipse at 50% 0%,#0e1e3a 0%,transparent 65%);}
+.hero-badge{display:inline-block;background:linear-gradient(135deg,var(--blue),#0a6a9a);color:#fff;font-size:.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:.28rem .9rem;border-radius:999px;margin-bottom:1.2rem;animation:fadeUp .7s ease .1s both;}
+.hero h2{font-family:'Baloo Bhaijaan 2',cursive;font-size:clamp(2rem,5.5vw,4rem);font-weight:800;background:linear-gradient(135deg,#fff 0%,var(--accent) 45%,var(--green) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;margin-bottom:1rem;animation:fadeUp .9s ease .2s both;}
+.hero p{color:var(--muted);max-width:540px;line-height:1.7;animation:fadeUp .9s ease .4s both;margin-bottom:2rem;}
+.hero-stats{display:flex;gap:1.1rem;flex-wrap:wrap;justify-content:center;animation:fadeUp .9s ease .6s both;}
+.stat{background:var(--card);border:1px solid var(--border);padding:.75rem 1.3rem;border-radius:12px;text-align:center;}
+.stat-n{font-size:1.7rem;font-weight:800;color:var(--accent);font-family:'Baloo Bhaijaan 2',cursive;}
+.stat-l{font-size:.72rem;color:var(--muted);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECTIONS */
+.section{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:4rem 2rem;scroll-margin-top:1rem;}
+.s-tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);background:rgba(88,166,255,.1);padding:.22rem .7rem;border-radius:999px;margin-bottom:.65rem;}
+.s-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:clamp(1.5rem,3.2vw,2.3rem);font-weight:800;margin-bottom:.45rem;line-height:1.2;}
+.s-desc{color:var(--muted);max-width:680px;line-height:1.7;margin-bottom:1.8rem;}
+hr.div{border:none;border-top:1px solid var(--border);max-width:880px;margin:0 auto;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;}
+
+/* CONCEPT CARDS */
+.cc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.3rem;position:relative;overflow:hidden;opacity:0;transform:translateY(24px);transition:all .5s ease;}
+.cc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.cc.red::before{background:var(--red)}.cc.blue::before{background:var(--blue)}.cc.green::before{background:var(--green)}.cc.yellow::before{background:var(--yellow)}.cc.accent::before{background:var(--accent)}
+.cc.visible{opacity:1;transform:translateY(0);}
+.cc:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(0,0,0,.4);border-color:var(--accent);}
+.ci{font-size:1.7rem;margin-bottom:.55rem;}
+.ct{font-family:'Baloo Bhaijaan 2',cursive;font-size:1rem;font-weight:800;margin-bottom:.35rem;}
+.cd{color:var(--muted);font-size:.86rem;line-height:1.6;}
+
+/* CODE BLOCKS */
+.cb{background:#0d1117;border:1px solid var(--border);border-radius:12px;padding:1.3rem;font-family:'Courier New',monospace;font-size:.85rem;line-height:1.9;overflow-x:auto;position:relative;}
+.cb .lb{position:absolute;top:.65rem;right:.85rem;font-size:.65rem;color:var(--muted);background:var(--card2);padding:.12rem .5rem;border-radius:5px;font-family:'Nunito',sans-serif;}
+.kw{color:#ff7b72}.str{color:#a5d6ff}.dec{color:#d2a8ff}.val{color:#79c0ff}.cm{color:#8b949e;font-style:italic}.tag{color:#7ee787}.attr{color:#ffa657}.fn{color:#e3b341}
+
+/* TABLES */
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+th{background:var(--card2);padding:.8rem 1rem;text-align:left;font-size:.8rem;color:var(--accent);font-weight:700;border-bottom:1px solid var(--border);}
+td{padding:.8rem 1rem;border-bottom:1px solid var(--border);font-size:.84rem;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(88,166,255,.05);}
+.pill{display:inline-block;background:rgba(88,166,255,.15);color:var(--accent);padding:.12rem .5rem;border-radius:6px;font-family:monospace;font-size:.82rem;}
+
+/* ALERTS */
+.alert{border-radius:12px;padding:1rem 1.2rem;margin:.75rem 0;border-left:4px solid;display:flex;gap:.65rem;align-items:flex-start;}
+.ai{font-size:1.15rem;flex-shrink:0;margin-top:2px;}
+.alert.tip{background:rgba(6,214,160,.1);border-color:var(--green);color:var(--green);}
+.alert.warn{background:rgba(255,209,102,.1);border-color:var(--yellow);color:#ffd166;}
+.alert.exam{background:rgba(230,57,70,.1);border-color:var(--red);color:#ff8b94;}
+.ab{font-size:.87rem;line-height:1.6;}
+.ab strong{display:block;font-weight:700;margin-bottom:.15rem;}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:.9rem;}
+.step{display:flex;gap:.9rem;align-items:flex-start;opacity:0;transform:translateX(-15px);transition:all .5s;}
+.step.visible{opacity:1;transform:translateX(0);}
+.sn{width:33px;height:33px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#388bff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;}
+.st{font-weight:700;margin-bottom:.18rem;}
+.sd{color:var(--muted);font-size:.86rem;}
+.sc{display:inline-block;background:var(--darker);border:1px solid var(--border);padding:.15rem .5rem;border-radius:6px;font-family:monospace;font-size:.82rem;color:var(--accent);margin-top:.3rem;}
+
+/* FLOW */
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:.45rem;justify-content:center;margin:1.1rem 0;}
+.fb{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:.5rem 1rem;font-size:.86rem;font-weight:700;transition:all .3s;cursor:default;}
+.fb:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.05);}
+.fa{color:var(--accent);font-size:1rem;}
+
+/* DEMO */
+.demo{background:var(--card);border:1px solid var(--green);border-radius:14px;padding:1.2rem;}
+.demo h3{font-family:'Baloo Bhaijaan 2',cursive;color:var(--green);margin-bottom:.7rem;font-size:.98rem;}
+.demo-in{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:.6rem .9rem;border-radius:9px;font-size:.92rem;font-family:'Nunito',sans-serif;outline:none;transition:border-color .2s;}
+.demo-in:focus{border-color:var(--green);}
+.demo-out{background:var(--darker);border:1px solid var(--border);border-radius:9px;padding:.8rem 1rem;margin-top:.65rem;}
+.demo-out .lbl{font-size:.72rem;color:var(--muted);}
+.demo-out p{font-family:'Baloo Bhaijaan 2',cursive;font-size:1.1rem;margin-top:.2rem;}
+
+/* QUIZ */
+.qcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:.9rem;opacity:0;transform:translateY(18px);transition:all .5s;}
+.qcard.visible{opacity:1;transform:translateY(0);}
+.qq{font-family:'Baloo Bhaijaan 2',cursive;font-size:.95rem;font-weight:700;margin-bottom:.85rem;}
+.qn{color:var(--accent);margin-right:.35rem;}
+.opts{display:flex;flex-direction:column;gap:.4rem;}
+.opt{padding:.55rem .95rem;border-radius:9px;border:1px solid var(--border);cursor:pointer;font-size:.86rem;transition:all .2s;background:var(--card2);}
+.opt:hover{border-color:var(--accent);background:rgba(88,166,255,.1);}
+.opt.correct{background:rgba(6,214,160,.2);border-color:var(--green);color:var(--green);}
+.opt.wrong{background:rgba(230,57,70,.15);border-color:var(--red);color:#ff8b94;}
+.qr{margin-top:.45rem;font-size:.82rem;font-weight:600;min-height:1rem;}
+
+/* FI */
+.fi{opacity:0;transform:translateY(22px);transition:all .6s ease;}
+.fi.visible{opacity:1;transform:translateY(0);}
+
+footer{position:relative;z-index:1;text-align:center;padding:2.2rem 1rem;border-top:1px solid var(--border);color:var(--muted);font-size:.86rem;}
+footer strong{color:var(--accent);}
+
+/* DIRECTIVE TAG BADGES */
+.dtag{display:inline-block;font-family:monospace;font-size:.82rem;font-weight:700;padding:.18rem .55rem;border-radius:6px;margin-right:.35rem;margin-bottom:.3rem;}
+.dtag.struct{background:rgba(230,57,70,.15);color:#ff8b94;border:1px solid rgba(230,57,70,.3);}
+.dtag.attr{background:rgba(6,214,160,.12);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+
+/* PIPE DEMO */
+.pipe-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap;}
+.pipe-in{background:var(--card2);border:1px solid var(--border);padding:.35rem .7rem;border-radius:8px;font-family:monospace;font-size:.84rem;color:var(--muted);}
+.pipe-arrow{color:var(--accent);font-weight:700;}
+.pipe-out{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);padding:.35rem .7rem;border-radius:8px;font-family:monospace;font-size:.84rem;color:var(--accent);}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .mob-btn{display:flex;}
+  .main{margin-left:0;}
+  .section{padding:3rem 1rem;}
+  .hero h2{font-size:1.9rem;}
+}
+
+  /* lec-index-nav */
+  a.lec-back-home {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 250;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 8px 14px;
+    background: var(--card, var(--surface2, rgba(22, 26, 34, 0.95)));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-head, inherit);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+  a.lec-back-home:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+</style>
+
+<a href="index.html" class="lec-back-home">← Advanced Web Technologies</a>
+</head>
+<body>
+
+<div class="pb" id="pb"></div>
+<div class="stars" id="stars"></div>
+<div class="overlay" id="ov" onclick="closeSB()"></div>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar" id="sb">
+  <div class="sb-logo">
+    <div class="sb-badge">CSC337 — Lecture 11</div>
+    <h1>Angular Core<br>Mastery 🔥</h1>
+    <p>Advanced Web Technologies</p>
+  </div>
+
+  <div class="nav-lbl">Lecture Topics</div>
+  <a class="nav-item active" href="#hero" onclick="setAct(this)"><span class="ic">🏠</span>Home<span class="dot"></span></a>
+  <a class="nav-item" href="#intro" onclick="setAct(this)"><span class="ic">🧠</span>Angular Mental Model<span class="dot"></span></a>
+  <a class="nav-item" href="#templating" onclick="setAct(this)"><span class="ic">📝</span>Templating<span class="dot"></span></a>
+  <a class="nav-item" href="#directives" onclick="setAct(this)"><span class="ic">🎛️</span>Directives<span class="dot"></span></a>
+  <a class="nav-item" href="#pipes" onclick="setAct(this)"><span class="ic">🔧</span>Pipes<span class="dot"></span></a>
+  <a class="nav-item" href="#di" onclick="setAct(this)"><span class="ic">💉</span>DI + Services<span class="dot"></span></a>
+  <a class="nav-item" href="#routing" onclick="setAct(this)"><span class="ic">🗺️</span>Routing<span class="dot"></span></a>
+  <a class="nav-item" href="#observables" onclick="setAct(this)"><span class="ic">📡</span>Observables<span class="dot"></span></a>
+
+  <div class="nav-lbl">Practice</div>
+  <a class="nav-item" href="#debug" onclick="setAct(this)"><span class="ic">🐛</span>Common Galtiyan<span class="dot"></span></a>
+  <a class="nav-item" href="#quiz" onclick="setAct(this)"><span class="ic">🧩</span>Quiz<span class="dot"></span></a>
+  <a class="nav-item" href="#homework" onclick="setAct(this)"><span class="ic">📚</span>Homework<span class="dot"></span></a>
+  <a class="nav-item" href="#recap" onclick="setAct(this)"><span class="ic">🔑</span>Recap<span class="dot"></span></a>
+
+  <div class="sb-foot">🇵🇰 Pakistani Students ke liye<br><strong style="color:var(--accent)">2 Ghante ka Lecture 11</strong></div>
+</aside>
+
+<button class="mob-btn" onclick="openSB()">☰</button>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main">
+
+<!-- ── HERO ── -->
+<section class="section" id="hero" style="min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 0%,#0b1d38 0%,transparent 65%)">
+  <div class="hero-badge">📘 Lecture 11 — Angular Core Mastery</div>
+  <h2 style="font-family:'Baloo Bhaijaan 2',cursive;font-size:clamp(2rem,5.5vw,4rem);font-weight:800;background:linear-gradient(135deg,#fff 0%,var(--accent) 45%,var(--green) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;margin-bottom:1rem;animation:fadeUp .9s ease .2s both">Angular Core Mastery Seekhain! 🔥</h2>
+  <p style="color:var(--muted);max-width:540px;line-height:1.7;animation:fadeUp .9s ease .4s both;margin-bottom:2rem">Templating, Directives, Pipes, DI, Services, Routing aur Observables — sab kuch aasaan Roman Urdu mein! Pakistani students ke liye bilkul special!</p>
+  <div class="hero-stats" style="animation:fadeUp .9s ease .6s both">
+    <div class="stat"><div class="stat-n">7</div><div class="stat-l">Core Topics</div></div>
+    <div class="stat"><div class="stat-n">2</div><div class="stat-l">Ghante</div></div>
+    <div class="stat"><div class="stat-n">5</div><div class="stat-l">Quiz MCQs</div></div>
+    <div class="stat"><div class="stat-n">4</div><div class="stat-l">Activities</div></div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── PART A: INTRO ── -->
+<section class="section" id="intro">
+  <div class="s-tag">Part A — 0 se 10 Minute</div>
+  <h2 class="s-title fi">Angular ka Mental Model 🧠</h2>
+  <p class="s-desc fi">Angular UI ko component state se drive karta hai. Data badlta hai → UI turant update ho jaata hai. Ye samjho to sab aasaan ho jaata hai!</p>
+
+  <div class="flow fi">
+    <div class="fb">Component State</div><span class="fa">→</span>
+    <div class="fb">Template Binding</div><span class="fa">→</span>
+    <div class="fb">Rendered DOM</div>
+  </div>
+  <div class="flow fi">
+    <div class="fb">User Event</div><span class="fa">→</span>
+    <div class="fb">Component Method</div><span class="fa">→</span>
+    <div class="fb">State Update</div><span class="fa">→</span>
+    <div class="fb">DOM Update</div>
+  </div>
+
+  <div class="g3" style="margin-top:1.3rem">
+    <div class="cc blue"><div class="ci">🏗️</div><div class="ct">Component Structure</div><div class="cd">TS class + HTML template + optional CSS. Teen parts milke ek complete component bante hain!</div></div>
+    <div class="cc green"><div class="ci">🔄</div><div class="ct">Change Detection</div><div class="cd">Angular khud detect karta hai kab data badla — aur view automatically update ho jaata hai!</div></div>
+    <div class="cc yellow"><div class="ci">🏢</div><div class="ct">Logic Kahan Rakho?</div><div class="cd">API logic component mein NAHI — Service mein rakhni chahiye! Component sirf UI dekhta hai.</div></div>
+  </div>
+
+  <div class="alert tip fi">
+    <span class="ai">💡</span>
+    <div class="ab"><strong>Mini Summary</strong>Angular UI templates se drive hoti hai; logic services mein structured honi chahiye, components mein bikhari nahi!</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── PART B: TEMPLATING ── -->
+<section class="section" id="templating">
+  <div class="s-tag">Part B — 10 se 30 Minute</div>
+  <h2 class="s-title fi">Templating — Data ko UI se Jodo! 📝</h2>
+  <p class="s-desc fi">Templates se aap values display karte ho aur user actions pe react karte ho. Chaar tarike hain data bind karne ke — sab yaad karo!</p>
+
+  <div class="g2">
+    <div class="cc red">
+      <div class="ci">1️⃣</div><div class="ct">Interpolation</div>
+      <div class="cd">Component ki value text ki tarah dikhao. Double curly braces!</div>
+      <div class="cb" style="margin-top:.7rem;padding:.7rem">
+<pre><span class="cm">// Component:</span>
+<span class="attr">title</span> = <span class="str">'Mera Store'</span>;
+<span class="cm">// Template:</span>
+<span class="tag">&lt;h1&gt;</span><span class="dec">{{ title }}</span><span class="tag">&lt;/h1&gt;</span></pre>
+      </div>
+    </div>
+    <div class="cc blue">
+      <div class="ci">2️⃣</div><div class="ct">Property Binding</div>
+      <div class="cd">DOM element ki property set karo. Square brackets use karo!</div>
+      <div class="cb" style="margin-top:.7rem;padding:.7rem">
+<pre><span class="attr">imgUrl</span> = <span class="str">'/logo.png'</span>;
+<span class="cm">// Template:</span>
+<span class="tag">&lt;img</span> <span class="dec">[src]</span>=<span class="str">"imgUrl"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;button</span> <span class="dec">[disabled]</span>=<span class="str">"isDisabled"</span><span class="tag">&gt;</span></pre>
+      </div>
+    </div>
+    <div class="cc green">
+      <div class="ci">3️⃣</div><div class="ct">Event Binding</div>
+      <div class="cd">User actions pakro — click, input, submit. Round brackets!</div>
+      <div class="cb" style="margin-top:.7rem;padding:.7rem">
+<pre><span class="fn">addToCart</span>(item: <span class="val">any</span>) {
+  <span class="cm">/* cart mein add karo */</span>
+}
+<span class="cm">// Template:</span>
+<span class="tag">&lt;button</span> <span class="dec">(click)</span>=<span class="str">"addToCart(item)"</span><span class="tag">&gt;</span></pre>
+      </div>
+    </div>
+    <div class="cc yellow">
+      <div class="ci">4️⃣</div><div class="ct">Two-Way Binding</div>
+      <div class="cd">Dono taraf sync — input se component, component se input. FormsModule zaroor!</div>
+      <div class="cb" style="margin-top:.7rem;padding:.7rem">
+<pre><span class="attr">searchText</span> = <span class="str">''</span>;
+<span class="cm">// Template:</span>
+<span class="tag">&lt;input</span> <span class="dec">[(ngModel)]</span>=<span class="str">"searchText"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;p&gt;</span><span class="dec">{{ searchText }}</span><span class="tag">&lt;/p&gt;</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="fi" style="margin:1.5rem 0 .7rem;font-family:'Baloo Bhaijaan 2',cursive;">Template Reference Variable</h3>
+  <div class="cb fi">
+    <span class="lb">template-ref.html</span>
+<pre><span class="cm">&lt;!-- #emailInput ek reference variable hai --&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">#emailInput</span> <span class="attr">type</span>=<span class="str">"email"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;button</span> <span class="dec">(click)</span>=<span class="str">"check(emailInput.value)"</span><span class="tag">&gt;</span>Check<span class="tag">&lt;/button&gt;</span>
+<span class="cm">&lt;!-- Is se directly DOM element access kar sakte hain --&gt;</span></pre>
+  </div>
+
+  <!-- Live Demo -->
+  <div class="demo fi" style="margin-top:1.3rem">
+    <h3>🎮 Live Demo — Real-Time Search Filter!</h3>
+    <p style="color:var(--muted);font-size:.83rem;margin-bottom:.7rem">Koi bhi naam likho — neeche list filter ho jaegi (Two-Way Binding aur Event Binding in action!)</p>
+    <input class="demo-in" type="text" placeholder="Student ka naam likho..." id="searchInp" oninput="filterList(this.value)">
+    <div class="demo-out" style="margin-top:.6rem">
+      <div class="lbl">Filtered List:</div>
+      <ul id="filteredList" style="margin-top:.4rem;list-style:none;display:flex;flex-direction:column;gap:.3rem;"></ul>
+    </div>
+  </div>
+
+  <div class="alert warn fi">
+    <span class="ai">⚠️</span>
+    <div class="ab"><strong>Common Galtiyan!</strong>FormsModule import karna bhool jaate hain (ngModel ke liye). Aur attribute value mein {{ }} mat likho — wahan property binding chahiye: [disabled]="val" nahi disabled="{{ val }}"</div>
+  </div>
+  <div class="alert exam fi">
+    <span class="ai">🎯</span>
+    <div class="ab"><strong>Exam Tip!</strong>Interpolation aur Property Binding ka farq: Interpolation string output deta hai; Property Binding DOM property set karta hai. Ye dono alag hain!</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── PART C: DIRECTIVES ── -->
+<section class="section" id="directives">
+  <div class="s-tag">Part C — 30 se 50 Minute</div>
+  <h2 class="s-title fi">Directives — DOM ko Control Karo! 🎛️</h2>
+  <p class="s-desc fi">Directives DOM ki structure ya appearance ko modify karne ke instructions hain. Do qisam hain — Structural aur Attribute!</p>
+
+  <div class="g2">
+    <div>
+      <h3 class="fi" style="font-family:'Baloo Bhaijaan 2',cursive;margin-bottom:.8rem;color:var(--red)">🏗️ Structural Directives — DOM badlte hain</h3>
+      <div class="tw fi">
+        <table>
+          <thead><tr><th>Directive</th><th>Kya Karta Hai</th><th>Use Case</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill">*ngIf</span></td><td>Element add/remove karta hai</td><td>Conditional UI</td></tr>
+            <tr><td><span class="pill">*ngFor</span></td><td>Element repeat karta hai</td><td>Lists / Tables</td></tr>
+            <tr><td><span class="pill">*ngSwitch</span></td><td>Switch-case rendering</td><td>Multiple states</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cb fi" style="margin-top:.8rem">
+        <span class="lb">structural.html</span>
+<pre><span class="cm">&lt;!-- ngIf: show/hide --&gt;</span>
+<span class="tag">&lt;div</span> <span class="dec">*ngIf</span>=<span class="str">"isLoggedIn"</span><span class="tag">&gt;</span>
+  Profile dikhao
+<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;button</span> <span class="dec">*ngIf</span>=<span class="str">"!isLoggedIn"</span><span class="tag">&gt;</span>Login<span class="tag">&lt;/button&gt;</span>
+
+<span class="cm">&lt;!-- ngFor: list --&gt;</span>
+<span class="tag">&lt;li</span> <span class="dec">*ngFor</span>=<span class="str">"let item of items; index as i"</span><span class="tag">&gt;</span>
+  <span class="dec">{{ i+1 }}</span>. <span class="dec">{{ item.name }}</span>
+<span class="tag">&lt;/li&gt;</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3 class="fi" style="font-family:'Baloo Bhaijaan 2',cursive;margin-bottom:.8rem;color:var(--green)">🎨 Attribute Directives — Style/Behavior badlte hain</h3>
+      <div class="tw fi">
+        <table>
+          <thead><tr><th>Directive</th><th>Kya Karta Hai</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill">[ngClass]</span></td><td>CSS classes toggle karta hai</td></tr>
+            <tr><td><span class="pill">[ngStyle]</span></td><td>Inline styles apply karta hai</td></tr>
+            <tr><td><span class="pill">ngModel</span></td><td>Form control binding karta hai</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cb fi" style="margin-top:.8rem">
+        <span class="lb">attribute.html</span>
+<pre><span class="cm">&lt;!-- ngClass: conditional class --&gt;</span>
+<span class="tag">&lt;div</span> <span class="dec">[ngClass]</span>=<span class="str">"{'active': isActive, 'disabled': !isActive}"</span><span class="tag">&gt;</span>
+  Status
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="cm">&lt;!-- ngStyle: inline style --&gt;</span>
+<span class="tag">&lt;p</span> <span class="dec">[ngStyle]</span>=<span class="str">"{'color': textColor, 'font-size': fontSize+'px'}"</span><span class="tag">&gt;</span>
+  Styled Text
+<span class="tag">&lt;/p&gt;</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert tip fi" style="margin-top:1.2rem">
+    <span class="ai">✅</span>
+    <div class="ab"><strong>Zaroori Baat!</strong>*ngIf element ko DOM se REMOVE karta hai — sirf hide nahi karta. Iska performance aur event handlers pe asar padta hai. Yaad rakhna!</div>
+  </div>
+  <div class="alert exam fi">
+    <span class="ai">🎯</span>
+    <div class="ab"><strong>Exam Tip — Common Question!</strong>Structural vs Attribute Directives: Structural DOM ki structure badlte hain (*ngIf, *ngFor). Attribute sirf appearance/behavior badlte hain (ngClass, ngStyle). * (asterisk) structural ki pehchan hai!</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── PART D: PIPES ── -->
+<section class="section" id="pipes">
+  <div class="s-tag">Part D — 50 se 60 Minute</div>
+  <h2 class="s-title fi">Pipes — Data Format Karo! 🔧</h2>
+  <p class="s-desc fi">Pipes template mein data ko format/transform karte hain — original data bilkul nahi badlta! Sirf display ke liye hain.</p>
+
+  <h3 class="fi" style="font-family:'Baloo Bhaijaan 2',cursive;margin-bottom:.9rem">Built-in Pipes — Ready-Made!</h3>
+  <div class="fi">
+    <div class="pipe-row"><span class="pipe-in">{{ 1200 | currency:'USD' }}</span><span class="pipe-arrow">→</span><span class="pipe-out">$1,200.00</span><span style="color:var(--muted);font-size:.82rem;margin-left:.4rem">currency pipe</span></div>
+    <div class="pipe-row"><span class="pipe-in">{{ today | date:'short' }}</span><span class="pipe-arrow">→</span><span class="pipe-out">4/22/26, 3:00 PM</span><span style="color:var(--muted);font-size:.82rem;margin-left:.4rem">date pipe</span></div>
+    <div class="pipe-row"><span class="pipe-in">{{ 'ahmed' | uppercase }}</span><span class="pipe-arrow">→</span><span class="pipe-out">AHMED</span><span style="color:var(--muted);font-size:.82rem;margin-left:.4rem">uppercase pipe</span></div>
+    <div class="pipe-row"><span class="pipe-in">{{ 3.14159 | number:'1.2-2' }}</span><span class="pipe-arrow">→</span><span class="pipe-out">3.14</span><span style="color:var(--muted);font-size:.82rem;margin-left:.4rem">number pipe</span></div>
+    <div class="pipe-row"><span class="pipe-in">{{ obs$ | async }}</span><span class="pipe-arrow">→</span><span class="pipe-out">auto subscribe!</span><span style="color:var(--muted);font-size:.82rem;margin-left:.4rem">async pipe</span></div>
+  </div>
+
+  <h3 class="fi" style="font-family:'Baloo Bhaijaan 2',cursive;margin:1.3rem 0 .7rem">Custom Pipe — Khud Banao!</h3>
+  <div class="cb fi">
+    <span class="lb">truncate.pipe.ts</span>
+<pre><span class="dec">@Pipe</span>({ <span class="attr">name</span>: <span class="str">'truncate'</span> })
+<span class="kw">export class</span> <span class="fn">TruncatePipe</span> <span class="kw">implements</span> <span class="val">PipeTransform</span> {
+  <span class="fn">transform</span>(value: <span class="val">string</span>, limit = <span class="val">50</span>): <span class="val">string</span> {
+    <span class="kw">return</span> value.length > limit
+      ? value.substring(<span class="val">0</span>, limit) + <span class="str">'...'</span>
+      : value;
+  }
+}
+<span class="cm">// Template mein use:</span>
+<span class="cm">// {{ longText | truncate:30 }}</span></pre>
+  </div>
+
+  <div class="g2" style="margin-top:1rem">
+    <div class="alert warn fi" style="margin:0">
+      <span class="ai">⚠️</span>
+      <div class="ab"><strong>Common Galti!</strong>Pipe mein heavy computation mat karo — ye bar bar run hota hai! Aur pipe business logic ke liye nahi, sirf display formatting ke liye hai.</div>
+    </div>
+    <div class="alert exam fi" style="margin:0">
+      <span class="ai">🎯</span>
+      <div class="ab"><strong>Exam Tip!</strong>"Pure pipe" sirf tab run karta hai jab input change ho. "Impure pipe" baar baar run karta hai — ye expensive ho sakta hai performance ke liye!</div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── PART E: DI + SERVICES ── -->
+<section class="section" id="di">
+  <div class="s-tag">Part E — 60 se 80 Minute</div>
+  <h2 class="s-title fi">Dependency Injection + Services 💉</h2>
+  <p class="s-desc fi">DI ka matlab hai Angular khud service objects banata aur deta hai — component ko manually nahi banani parti. Ye Angular ka superpower hai!</p>
+
+  <div class="flow fi">
+    <div class="fb">Component Request</div><span class="fa">→</span>
+    <div class="fb">Angular Injector</div><span class="fa">→</span>
+    <div class="fb">Provider Dhoondhe</div><span class="fa">→</span>
+    <div class="fb">Instance Return</div>
+  </div>
+
+  <div class="g2" style="margin-top:1rem">
+    <div class="cb fi">
+      <span class="lb">product.service.ts</span>
+<pre><span class="dec">@Injectable</span>({
+  <span class="attr">providedIn</span>: <span class="str">'root'</span>
+  <span class="cm">// Poori app mein ek hi instance</span>
+  <span class="cm">// = Singleton pattern</span>
+})
+<span class="kw">export class</span> <span class="fn">ProductService</span> {
+  <span class="kw">private</span> products = [
+    { id: <span class="val">1</span>, name: <span class="str">'Laptop'</span> },
+    { id: <span class="val">2</span>, name: <span class="str">'Phone'</span> }
+  ];
+
+  <span class="fn">getProducts</span>() {
+    <span class="kw">return</span> <span class="kw">this</span>.products;
+  }
+}</pre>
+    </div>
+    <div class="cb fi">
+      <span class="lb">home.component.ts</span>
+<pre><span class="dec">@Component</span>({ <span class="attr">selector</span>: <span class="str">'app-home'</span>, ... })
+<span class="kw">export class</span> <span class="fn">HomeComponent</span> {
+
+  products: <span class="val">any</span>[] = [];
+
+  <span class="cm">// Constructor mein inject karo</span>
+  <span class="kw">constructor</span>(
+    <span class="kw">private</span> ps: <span class="val">ProductService</span>
+  ) {}
+
+  <span class="fn">ngOnInit</span>() {
+    <span class="cm">// Service use karo!</span>
+    <span class="kw">this</span>.products = <span class="kw">this</span>.ps.<span class="fn">getProducts</span>();
+  }
+}</pre>
+    </div>
+  </div>
+
+  <h3 class="fi" style="font-family:'Baloo Bhaijaan 2',cursive;margin:1.4rem 0 .8rem">Services Kyun? — Fayde!</h3>
+  <div class="g3">
+    <div class="cc blue"><div class="ci">🧹</div><div class="ct">Component Saaf Rahe</div><div class="cd">Component sirf UI dekhta hai. API calls, caching, auth — sab service mein!</div></div>
+    <div class="cc green"><div class="ci">♻️</div><div class="ct">Logic Reuse Karo</div><div class="cd">Ek service likho — poori app mein use karo. Baar baar same code likhne ki zaroorat nahi!</div></div>
+    <div class="cc yellow"><div class="ci">🧪</div><div class="ct">Testing Aasaan</div><div class="cd">Service ko alag test kar sakte ho. Mock service inject karo — component test simple ho jaata hai!</div></div>
+  </div>
+
+  <div class="tw fi" style="margin-top:1.2rem">
+    <table>
+      <thead><tr><th>Provider Scope</th><th>Matlab</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill">providedIn: 'root'</span></td><td>Root level</td><td>Poori app mein ek hi instance (Singleton)</td></tr>
+        <tr><td><span class="pill">component providers: []</span></td><td>Component level</td><td>Har component ka alag instance — unexpected ho sakta hai!</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert warn fi">
+    <span class="ai">⚠️</span>
+    <div class="ab"><strong>Common Galtiyan!</strong>HttpClient code seedha component mein likhna — ye galat hai, service mein rakho! Aur component-level provider accidentally multiple instances bana sakta hai — dhyan rakhna!</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── PART F: ROUTING ── -->
+<section class="section" id="routing">
+  <div class="s-tag">Part F — 80 se 100 Minute</div>
+  <h2 class="s-title fi">Routing — SPA Navigation! 🗺️</h2>
+  <p class="s-desc fi">Routing se users ek view se doosre mein jaate hain bina page reload ke. Ye SPA ki jaan hai!</p>
+
+  <div class="cb fi">
+    <span class="lb">app-routing.module.ts</span>
+<pre><span class="kw">const</span> routes: <span class="val">Routes</span> = [
+  { <span class="attr">path</span>: <span class="str">''</span>,           <span class="attr">component</span>: <span class="val">HomeComponent</span> },
+  { <span class="attr">path</span>: <span class="str">'products'</span>,   <span class="attr">component</span>: <span class="val">ProductsComponent</span> },
+  { <span class="attr">path</span>: <span class="str">'products/:id'</span>, <span class="attr">component</span>: <span class="val">ProductDetailComponent</span> },
+  <span class="cm">// Wildcard HAMESHA last mein!</span>
+  { <span class="attr">path</span>: <span class="str">'**'</span>,         <span class="attr">component</span>: <span class="val">NotFoundComponent</span> }
+];</pre>
+  </div>
+
+  <div class="g2" style="margin-top:1rem">
+    <div class="cb fi">
+      <span class="lb">navigation — Template</span>
+<pre><span class="cm">&lt;!-- Declarative navigation --&gt;</span>
+<span class="tag">&lt;nav&gt;</span>
+  <span class="tag">&lt;a</span> <span class="dec">[routerLink]</span>=<span class="str">"['/']"</span><span class="tag">&gt;</span>Home<span class="tag">&lt;/a&gt;</span>
+  <span class="tag">&lt;a</span> <span class="dec">[routerLink]</span>=<span class="str">"['/products']"</span><span class="tag">&gt;</span>Products<span class="tag">&lt;/a&gt;</span>
+  <span class="tag">&lt;a</span> <span class="dec">[routerLink]</span>=<span class="str">"['/products', item.id]"</span><span class="tag">&gt;</span>
+    Detail
+  <span class="tag">&lt;/a&gt;</span>
+<span class="tag">&lt;/nav&gt;</span>
+
+<span class="cm">&lt;!-- Ye ZARURI hai! --&gt;</span>
+<span class="tag">&lt;router-outlet&gt;&lt;/router-outlet&gt;</span></pre>
+    </div>
+    <div class="cb fi">
+      <span class="lb">navigation — TypeScript</span>
+<pre><span class="kw">export class</span> <span class="fn">ProductDetailComponent</span> {
+  product: <span class="val">any</span>;
+
+  <span class="kw">constructor</span>(
+    <span class="kw">private</span> route: <span class="val">ActivatedRoute</span>,
+    <span class="kw">private</span> ps: <span class="val">ProductService</span>,
+    <span class="kw">private</span> router: <span class="val">Router</span>
+  ) {}
+
+  <span class="fn">ngOnInit</span>() {
+    <span class="cm">// Route param read karo</span>
+    <span class="kw">const</span> id = <span class="kw">this</span>.route.snapshot
+      .paramMap.<span class="fn">get</span>(<span class="str">'id'</span>);
+    <span class="cm">// Programmatic navigate:</span>
+    <span class="cm">// this.router.navigate(['/products', id])</span>
+  }
+}</pre>
+    </div>
+  </div>
+
+  <div class="alert warn fi">
+    <span class="ai">⚠️</span>
+    <div class="ab"><strong>Common Galtiyan!</strong>&lt;router-outlet&gt; lagana bhool jaate hain — iske bina routes kaam nahi karenge! Aur wildcard route ** hamesha LAST mein rakhna — warna sab routes block ho jaenge!</div>
+  </div>
+  <div class="alert exam fi">
+    <span class="ai">🎯</span>
+    <div class="ab"><strong>Exam Tip!</strong>routerLink vs navigate() ka farq: routerLink template mein declarative hai, navigate() TypeScript mein programmatic hai. Dono ka use case alag hai!</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── PART G: OBSERVABLES ── -->
+<section class="section" id="observables">
+  <div class="s-tag">Part G — 100 se 115 Minute</div>
+  <h2 class="s-title fi">Observables — Reactive Data Streams! 📡</h2>
+  <p class="s-desc fi">Observables async data ki streams represent karte hain — API responses, events, route changes. Angular HttpClient Observable return karta hai!</p>
+
+  <div class="flow fi">
+    <div class="fb">Route Change</div><span class="fa">→</span>
+    <div class="fb">ActivatedRoute Observable</div><span class="fa">→</span>
+    <div class="fb">HttpClient Observable</div><span class="fa">→</span>
+    <div class="fb">async pipe render</div>
+  </div>
+
+  <div class="g2" style="margin-top:1rem">
+    <div class="cb fi">
+      <span class="lb">product.service.ts</span>
+<pre><span class="dec">@Injectable</span>({ <span class="attr">providedIn</span>: <span class="str">'root'</span> })
+<span class="kw">export class</span> <span class="fn">ProductService</span> {
+  <span class="kw">constructor</span>(<span class="kw">private</span> http: <span class="val">HttpClient</span>) {}
+
+  <span class="fn">getProducts</span>(): <span class="val">Observable</span>&lt;<span class="val">Product</span>[]&gt; {
+    <span class="kw">return</span> <span class="kw">this</span>.http.<span class="fn">get</span>&lt;<span class="val">Product</span>[]&gt;(
+      <span class="str">'/api/products'</span>
+    );
+  }
+
+  <span class="fn">getById</span>(id: <span class="val">number</span>): <span class="val">Observable</span>&lt;<span class="val">Product</span>&gt; {
+    <span class="kw">return</span> <span class="kw">this</span>.http.<span class="fn">get</span>&lt;<span class="val">Product</span>&gt;(
+      <span class="str">`/api/products/${id}`</span>
+    );
+  }
+}</pre>
+    </div>
+    <div class="cb fi">
+      <span class="lb">products.component.ts + html</span>
+<pre><span class="cm">// Method 1: Manual subscribe</span>
+<span class="fn">ngOnInit</span>() {
+  <span class="kw">this</span>.ps.<span class="fn">getProducts</span>()
+    .<span class="fn">subscribe</span>(data => {
+      <span class="kw">this</span>.products = data;
+    });
+}
+
+<span class="cm">// Method 2: async pipe (BETTER!)</span>
+products$ = <span class="kw">this</span>.ps.<span class="fn">getProducts</span>();
+
+<span class="cm">// Template mein:</span>
+<span class="cm">// &lt;li *ngFor="let p of products$ | async"&gt;</span>
+<span class="cm">//   {{ p.name }}&lt;/li&gt;</span>
+<span class="cm">// async pipe khud subscribe/unsubscribe karta hai!</span></pre>
+    </div>
+  </div>
+
+  <h3 class="fi" style="font-family:'Baloo Bhaijaan 2',cursive;margin:1.3rem 0 .7rem">RxJS Operators — Powerful Tools!</h3>
+  <div class="g3">
+    <div class="cc red"><div class="ci">🗺️</div><div class="ct">map()</div><div class="cd">Data transform karo. Jaise response se sirf names nikalo!</div></div>
+    <div class="cc blue"><div class="ci">🔍</div><div class="ct">filter()</div><div class="cd">Conditions lagao. Sirf active products dikhao!</div></div>
+    <div class="cc green"><div class="ci">⚡</div><div class="ct">switchMap()</div><div class="cd">Pehla request cancel karo, nayi request chalao. Search-as-you-type ke liye perfect!</div></div>
+  </div>
+
+  <div class="alert warn fi" style="margin-top:1rem">
+    <span class="ai">⚠️</span>
+    <div class="ab"><strong>Memory Leak Alert!</strong>subscribe() karo aur cleanup na karo to memory leak hoti hai! async pipe use karo — wo khud unsubscribe karta hai. Ya takeUntil / Subscription cleanup pattern use karo!</div>
+  </div>
+  <div class="alert tip fi">
+    <span class="ai">💡</span>
+    <div class="ab"><strong>Real-World Example</strong>Search-as-you-type: user type kare, debounce lage, switchMap purani request cancel kare, nayi API call ho — sab Observables se possible!</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── DEBUG ── -->
+<section class="section" id="debug">
+  <div class="s-tag">Common Galtiyan</div>
+  <h2 class="s-title fi">Debugging Clinic 🐛</h2>
+  <p class="s-desc fi">Ye galtiyan sabse zyada hoti hain — pehle se yaad karo to kabhi phase nahi khao ge!</p>
+  <div class="g2">
+    <div class="alert warn fi" style="margin:0"><span class="ai">🔴</span><div class="ab"><strong>subscribe() everywhere — cleanup nahi</strong>Long-lived streams mein subscribe karo aur unsubscribe na karo — memory leak hogi! async pipe ya takeUntil use karo.</div></div>
+    <div class="alert warn fi" style="margin:0"><span class="ai">🔴</span><div class="ab"><strong>Pipe mein business logic</strong>Pipe sirf display formatting ke liye hai. Agar logic complex hai — Service mein rakho, pipe mein nahi!</div></div>
+    <div class="alert warn fi" style="margin:0"><span class="ai">🔴</span><div class="ab"><strong>** route pehle likh di</strong>Wildcard route HAMESHA last mein honi chahiye — warna sab routes usi pe match ho jaenge!</div></div>
+    <div class="alert warn fi" style="margin:0"><span class="ai">🔴</span><div class="ab"><strong>HttpClient directly component mein</strong>API calls service mein honi chahiye. Component mein directly HttpClient use karna bad practice hai!</div></div>
+    <div class="alert warn fi" style="margin:0"><span class="ai">🔴</span><div class="ab"><strong>router-outlet bhool gaye</strong>Bina &lt;router-outlet&gt; ke routes kaam nahi karenge. App component ke template mein lagana zaroor hai!</div></div>
+    <div class="alert tip fi" style="margin:0"><span class="ai">💡</span><div class="ab"><strong>Pro Tip</strong>Browser DevTools Console kholo — Angular ke error messages bohat descriptive hote hain. Pehle console check karo!</div></div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── QUIZ ── -->
+<section class="section" id="quiz">
+  <div class="s-tag">Exit Ticket</div>
+  <h2 class="s-title fi">Apna Test Karo! 🧩</h2>
+  <p class="s-desc fi">5 sawaal — sahi jawab green, galat red. Sab ke baad score milega!</p>
+  <div id="qc"></div>
+  <div id="qs" style="display:none;margin-top:1rem" class="alert tip">
+    <span class="ai">🎉</span><div class="ab"><strong id="st"></strong></div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── HOMEWORK ── -->
+<section class="section" id="homework">
+  <div class="s-tag">Ghar ka Kaam</div>
+  <h2 class="s-title fi">Homework aur Lab Task 📚</h2>
+  <p class="s-desc fi">Practice se hi mastery aati hai — ye tasks karo aur Angular ke ustad ban jao!</p>
+  <div class="g2">
+    <div class="cc blue fi" style="opacity:1;transform:none">
+      <div class="ci">🏠</div><div class="ct">Homework: Student Directory</div>
+      <div class="cd">
+        <strong style="color:var(--text)">student-directory component banao:</strong><br><br>
+        ✅ *ngFor se student list dikhao<br>
+        ✅ *ngIf se "No students found" show karo<br>
+        ✅ [(ngModel)] se search input<br>
+        ✅ Pipe se name uppercase ya bio truncate karo<br><br>
+        <span style="color:var(--muted)">Submit: ZIP ya GitHub link</span>
+      </div>
+    </div>
+    <div class="cc green fi" style="opacity:1;transform:none">
+      <div class="ci">💻</div><div class="ct">Lab: Mini Store SPA</div>
+      <div class="cd">
+        <strong style="color:var(--text)">Steps:</strong><br><br>
+        1️⃣ 3 components: Home, Products, ProductDetail<br>
+        2️⃣ Routes: /, /products, /products/:id<br>
+        3️⃣ ProductService: getProducts() + getById()<br>
+        4️⃣ *ngFor + currency/uppercase pipes<br>
+        5️⃣ Route params se detail load karo<br><br>
+        <strong style="color:var(--yellow)">🌟 Bonus:</strong> async pipe use karo subscribe ki jagah!
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ── RECAP ── -->
+<section class="section" id="recap">
+  <div class="s-tag">Quick Recap</div>
+  <h2 class="s-title fi">5 Key Baatein Yaad Karo 🔑</h2>
+  <div class="steps">
+    <div class="step"><div class="sn">1</div><div><div class="st">Templates component state ko UI se jodte hain</div><div class="sd">{{ }}, [ ], ( ), [(ngModel)] — charon bindings yaad karo!</div></div></div>
+    <div class="step"><div class="sn">2</div><div><div class="st">Directives DOM control karte hain</div><div class="sd">Structural (*ngIf, *ngFor) structure badlte hain. Attribute (ngClass, ngStyle) appearance badlte hain.</div></div></div>
+    <div class="step"><div class="sn">3</div><div><div class="st">Pipes data display ke liye format karte hain</div><div class="sd">Original data nahi badlta — sirf template mein formatting hoti hai!</div></div></div>
+    <div class="step"><div class="sn">4</div><div><div class="st">DI + Services = Clean Architecture</div><div class="sd">Shared logic service mein rakho, DI se inject karo. Component sirf UI pe focus kare!</div></div></div>
+    <div class="step"><div class="sn">5</div><div><div class="st">Routing + Observables = Modern SPA</div><div class="sd">Routes navigate karte hain, Observables reactive data dete hain. async pipe se memory leaks bhi avoid honge!</div></div></div>
+  </div>
+
+  <div class="alert exam fi" style="margin-top:1.5rem">
+    <span class="ai">🎯</span>
+    <div class="ab"><strong>Viva / Exam ke liye Perfect Jawab!</strong>
+      "Angular DI prefer kyo karta hai?" → Manually objects banane se coupling badhti hai. DI se services inject hoti hain — testing aur maintenance aasaan hoti hai.<br>
+      "async pipe kab use karein?" → Jab Observable subscribe karo aur cleanup ki chinta na ho — async pipe khud unsubscribe karta hai!
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>CSC337 — Advanced Web Technologies 🇵🇰 | Lecture 11</p>
+  <p style="margin-top:.4rem">Banaya gaya Pakistani students ke liye ❤️ — <strong>Angular Seekhain, Pakistan Banain!</strong></p>
+</footer>
+
+</main><!-- /main -->
+
+<script>
+// ── STARS ──
+const sc=document.getElementById('stars');
+for(let i=0;i<110;i++){
+  const s=document.createElement('div');s.className='star';
+  const sz=Math.random()>.8?3:2;
+  s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s`;
+  sc.appendChild(s);
+}
+
+// ── PROGRESS BAR ──
+window.addEventListener('scroll',()=>{
+  const t=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById('pb').style.width=(window.scrollY/t*100)+'%';
+  updateNav();
+});
+
+// ── SIDEBAR ──
+function openSB(){document.getElementById('sb').classList.add('open');document.getElementById('ov').classList.add('show');}
+function closeSB(){document.getElementById('sb').classList.remove('open');document.getElementById('ov').classList.remove('show');}
+function setAct(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');if(window.innerWidth<=768)closeSB();}
+
+// ── AUTO NAV HIGHLIGHT ──
+const sections=['hero','intro','templating','directives','pipes','di','routing','observables','debug','quiz','homework','recap'];
+function updateNav(){
+  let cur='hero';
+  sections.forEach(id=>{const el=document.getElementById(id);if(el&&window.scrollY>=el.offsetTop-130)cur=id;});
+  document.querySelectorAll('.nav-item').forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+cur)a.classList.add('active');});
+}
+
+// ── INTERSECTION OBSERVER ──
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('visible'),i%5*100);});
+},{threshold:0.08});
+document.querySelectorAll('.cc,.step,.qcard,.fi').forEach(el=>obs.observe(el));
+
+// ── SEARCH DEMO ──
+const students=['Ali Hassan','Fatima Malik','Ahmed Raza','Sara Khan','Usman Butt','Zainab Siddiqui','Bilal Chaudhry','Ayesha Nawaz','Omar Sheikh','Maria Qadir'];
+function filterList(val){
+  const ul=document.getElementById('filteredList');
+  const filtered=students.filter(s=>s.toLowerCase().includes(val.toLowerCase()));
+  ul.innerHTML=filtered.length
+    ?filtered.map(s=>`<li style="color:var(--accent);font-weight:600;padding:.15rem 0">• ${s}</li>`).join('')
+    :'<li style="color:var(--muted)">Koi student nahi mila 😔</li>';
+}
+filterList('');
+
+// ── QUIZ ──
+const qs=[
+  {q:"DOM property set karne ke liye kaunsi binding use hoti hai?",opts:["Interpolation {{ }}","Property Binding [ ]","Event Binding ( )","Pipe |"],ans:1},
+  {q:"Kaunsa directive structural hai?",opts:["ngClass","ngStyle","*ngIf","ngModel"],ans:2},
+  {q:"providedIn: 'root' ka matlab kya hai?",opts:["Har component ka alag instance","Poori app mein ek singleton instance","Sirf routing ke liye","Sirf pipes ke liye"],ans:1},
+  {q:"Angular HttpClient kya return karta hai?",opts:["Promise","Callback","Observable","Generator"],ans:2},
+  {q:"<router-outlet> kahan rakhna chahiye?",opts:["Service mein","Pipe mein","Template mein jahan routed views dikhni hain","Sirf module mein"],ans:2}
+];
+let answered=0,score=0;
+const qc=document.getElementById('qc');
+qs.forEach((q,qi)=>{
+  const card=document.createElement('div');card.className='qcard';
+  card.innerHTML=`<div class="qq"><span class="qn">Q${qi+1}.</span>${q.q}</div>
+  <div class="opts">${q.opts.map((o,oi)=>`<div class="opt" data-qi="${qi}" data-oi="${oi}">${String.fromCharCode(65+oi)}) ${o}</div>`).join('')}</div>
+  <div class="qr" id="qr${qi}"></div>`;
+  qc.appendChild(card);obs.observe(card);
+});
+document.querySelectorAll('.opt').forEach(o=>{
+  o.addEventListener('click',function(){
+    const qi=+this.dataset.qi,oi=+this.dataset.oi;
+    const rd=document.getElementById('qr'+qi);
+    if(rd.dataset.done)return;
+    rd.dataset.done='1';answered++;
+    if(oi===qs[qi].ans){this.classList.add('correct');rd.textContent='✅ Bilkul sahi! Shabash!';rd.style.color='#06d6a0';score++;}
+    else{this.classList.add('wrong');document.querySelectorAll(`[data-qi="${qi}"]`)[qs[qi].ans].classList.add('correct');rd.textContent='❌ Galat — sahi jawab green mein dekho!';rd.style.color='#ff8b94';}
+    if(answered===qs.length){
+      const sd=document.getElementById('qs'),p=score/qs.length*100;
+      sd.style.display='flex';
+      document.getElementById('st').textContent=p===100?'🌟 Perfect 5/5! Aap Angular expert ho!':p>=80?`🎉 ${score}/5 — Bohat acha! Thori aur mehnat!`:p>=60?`📚 ${score}/5 — Theek hai, dobara parho!`:`💪 ${score}/5 — Himmat mat haro, koshish karo!`;
+      sd.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  });
+});
+</script>
+</body>
+</html>

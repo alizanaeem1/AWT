@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecture 03 – HTTP Server + URL + FS | CSC337</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090d;
+  --bg2: #0d1018;
+  --bg3: #141824;
+  --bg4: #1b2030;
+  --border: #202840;
+  --a1: #00ffa3;
+  --a2: #0066ff;
+  --a3: #ff6b35;
+  --a4: #ffd60a;
+  --a5: #ff4d6d;
+  --a6: #c77dff;
+  --text: #e8edf5;
+  --text2: #8892a4;
+  --text3: #4a5568;
+  --glow1: 0 0 24px rgba(0,255,163,0.12);
+  --glow2: 0 0 24px rgba(0,102,255,0.12);
+  --font: 'Outfit', sans-serif;
+  --code: 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: 270px;
+  min-height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  left: 0; top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform .3s ease;
+}
+.sb-logo {
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.sb-logo::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(0,255,163,0.1), transparent 70%);
+}
+.sb-logo .tag {
+  font-size: 10px;
+  color: var(--a1);
+  letter-spacing: 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.sb-logo h2 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-top: 5px;
+  color: var(--text);
+}
+.sb-logo h2 span { color: var(--a1); }
+.sb-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+.nav-label {
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: var(--text3);
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 14px 18px 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all .2s;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); border-left-color: rgba(0,255,163,0.4); }
+.nav-item.active { background: rgba(0,255,163,0.06); color: var(--a1); border-left-color: var(--a1); }
+.nav-item .ni { font-size: 14px; }
+.sb-foot {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text3);
+}
+.progress-bar {
+  height: 3px;
+  background: var(--bg4);
+  border-radius: 2px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--a1), var(--a2));
+  border-radius: 2px;
+  width: 0%;
+  transition: width .3s;
+}
+
+/* ── Main ── */
+#main { margin-left: 270px; flex: 1; }
+
+/* ── Hero ── */
+.hero {
+  min-height: 340px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 56px 48px 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 80% 20%, rgba(0,102,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(0,255,163,0.08) 0%, transparent 60%);
+}
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(32,40,64,0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32,40,64,0.5) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.4;
+}
+.hero-content { position: relative; }
+.hero-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.h-tag {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+.h-tag.green { color: var(--a1); border-color: rgba(0,255,163,0.25); background: rgba(0,255,163,0.05); }
+.h-tag.blue { color: var(--a2); border-color: rgba(0,102,255,0.25); background: rgba(0,102,255,0.05); }
+.hero h1 {
+  font-size: clamp(26px, 4.5vw, 44px);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.hero h1 .g { color: var(--a1); }
+.hero h1 .b { color: #60a5fa; }
+.hero p { font-size: 14.5px; color: var(--text2); max-width: 620px; line-height: 1.7; margin-bottom: 28px; }
+.hero-pills { display: flex; gap: 16px; flex-wrap: wrap; }
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+.pill .pv { font-size: 18px; font-weight: 800; color: var(--a1); }
+.pill .pl { font-size: 11px; color: var(--text3); }
+
+/* ── Content ── */
+.content { padding: 44px 48px; }
+section { margin-bottom: 60px; scroll-margin-top: 80px; }
+
+.sec-hd { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+.sec-icon {
+  width: 44px; height: 44px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.sec-meta h2 { font-size: 21px; font-weight: 800; }
+.sec-meta p { font-size: 11px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+
+/* ── Alert ── */
+.alert {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid;
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  align-items: flex-start;
+}
+.alert.info { background: rgba(0,102,255,0.06); border-color: rgba(0,102,255,0.2); }
+.alert.success { background: rgba(0,255,163,0.05); border-color: rgba(0,255,163,0.2); }
+.alert.warn { background: rgba(255,214,10,0.05); border-color: rgba(255,214,10,0.2); }
+.alert.danger { background: rgba(255,77,109,0.05); border-color: rgba(255,77,109,0.2); }
+.alert-i { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.alert strong { display: block; font-size: 12px; font-weight: 700; letter-spacing: .5px; margin-bottom: 4px; }
+.alert.info strong { color: #60a5fa; }
+.alert.success strong { color: var(--a1); }
+.alert.warn strong { color: var(--a4); }
+.alert.danger strong { color: var(--a5); }
+
+/* ── Cards ── */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: all .25s;
+  position: relative;
+  overflow: hidden;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity .25s;
+  pointer-events: none;
+}
+.card:hover { transform: translateY(-3px); }
+.card.c1:hover { box-shadow: var(--glow1); border-color: rgba(0,255,163,0.3); }
+.card.c2:hover { box-shadow: var(--glow2); border-color: rgba(0,102,255,0.3); }
+.card.c3:hover { box-shadow: 0 0 24px rgba(255,107,53,0.12); border-color: rgba(255,107,53,0.3); }
+.card.c4:hover { box-shadow: 0 0 24px rgba(199,125,255,0.12); border-color: rgba(199,125,255,0.3); }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.card-ico { font-size: 26px; }
+.card-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.badge-g { background: rgba(0,255,163,0.1); color: var(--a1); }
+.badge-b { background: rgba(0,102,255,0.1); color: #60a5fa; }
+.badge-o { background: rgba(255,107,53,0.1); color: var(--a3); }
+.badge-p { background: rgba(199,125,255,0.1); color: var(--a6); }
+.card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.card p { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+
+/* ── Code ── */
+.code-block {
+  background: #050710;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.code-header {
+  background: var(--bg3);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.dots { display: flex; gap: 6px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; }
+.dy { background: #febc2e; }
+.dg { background: #28c840; }
+.clang { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); font-family: var(--code); }
+.cbtn {
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all .2s;
+}
+.cbtn:hover { color: var(--a1); border-color: rgba(0,255,163,0.3); }
+.code-body { padding: 20px; font-family: var(--code); font-size: 12.5px; line-height: 1.85; overflow-x: auto; }
+.kw { color: #c792ea; }
+.fn { color: #82aaff; }
+.str { color: #c3e88d; }
+.cm { color: #4a5568; font-style: italic; }
+.num { color: #f78c6c; }
+.vr { color: var(--a1); }
+.ob { color: #ffcb6b; }
+.hk { color: #ff9cac; }
+
+/* ── Steps ── */
+.steps { }
+.step {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 22px;
+  position: relative;
+  padding-left: 4px;
+}
+.step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 21px; top: 44px;
+  width: 2px; height: calc(100% - 14px);
+  background: linear-gradient(180deg, var(--a1), transparent);
+  opacity: .2;
+}
+.sn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(0,255,163,0.08);
+  border: 2px solid rgba(0,255,163,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; color: var(--a1);
+  flex-shrink: 0;
+}
+.sc h4 { font-size: 14.5px; font-weight: 700; margin-bottom: 5px; }
+.sc p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* ── Table ── */
+.tbl-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--bg3); }
+thead th { padding: 13px 16px; text-align: left; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); font-weight: 700; border-bottom: 1px solid var(--border); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+tbody td { padding: 13px 16px; color: var(--text2); line-height: 1.5; }
+tbody td:first-child { font-family: var(--code); color: var(--a1); font-size: 12px; font-weight: 600; }
+.tbadge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.tb-g { background: rgba(0,255,163,0.1); color: var(--a1); }
+.tb-o { background: rgba(255,107,53,0.1); color: var(--a3); }
+.tb-r { background: rgba(255,77,109,0.1); color: var(--a5); }
+
+/* ── Comparison ── */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.compare-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.compare-head {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.compare-head.red { color: var(--a5); background: rgba(255,77,109,0.06); }
+.compare-head.grn { color: var(--a1); background: rgba(0,255,163,0.06); }
+.compare-body { padding: 16px; font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+/* ── Quiz ── */
+.quiz-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.quiz-hd {
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(0,255,163,0.08), rgba(0,102,255,0.05));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.quiz-hd h3 { font-size: 17px; font-weight: 800; }
+.qprog { font-size: 12px; color: var(--text3); }
+.quiz-bd { padding: 28px; }
+.qcard { display: none; }
+.qcard.active { display: block; animation: fadeUp .3s; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.qn { font-size: 10.5px; color: var(--a1); letter-spacing: 2px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+.qt { font-size: 16px; font-weight: 700; margin-bottom: 20px; line-height: 1.55; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.ob2 {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all .2s;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.ob2:hover:not(:disabled) { border-color: rgba(0,255,163,0.4); background: rgba(0,255,163,0.05); }
+.ob2.correct { background: rgba(0,255,163,0.1); border-color: var(--a1); color: var(--a1); }
+.ob2.wrong { background: rgba(255,77,109,0.08); border-color: var(--a5); color: var(--a5); }
+.ob2:disabled { cursor: not-allowed; }
+.ol {
+  width: 25px; height: 25px;
+  border-radius: 6px;
+  background: var(--bg4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  flex-shrink: 0;
+}
+.qfb {
+  margin-top: 14px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  display: none;
+}
+.qfb.show { display: block; animation: fadeUp .25s; }
+.qfb.correct { background: rgba(0,255,163,0.08); border: 1px solid rgba(0,255,163,0.25); color: #6ee7b7; }
+.qfb.wrong { background: rgba(255,77,109,0.06); border: 1px solid rgba(255,77,109,0.2); color: #fda4af; }
+.qnav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-top: 1px solid var(--border);
+}
+.qbtn { padding: 10px 22px; border-radius: 8px; font-family: var(--font); font-weight: 700; font-size: 13px; cursor: pointer; transition: all .2s; }
+.qbp { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); }
+.qbp:hover { color: var(--text); border-color: var(--text3); }
+.qbn { background: var(--a2); border: none; color: #fff; }
+.qbn:hover { opacity: .85; }
+.qbn:disabled { opacity: .35; cursor: not-allowed; }
+.qdots { display: flex; gap: 7px; }
+.qdot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all .2s; }
+.qdot.answered { background: var(--a1); }
+.qdot.current { background: var(--a2); width: 20px; border-radius: 4px; }
+.qres { display: none; text-align: center; padding: 40px 20px; }
+.qres.show { display: block; animation: fadeUp .4s; }
+.rs { font-size: 60px; font-weight: 800; margin: 14px 0; }
+.rs.good { color: var(--a1); }
+.rs.ok { color: var(--a4); }
+.rs.bad { color: var(--a5); }
+.rl { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.rsub { font-size: 13px; color: var(--text2); margin-bottom: 26px; }
+.retry-btn {
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  border: none;
+  color: #000;
+  padding: 12px 30px;
+  border-radius: 10px;
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.retry-btn:hover { opacity: .85; }
+
+/* ── HW ── */
+.hw {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 14px;
+  transition: border-color .2s;
+}
+.hw:hover { border-color: rgba(0,255,163,0.2); }
+.hw-n {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(0,102,255,0.12);
+  border: 1px solid rgba(0,102,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #60a5fa;
+  flex-shrink: 0;
+}
+.hw-t h4 { font-size: 13.5px; font-weight: 700; margin-bottom: 4px; }
+.hw-t p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.cd { font-family: var(--code); font-size: 11px; background: var(--bg3); padding: 1px 6px; border-radius: 4px; }
+
+/* ── Recap ── */
+.recap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.rc {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  border-top: 3px solid;
+  transition: transform .2s;
+}
+.rc:hover { transform: translateY(-2px); }
+.rc.g1 { border-top-color: var(--a1); }
+.rc.g2 { border-top-color: #60a5fa; }
+.rc.g3 { border-top-color: var(--a3); }
+.rc.g4 { border-top-color: var(--a6); }
+.rc .ri { font-size: 24px; margin-bottom: 10px; }
+.rc h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.rc p { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+
+/* ── Hamburger ── */
+.ham {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 200;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 4px;
+}
+.ham span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  .hero { padding: 72px 22px 38px; }
+  .content { padding: 28px 22px; }
+  .compare { grid-template-columns: 1fr; }
+  .ham { display: flex; }
+}
+
+/* ── Animations ── */
+@keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--a1); animation: pulse 1.5s infinite; }
+
+  /* lec-index-nav */
+  a.lec-back-home {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 250;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 8px 14px;
+    background: var(--card, var(--surface2, rgba(22, 26, 34, 0.95)));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-head, inherit);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+  a.lec-back-home:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+</style>
+
+<a href="index.html" class="lec-back-home">← Advanced Web Technologies</a>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <div class="tag">CSC337 · Lecture 03</div>
+    <h2>HTTP + URL + <span>FS</span></h2>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-label">Lecture Content</div>
+    <a class="nav-item active" onclick="goTo('overview')"><span class="ni">🎯</span> Overview</a>
+    <a class="nav-item" onclick="goTo('http')"><span class="ni">🌐</span> HTTP Server</a>
+    <a class="nav-item" onclick="goTo('url')"><span class="ni">🔗</span> URL Module</a>
+    <a class="nav-item" onclick="goTo('routing')"><span class="ni">🗺️</span> Routing</a>
+    <a class="nav-item" onclick="goTo('fs')"><span class="ni">📁</span> File System (FS)</a>
+    <a class="nav-item" onclick="goTo('streams')"><span class="ni">🌊</span> Streams & Pipe</a>
+    <a class="nav-item" onclick="goTo('examples')"><span class="ni">💻</span> Full Examples</a>
+    <a class="nav-item" onclick="goTo('security')"><span class="ni">🔒</span> Security</a>
+    <a class="nav-item" onclick="goTo('errors')"><span class="ni">🐛</span> Common Errors</a>
+    <div class="nav-label">Practice</div>
+    <a class="nav-item" onclick="goTo('quiz')"><span class="ni">🎯</span> Quiz</a>
+    <a class="nav-item" onclick="goTo('lab')"><span class="ni">🧪</span> Mini Lab</a>
+    <a class="nav-item" onclick="goTo('homework')"><span class="ni">📝</span> Homework</a>
+    <a class="nav-item" onclick="goTo('recap')"><span class="ni">✅</span> Recap</a>
+  </div>
+  <div class="sb-foot">
+    <div>Advanced Web Tech · 2026</div>
+    <div class="progress-bar"><div class="progress-fill" id="pg"></div></div>
+  </div>
+</nav>
+
+<button class="ham" onclick="toggleSb()">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-tags">
+        <span class="h-tag green">UNIT 2</span>
+        <span class="h-tag blue">LECTURE 03</span>
+        <span class="h-tag">Lectures 5–6</span>
+        <span class="h-tag"><span class="live-dot"></span> Live Code</span>
+      </div>
+      <h1>HTTP Server + <span class="g">URL Module</span><br>+ File System & <span class="b">Streams</span></h1>
+      <p>Is lecture mein hum sikhenge ke bina kisi framework ke Node.js mein HTTP server kaise banate hain, URLs kaise parse karte hain, files kaise padhte/likhte hain, aur large files efficiently kaise stream karte hain!</p>
+      <div class="hero-pills">
+        <div class="pill"><span class="pv">3</span><span class="pl">Main<br>Topics</span></div>
+        <div class="pill"><span class="pv">5</span><span class="pl">Quiz<br>MCQs</span></div>
+        <div class="pill"><span class="pv">120</span><span class="pl">Minutes</span></div>
+        <div class="pill"><span class="pv">6</span><span class="pl">Code<br>Examples</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Overview -->
+    <section id="overview">
+      <div class="sec-hd">
+        <div class="sec-icon">🎯</div>
+        <div class="sec-meta"><h2>Learning Objectives</h2><p>Is lecture ke baad aap kya kar sakenge</p></div>
+      </div>
+
+      <div class="grid">
+        <div class="card c1">
+          <div class="card-top"><span class="card-ico">🌐</span><span class="card-badge badge-g">HTTP</span></div>
+          <h3>HTTP Server Banana</h3>
+          <p>req/res objects samajhna, status codes, headers set karna.</p>
+        </div>
+        <div class="card c2">
+          <div class="card-top"><span class="card-ico">🔗</span><span class="card-badge badge-b">URL</span></div>
+          <h3>URL Parse Karna</h3>
+          <p>pathname, query parameters alag karna — safely aur correctly.</p>
+        </div>
+        <div class="card c3">
+          <div class="card-top"><span class="card-ico">🗺️</span><span class="card-badge badge-o">ROUTING</span></div>
+          <h3>Routing Without Framework</h3>
+          <p>Method + URL se handler function map karna bina Express ke.</p>
+        </div>
+        <div class="card c4">
+          <div class="card-top"><span class="card-ico">🌊</span><span class="card-badge badge-p">STREAMS</span></div>
+          <h3>Files & Streams</h3>
+          <p>Async file read/write, streams se large files efficiently serve karna.</p>
+        </div>
+      </div>
+
+      <div class="alert info">
+        <span class="alert-i">📋</span>
+        <div><strong>Prerequisites</strong>JavaScript basics (functions, objects, callbacks), command-line, aur HTTP kya hota hai — yeh sab pata hona chahiye. Lecture 02 ka Event Loop concept bhi yaad raho!</div>
+      </div>
+    </section>
+
+    <!-- HTTP -->
+    <section id="http">
+      <div class="sec-hd">
+        <div class="sec-icon">🌐</div>
+        <div class="sec-meta"><h2>HTTP Server in Node.js</h2><p>20 – 50 Minutes</p></div>
+      </div>
+
+      <div class="alert success">
+        <span class="alert-i">💡</span>
+        <div><strong>Core Idea</strong>Node.js ka http module low-level server banata hai. Har request par hume 2 objects milte hain: <strong>req</strong> (IncomingMessage) aur <strong>res</strong> (ServerResponse).</div>
+      </div>
+
+      <div class="grid" style="margin-top:18px">
+        <div class="card c1">
+          <div class="card-top"><span class="card-ico">📥</span><span class="card-badge badge-g">REQ</span></div>
+          <h3>req Object</h3>
+          <p>req.method, req.url, req.headers — client ka request info. Request body bhi isme aata hai.</p>
+        </div>
+        <div class="card c2">
+          <div class="card-top"><span class="card-ico">📤</span><span class="card-badge badge-b">RES</span></div>
+          <h3>res Object</h3>
+          <p>res.statusCode, res.setHeader(), res.end() — client ko jawab dene ke liye.</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+          <span class="clang">server.js – Pehla Server!</span>
+          <button class="cbtn" onclick="cp(this)">Copy</button>
+        </div>
+        <div class="code-body"><pre><span class="kw">const</span> <span class="vr">http</span> = <span class="fn">require</span>(<span class="str">'http'</span>);
+
+<span class="kw">const</span> <span class="vr">server</span> = <span class="vr">http</span>.<span class="fn">createServer</span>((<span class="vr">req</span>, <span class="vr">res</span>) => {
+  <span class="cm">// Response status set karo</span>
+  <span class="vr">res</span>.<span class="vr">statusCode</span> = <span class="num">200</span>;
+  
+  <span class="cm">// Header set karo</span>
+  <span class="vr">res</span>.<span class="fn">setHeader</span>(<span class="str">'Content-Type'</span>, <span class="str">'text/plain; charset=utf-8'</span>);
+  
+  <span class="cm">// Response bhejo aur connection band karo</span>
+  <span class="vr">res</span>.<span class="fn">end</span>(<span class="str">'Mera pehla Node.js Server! 🎉\n'</span>);
+});
+
+<span class="cm">// Port 3000 par sunna shuru karo</span>
+<span class="vr">server</span>.<span class="fn">listen</span>(<span class="num">3000</span>, () => {
+  <span class="ob">console</span>.<span class="fn">log</span>(<span class="str">'Server chal raha hai: http://localhost:3000'</span>);
+});</pre></div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Status Code</th><th>Matlab</th><th>Kab Use Hota Hai</th></tr></thead>
+          <tbody>
+            <tr><td>200 OK</td><td><span class="tbadge tb-g">Success</span></td><td>Request kamyab hui</td></tr>
+            <tr><td>201 Created</td><td><span class="tbadge tb-g">Success</span></td><td>Naya resource bana</td></tr>
+            <tr><td>400 Bad Request</td><td><span class="tbadge tb-o">Client Error</span></td><td>Galat data bheja</td></tr>
+            <tr><td>404 Not Found</td><td><span class="tbadge tb-o">Client Error</span></td><td>Page/resource nahi mila</td></tr>
+            <tr><td>500 Server Error</td><td><span class="tbadge tb-r">Server Error</span></td><td>Server mein kuch gadbad</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- URL -->
+    <section id="url">
+      <div class="sec-hd">
+        <div class="sec-icon">🔗</div>
+        <div class="sec-meta"><h2>URL Module – Parse Karna</h2><p>URL Ka Anatomy</p></div>
+      </div>
+
+      <div class="alert warn">
+        <span class="alert-i">⚠️</span>
+        <div><strong>Zaroori Baat!</strong>req.url sirf path + query string hoti hai, puri URL nahi. Ise parse karne ke liye URL class use karo. Manual splitting (? aur & se karna) error-prone hai — encoding problems aate hain!</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+          <span class="clang">JavaScript – URL Parsing</span>
+          <button class="cbtn" onclick="cp(this)">Copy</button>
+        </div>
+        <div class="code-body"><pre><span class="kw">const</span> { <span class="ob">URL</span> } = <span class="fn">require</span>(<span class="str">'url'</span>);
+
+<span class="cm">// Server mein URL parse karna:</span>
+<span class="kw">function</span> <span class="fn">parseUrl</span>(<span class="vr">req</span>) {
+  <span class="cm">// Base URL zaroori hai kyunki req.url relative hoti hai</span>
+  <span class="kw">const</span> <span class="vr">base</span> = <span class="str">`http://<span class="vr">${req.headers.host}</span>`</span>;
+  <span class="kw">return</span> <span class="kw">new</span> <span class="ob">URL</span>(<span class="vr">req</span>.<span class="vr">url</span>, <span class="vr">base</span>);
+}
+
+<span class="cm">// Example: /search?q=node&limit=10</span>
+<span class="kw">const</span> <span class="vr">u</span> = <span class="fn">parseUrl</span>(<span class="vr">req</span>);
+
+<span class="ob">console</span>.<span class="fn">log</span>(<span class="vr">u</span>.<span class="vr">pathname</span>);                    <span class="cm">// '/search'</span>
+<span class="ob">console</span>.<span class="fn">log</span>(<span class="vr">u</span>.<span class="vr">searchParams</span>.<span class="fn">get</span>(<span class="str">'q'</span>));     <span class="cm">// 'node'</span>
+<span class="ob">console</span>.<span class="fn">log</span>(<span class="vr">u</span>.<span class="vr">searchParams</span>.<span class="fn">get</span>(<span class="str">'limit'</span>)); <span class="cm">// '10'</span>
+<span class="ob">console</span>.<span class="fn">log</span>(<span class="vr">u</span>.<span class="vr">hash</span>);                       <span class="cm">// '#section' (client-side only)</span></pre></div>
+      </div>
+
+      <div class="compare">
+        <div class="compare-card">
+          <div class="compare-head red">❌ Galat Tarika (Manual Split)</div>
+          <div class="compare-body">
+            <code style="font-family:var(--code); font-size:12px; color:#f87171">const parts = req.url.split('?')<br>const query = parts[1].split('&')</code>
+            <br><br>
+            ❌ URL encoding handle nahi hoti<br>
+            ❌ Special characters break ho jate hain<br>
+            ❌ Error-prone code
+          </div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-head grn">✅ Sahi Tarika (URL Class)</div>
+          <div class="compare-body">
+            <code style="font-family:var(--code); font-size:12px; color:var(--a1)">const u = new URL(req.url, base)<br>u.searchParams.get('q')</code>
+            <br><br>
+            ✅ URL encoding automatic handle<br>
+            ✅ Clean, readable code<br>
+            ✅ Reliable aur standard
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Routing -->
+    <section id="routing">
+      <div class="sec-hd">
+        <div class="sec-icon">🗺️</div>
+        <div class="sec-meta"><h2>Routing — Bina Framework Ke</h2><p>Method + URL = Handler</p></div>
+      </div>
+
+      <div class="alert info">
+        <span class="alert-i">🗺️</span>
+        <div><strong>Routing kya hai?</strong>Routing matlab — decide karo ke kaun si function chalegi based on HTTP method (GET/POST) aur URL path. Express automatically karta hai, lekin andar se yahi hota hai!</div>
+      </div>
+
+      <div class="steps">
+        <div class="step"><div class="sn">1</div><div class="sc"><h4>Routes Object Banao</h4><p>Ek object mein sare routes define karo: key = "METHOD /path", value = handler function.</p></div></div>
+        <div class="step"><div class="sn">2</div><div class="sc"><h4>URL Parse Karo</h4><p>Har request mein URL parse karo aur method + pathname se key banao.</p></div></div>
+        <div class="step"><div class="sn">3</div><div class="sc"><h4>Handler Dhoondo</h4><p>Routes object mein key se matching handler function dhoondo.</p></div></div>
+        <div class="step"><div class="sn">4</div><div class="sc"><h4>404 Handle Karo</h4><p>Agar koi route nahi mila, to 404 Not Found response bhejo.</p></div></div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+          <span class="clang">JavaScript – Routing System</span>
+          <button class="cbtn" onclick="cp(this)">Copy</button>
+        </div>
+        <div class="code-body"><pre><span class="kw">const</span> <span class="vr">http</span> = <span class="fn">require</span>(<span class="str">'http'</span>);
+<span class="kw">const</span> { <span class="ob">URL</span> } = <span class="fn">require</span>(<span class="str">'url'</span>);
+
+<span class="cm">// Routes object — key: "METHOD /path"</span>
+<span class="kw">const</span> <span class="vr">routes</span> = {
+  <span class="str">'GET /'</span>: (<span class="vr">req</span>, <span class="vr">res</span>) => {
+    <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">200</span>, { <span class="str">'Content-Type'</span>: <span class="str">'text/plain'</span> });
+    <span class="vr">res</span>.<span class="fn">end</span>(<span class="str">'Home Page!\n'</span>);
+  },
+  <span class="str">'GET /api/time'</span>: (<span class="vr">req</span>, <span class="vr">res</span>) => {
+    <span class="kw">const</span> <span class="vr">data</span> = { <span class="vr">time</span>: <span class="kw">new</span> <span class="ob">Date</span>().<span class="fn">toISOString</span>() };
+    <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">200</span>, { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> });
+    <span class="vr">res</span>.<span class="fn">end</span>(<span class="ob">JSON</span>.<span class="fn">stringify</span>(<span class="vr">data</span>));
+  }
+};
+
+<span class="kw">function</span> <span class="fn">handler</span>(<span class="vr">req</span>, <span class="vr">res</span>) {
+  <span class="kw">const</span> <span class="vr">u</span> = <span class="kw">new</span> <span class="ob">URL</span>(<span class="vr">req</span>.<span class="vr">url</span>, <span class="str">`http://<span class="vr">${req.headers.host}</span>`</span>);
+  <span class="kw">const</span> <span class="vr">key</span> = <span class="str">`<span class="vr">${req.method}</span> <span class="vr">${u.pathname}</span>`</span>;
+  <span class="kw">const</span> <span class="vr">fn</span> = <span class="vr">routes</span>[<span class="vr">key</span>];
+  
+  <span class="kw">if</span> (!<span class="vr">fn</span>) {
+    <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">404</span>, { <span class="str">'Content-Type'</span>: <span class="str">'text/plain'</span> });
+    <span class="kw">return</span> <span class="vr">res</span>.<span class="fn">end</span>(<span class="str">'404 – Page Nahi Mila!\n'</span>);
+  }
+  <span class="fn">fn</span>(<span class="vr">req</span>, <span class="vr">res</span>, <span class="vr">u</span>);
+}
+
+<span class="vr">http</span>.<span class="fn">createServer</span>(<span class="vr">handler</span>).<span class="fn">listen</span>(<span class="num">3000</span>);
+<span class="ob">console</span>.<span class="fn">log</span>(<span class="str">'http://localhost:3000 par chal raha hai'</span>);</pre></div>
+      </div>
+    </section>
+
+    <!-- FS -->
+    <section id="fs">
+      <div class="sec-hd">
+        <div class="sec-icon">📁</div>
+        <div class="sec-meta"><h2>File System (FS) Module</h2><p>Files Padhna aur Likhna</p></div>
+      </div>
+
+      <div class="compare">
+        <div class="compare-card">
+          <div class="compare-head red">⛔ Synchronous (Blocking)</div>
+          <div class="compare-body">
+            Server rukta hai file padhne tak. Ek user ke liye poora server block ho jata hai! Server mein kabhi use mat karo.
+            <br><br>
+            <code style="font-family:var(--code); font-size:12px; color:#f87171">fs.readFileSync('file.txt') ← BAD!</code>
+          </div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-head grn">✅ Asynchronous (Non-Blocking)</div>
+          <div class="compare-body">
+            Server doosre kaam karta rehta hai jab tak file read nahi hoti. Production mein yahi use karo!
+            <br><br>
+            <code style="font-family:var(--code); font-size:12px; color:var(--a1)">fs.readFile() / fs.promises ← GOOD!</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+          <span class="clang">JavaScript – FS APIs</span>
+          <button class="cbtn" onclick="cp(this)">Copy</button>
+        </div>
+        <div class="code-body"><pre><span class="kw">const</span> <span class="vr">fs</span> = <span class="fn">require</span>(<span class="str">'fs/promises'</span>);  <span class="cm">// Modern promise-based</span>
+
+<span class="cm">// File padhna (async/await)</span>
+<span class="kw">async function</span> <span class="fn">fileParho</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> <span class="vr">data</span> = <span class="kw">await</span> <span class="vr">fs</span>.<span class="fn">readFile</span>(<span class="str">'data.txt'</span>, <span class="str">'utf8'</span>);
+    <span class="ob">console</span>.<span class="fn">log</span>(<span class="str">'File ka content:'</span>, <span class="vr">data</span>);
+  } <span class="kw">catch</span> (<span class="vr">err</span>) {
+    <span class="ob">console</span>.<span class="fn">error</span>(<span class="str">'File nahi mili!'</span>, <span class="vr">err</span>.<span class="vr">message</span>);
+  }
+}
+
+<span class="cm">// File likhna</span>
+<span class="kw">async function</span> <span class="fn">fileLikho</span>() {
+  <span class="kw">await</span> <span class="vr">fs</span>.<span class="fn">writeFile</span>(<span class="str">'output.txt'</span>, <span class="str">'Mera Data!'</span>, <span class="str">'utf8'</span>);
+  <span class="ob">console</span>.<span class="fn">log</span>(<span class="str">'File likh di!'</span>);
+}
+
+<span class="fn">fileParho</span>();
+<span class="fn">fileLikho</span>();</pre></div>
+      </div>
+    </section>
+
+    <!-- Streams -->
+    <section id="streams">
+      <div class="sec-hd">
+        <div class="sec-icon">🌊</div>
+        <div class="sec-meta"><h2>Streams & pipe()</h2><p>Large Files Efficiently Serve Karo</p></div>
+      </div>
+
+      <div class="alert success">
+        <span class="alert-i">🌊</span>
+        <div><strong>Stream kya hai?</strong>Stream data ko chhote chhote chunks mein process karta hai. Poori file RAM mein load karne ki zarurat nahi! Imagine karo: pipe se pani aata hai — tank bhar ke nahi laate, seedha flow karta hai.</div>
+      </div>
+
+      <div class="grid">
+        <div class="card c1">
+          <div class="card-top"><span class="card-ico">📖</span><span class="card-badge badge-g">READABLE</span></div>
+          <h3>Readable Stream</h3>
+          <p>Data ka source. Example: fs.createReadStream() file se data padhta hai chunk by chunk.</p>
+        </div>
+        <div class="card c2">
+          <div class="card-top"><span class="card-ico">✍️</span><span class="card-badge badge-b">WRITABLE</span></div>
+          <h3>Writable Stream</h3>
+          <p>Data ka destination. HTTP response ek writable stream hai — chunks receive karta hai.</p>
+        </div>
+        <div class="card c3">
+          <div class="card-top"><span class="card-ico">🔧</span><span class="card-badge badge-o">PIPE</span></div>
+          <h3>pipe() Method</h3>
+          <p>Readable ko Writable se connect karta hai. Backpressure automatic handle karta hai!</p>
+        </div>
+        <div class="card c4">
+          <div class="card-top"><span class="card-ico">🛡️</span><span class="card-badge badge-p">BACKPRESSURE</span></div>
+          <h3>Backpressure</h3>
+          <p>Network slow ho to pipe() data flow slow karta hai — memory overflow se bachata hai.</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+          <span class="clang">JavaScript – Stream + pipe()</span>
+          <button class="cbtn" onclick="cp(this)">Copy</button>
+        </div>
+        <div class="code-body"><pre><span class="kw">const</span> <span class="vr">fs</span> = <span class="fn">require</span>(<span class="str">'fs'</span>);
+
+<span class="kw">function</span> <span class="fn">fileBhejo</span>(<span class="vr">filePath</span>, <span class="vr">res</span>) {
+  <span class="cm">// File ka stream banao — RAM mein poora load nahi hoga</span>
+  <span class="kw">const</span> <span class="vr">fileStream</span> = <span class="vr">fs</span>.<span class="fn">createReadStream</span>(<span class="vr">filePath</span>);
+
+  <span class="cm">// Error handle karo (file nahi mili, permission nahi)</span>
+  <span class="vr">fileStream</span>.<span class="fn">on</span>(<span class="str">'error'</span>, (<span class="vr">err</span>) => {
+    <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">404</span>, { <span class="str">'Content-Type'</span>: <span class="str">'text/plain'</span> });
+    <span class="vr">res</span>.<span class="fn">end</span>(<span class="str">'File nahi mili!\n'</span>);
+  });
+
+  <span class="cm">// Response header set karo</span>
+  <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">200</span>, { <span class="str">'Content-Type'</span>: <span class="str">'application/octet-stream'</span> });
+  
+  <span class="cm">// pipe() se file seedha response mein bhejo!</span>
+  <span class="vr">fileStream</span>.<span class="fn">pipe</span>(<span class="vr">res</span>); <span class="cm">// Backpressure automatic!</span>
+}</pre></div>
+      </div>
+    </section>
+
+    <!-- Full Examples -->
+    <section id="examples">
+      <div class="sec-hd">
+        <div class="sec-icon">💻</div>
+        <div class="sec-meta"><h2>Full Practical Examples</h2><p>Complete Working Code</p></div>
+      </div>
+
+      <p style="color:var(--text2); font-size:14px; margin-bottom:20px; line-height:1.7;"><strong style="color:var(--text)">Example A:</strong> GET /api/echo?msg=hello — URL se query parameter leke JSON mein response do.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+          <span class="clang">Example A – JSON API + URL Query</span>
+          <button class="cbtn" onclick="cp(this)">Copy</button>
+        </div>
+        <div class="code-body"><pre><span class="kw">const</span> <span class="vr">http</span> = <span class="fn">require</span>(<span class="str">'http'</span>);
+<span class="kw">const</span> { <span class="ob">URL</span> } = <span class="fn">require</span>(<span class="str">'url'</span>);
+
+<span class="vr">http</span>.<span class="fn">createServer</span>((<span class="vr">req</span>, <span class="vr">res</span>) => {
+  <span class="kw">const</span> <span class="vr">u</span> = <span class="kw">new</span> <span class="ob">URL</span>(<span class="vr">req</span>.<span class="vr">url</span>, <span class="str">`http://<span class="vr">${req.headers.host}</span>`</span>);
+  
+  <span class="cm">// Sirf GET /api/echo handle karo</span>
+  <span class="kw">if</span> (<span class="vr">req</span>.<span class="vr">method</span> === <span class="str">'GET'</span> && <span class="vr">u</span>.<span class="vr">pathname</span> === <span class="str">'/api/echo'</span>) {
+    <span class="kw">const</span> <span class="vr">msg</span> = <span class="vr">u</span>.<span class="vr">searchParams</span>.<span class="fn">get</span>(<span class="str">'msg'</span>) ?? <span class="str">''</span>;
+    <span class="kw">const</span> <span class="vr">payload</span> = { <span class="vr">ok</span>: <span class="kw">true</span>, <span class="vr">msg</span> };
+    <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">200</span>, { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> });
+    <span class="kw">return</span> <span class="vr">res</span>.<span class="fn">end</span>(<span class="ob">JSON</span>.<span class="fn">stringify</span>(<span class="vr">payload</span>));
+  }
+  
+  <span class="cm">// Koi aur route nahi mila</span>
+  <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">404</span>);
+  <span class="vr">res</span>.<span class="fn">end</span>(<span class="str">'Not Found\n'</span>);
+}).<span class="fn">listen</span>(<span class="num">3000</span>);</pre></div>
+      </div>
+
+      <p style="color:var(--text2); font-size:14px; margin:24px 0 16px; line-height:1.7;"><strong style="color:var(--text)">Example B:</strong> Static files serve karo public/ folder se — streams use karke, security ke saath.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+          <span class="clang">Example B – Static File Server</span>
+          <button class="cbtn" onclick="cp(this)">Copy</button>
+        </div>
+        <div class="code-body"><pre><span class="kw">const</span> <span class="vr">http</span> = <span class="fn">require</span>(<span class="str">'http'</span>);
+<span class="kw">const</span> <span class="vr">fs</span>   = <span class="fn">require</span>(<span class="str">'fs'</span>);
+<span class="kw">const</span> <span class="vr">path</span> = <span class="fn">require</span>(<span class="str">'path'</span>);
+<span class="kw">const</span> { <span class="ob">URL</span> } = <span class="fn">require</span>(<span class="str">'url'</span>);
+
+<span class="kw">const</span> <span class="vr">publicDir</span> = <span class="vr">path</span>.<span class="fn">join</span>(<span class="vr">__dirname</span>, <span class="str">'public'</span>);
+
+<span class="cm">// Content-Type map</span>
+<span class="kw">function</span> <span class="fn">getContentType</span>(<span class="vr">filePath</span>) {
+  <span class="kw">const</span> <span class="vr">ext</span> = <span class="vr">path</span>.<span class="fn">extname</span>(<span class="vr">filePath</span>).<span class="fn">toLowerCase</span>();
+  <span class="kw">return</span> ({
+    <span class="str">'.html'</span>: <span class="str">'text/html; charset=utf-8'</span>,
+    <span class="str">'.css'</span>:  <span class="str">'text/css; charset=utf-8'</span>,
+    <span class="str">'.js'</span>:   <span class="str">'application/javascript'</span>,
+    <span class="str">'.json'</span>: <span class="str">'application/json'</span>,
+    <span class="str">'.png'</span>:  <span class="str">'image/png'</span>,
+    <span class="str">'.jpg'</span>:  <span class="str">'image/jpeg'</span>
+  })[<span class="vr">ext</span>] || <span class="str">'application/octet-stream'</span>;
+}
+
+<span class="cm">// Security: path traversal rokna</span>
+<span class="kw">function</span> <span class="fn">safeJoin</span>(<span class="vr">base</span>, <span class="vr">target</span>) {
+  <span class="kw">const</span> <span class="vr">finalPath</span> = <span class="vr">path</span>.<span class="fn">normalize</span>(<span class="vr">path</span>.<span class="fn">join</span>(<span class="vr">base</span>, <span class="vr">target</span>));
+  <span class="kw">if</span> (!<span class="vr">finalPath</span>.<span class="fn">startsWith</span>(<span class="vr">base</span>)) <span class="kw">return null</span>; <span class="cm">// Attack block!</span>
+  <span class="kw">return</span> <span class="vr">finalPath</span>;
+}
+
+<span class="vr">http</span>.<span class="fn">createServer</span>((<span class="vr">req</span>, <span class="vr">res</span>) => {
+  <span class="kw">const</span> <span class="vr">u</span> = <span class="kw">new</span> <span class="ob">URL</span>(<span class="vr">req</span>.<span class="vr">url</span>, <span class="str">`http://<span class="vr">${req.headers.host}</span>`</span>);
+  <span class="kw">let</span> <span class="vr">reqPath</span> = <span class="fn">decodeURIComponent</span>(<span class="vr">u</span>.<span class="vr">pathname</span>);
+  <span class="kw">if</span> (<span class="vr">reqPath</span> === <span class="str">'/'</span>) <span class="vr">reqPath</span> = <span class="str">'/index.html'</span>;
+
+  <span class="kw">const</span> <span class="vr">filePath</span> = <span class="fn">safeJoin</span>(<span class="vr">publicDir</span>, <span class="vr">reqPath</span>);
+  <span class="kw">if</span> (!<span class="vr">filePath</span>) { <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">400</span>); <span class="kw">return</span> <span class="vr">res</span>.<span class="fn">end</span>(<span class="str">'Bad Request'</span>); }
+
+  <span class="kw">const</span> <span class="vr">stream</span> = <span class="vr">fs</span>.<span class="fn">createReadStream</span>(<span class="vr">filePath</span>);
+  <span class="vr">stream</span>.<span class="fn">on</span>(<span class="str">'error'</span>, () => { <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">404</span>); <span class="vr">res</span>.<span class="fn">end</span>(<span class="str">'File nahi mili'</span>); });
+  <span class="vr">res</span>.<span class="fn">writeHead</span>(<span class="num">200</span>, { <span class="str">'Content-Type'</span>: <span class="fn">getContentType</span>(<span class="vr">filePath</span>) });
+  <span class="vr">stream</span>.<span class="fn">pipe</span>(<span class="vr">res</span>);
+}).<span class="fn">listen</span>(<span class="num">3000</span>);</pre></div>
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section id="security">
+      <div class="sec-hd">
+        <div class="sec-icon">🔒</div>
+        <div class="sec-meta"><h2>Security — Path Traversal</h2><p>Zaroori Hai Jaanna!</p></div>
+      </div>
+
+      <div class="alert danger">
+        <span class="alert-i">🚨</span>
+        <div><strong>Path Traversal Attack kya hai?</strong>Hacker URL mein <code class="cd">/../secret.txt</code> likh ke public folder se bahar ki files access karne ki koshish karta hai. Agar check nahi kia to server ke private files leak ho sakte hain!</div>
+      </div>
+
+      <div class="steps">
+        <div class="step"><div class="sn">1</div><div class="sc"><h4>URL Decode Karo</h4><p><code class="cd">decodeURIComponent()</code> se URL ke encoded characters decode karo — attacker %2F use kar sakta hai.</p></div></div>
+        <div class="step"><div class="sn">2</div><div class="sc"><h4>path.normalize() Use Karo</h4><p>/../.. patterns normalize ho jaate hain — ../.. ka jo bhi effect hai wo remove hota hai.</p></div></div>
+        <div class="step"><div class="sn">3</div><div class="sc"><h4>startsWith() Check Karo</h4><p>Final path verify karo ke wo public directory ke andar hai ya nahi. Bahar hai to 400/403 do.</p></div></div>
+      </div>
+    </section>
+
+    <!-- Errors -->
+    <section id="errors">
+      <div class="sec-hd">
+        <div class="sec-icon">🐛</div>
+        <div class="sec-meta"><h2>Common Errors & Debugging</h2><p>Ye galtiyan mat karna!</p></div>
+      </div>
+
+      <div class="alert danger">
+        <span class="alert-i">❌</span>
+        <div><strong>Galti 1: res.end() bhool gaye</strong>Agar response end nahi kia, connection hang rehta hai, browser loading karta rehta hai. Hamesha res.end() ya pipe() use karo!</div>
+      </div>
+      <div class="alert danger">
+        <span class="alert-i">❌</span>
+        <div><strong>Galti 2: Galat Content-Type</strong>JSON bhej rahe ho lekin Content-Type text/html set hai — browser confuse ho jata hai. Hamesha sahi Content-Type set karo.</div>
+      </div>
+      <div class="alert warn">
+        <span class="alert-i">⚠️</span>
+        <div><strong>Galti 3: readFile for Large Files</strong>Badi file ko readFile se padhna memory overload kar sakta hai. Large files ke liye hamesha streams use karo!</div>
+      </div>
+      <div class="alert warn">
+        <span class="alert-i">⚠️</span>
+        <div><strong>Galti 4: Error Handling Nahi</strong>fs aur stream errors handle nahi karna server crash kar sakta hai. Hamesha try/catch ya .on('error') use karo.</div>
+      </div>
+    </section>
+
+    <!-- Quiz -->
+    <section id="quiz">
+      <div class="sec-hd">
+        <div class="sec-icon">🎯</div>
+        <div class="sec-meta"><h2>Interactive Quiz</h2><p>5 MCQs — Test Karo!</p></div>
+      </div>
+
+      <div class="quiz-wrap">
+        <div class="quiz-hd">
+          <h3>🧠 HTTP + URL + FS Quiz</h3>
+          <span class="qprog" id="qprog">Question 1 of 5</span>
+        </div>
+        <div class="quiz-bd" id="qbd">
+
+          <div class="qcard active" data-i="0">
+            <div class="qn">Question 01</div>
+            <div class="qt">req.url mein kya hota hai Node.js HTTP server mein?</div>
+            <div class="opts">
+              <button class="ob2" onclick="qa(this,false,0)"><span class="ol">A</span>Poori URL (protocol + host + path)</button>
+              <button class="ob2" onclick="qa(this,true,0)"><span class="ol">B</span>Sirf path + query string</button>
+              <button class="ob2" onclick="qa(this,false,0)"><span class="ol">C</span>Sirf domain name</button>
+              <button class="ob2" onclick="qa(this,false,0)"><span class="ol">D</span>Sirf query string</button>
+            </div>
+            <div class="qfb" id="qf0"></div>
+          </div>
+
+          <div class="qcard" data-i="1">
+            <div class="qn">Question 02</div>
+            <div class="qt">URL parse karne ke liye sahi tarika kaunsa hai?</div>
+            <div class="opts">
+              <button class="ob2" onclick="qa(this,false,1)"><span class="ol">A</span>req.url.split('?')</button>
+              <button class="ob2" onclick="qa(this,true,1)"><span class="ol">B</span>new URL(req.url, base)</button>
+              <button class="ob2" onclick="qa(this,false,1)"><span class="ol">C</span>req.url.slice(1)</button>
+              <button class="ob2" onclick="qa(this,false,1)"><span class="ol">D</span>JSON.parse(req.url)</button>
+            </div>
+            <div class="qfb" id="qf1"></div>
+          </div>
+
+          <div class="qcard" data-i="2">
+            <div class="qn">Question 03</div>
+            <div class="qt">Server mein large file efficiently serve karne ka sahi tarika kaunsa hai?</div>
+            <div class="opts">
+              <button class="ob2" onclick="qa(this,false,2)"><span class="ol">A</span>fs.readFileSync use karo</button>
+              <button class="ob2" onclick="qa(this,false,2)"><span class="ol">B</span>Poori file RAM mein load karo</button>
+              <button class="ob2" onclick="qa(this,true,2)"><span class="ol">C</span>fs.createReadStream + pipe() use karo</button>
+              <button class="ob2" onclick="qa(this,false,2)"><span class="ol">D</span>fs.readFile use karo</button>
+            </div>
+            <div class="qfb" id="qf2"></div>
+          </div>
+
+          <div class="qcard" data-i="3">
+            <div class="qn">Question 04</div>
+            <div class="qt">Path traversal attack se bachne ke liye kya karna chahiye?</div>
+            <div class="opts">
+              <button class="ob2" onclick="qa(this,false,3)"><span class="ol">A</span>Sirf GET requests allow karo</button>
+              <button class="ob2" onclick="qa(this,false,3)"><span class="ol">B</span>HTTPS use karo</button>
+              <button class="ob2" onclick="qa(this,true,3)"><span class="ol">C</span>path.normalize() + startsWith() se path check karo</button>
+              <button class="ob2" onclick="qa(this,false,3)"><span class="ol">D</span>req.url ko as-is use karo</button>
+            </div>
+            <div class="qfb" id="qf3"></div>
+          </div>
+
+          <div class="qcard" data-i="4">
+            <div class="qn">Question 05</div>
+            <div class="qt">Routing mein key "GET /api/time" se kya milta hai?</div>
+            <div class="opts">
+              <button class="ob2" onclick="qa(this,false,4)"><span class="ol">A</span>GET request any URL par</button>
+              <button class="ob2" onclick="qa(this,false,4)"><span class="ol">B</span>POST request /api/time par</button>
+              <button class="ob2" onclick="qa(this,true,4)"><span class="ol">C</span>GET request /api/time path par</button>
+              <button class="ob2" onclick="qa(this,false,4)"><span class="ol">D</span>Koi bhi method /api/time par</button>
+            </div>
+            <div class="qfb" id="qf4"></div>
+          </div>
+
+          <div class="qres" id="qres">
+            <div style="font-size:48px">🎊</div>
+            <div class="rs" id="qrs"></div>
+            <div class="rl" id="qrl"></div>
+            <div class="rsub" id="qrsub"></div>
+            <button class="retry-btn" onclick="retryQ()">🔄 Dobara Koshish Karo</button>
+          </div>
+        </div>
+        <div class="qnav" id="qnav">
+          <button class="qbtn qbp" onclick="qPrev()" id="qbp" disabled>← Pichla</button>
+          <div class="qdots" id="qdts">
+            <div class="qdot current"></div>
+            <div class="qdot"></div>
+            <div class="qdot"></div>
+            <div class="qdot"></div>
+            <div class="qdot"></div>
+          </div>
+          <button class="qbtn qbn" onclick="qNext()" id="qbn" disabled>Agla →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mini Lab -->
+    <section id="lab">
+      <div class="sec-hd">
+        <div class="sec-icon">🧪</div>
+        <div class="sec-meta"><h2>Mini Lab — Class Activity</h2><p>20 Minutes · Pairs mein karo</p></div>
+      </div>
+
+      <div class="alert info">
+        <span class="alert-i">👥</span>
+        <div><strong>Instructions</strong>Do log ek group mein karo. Ek code kare, doosra review kare aur browser/curl se test kare. 10 minute baad role swap karo!</div>
+      </div>
+
+      <div class="hw">
+        <div class="hw-n">1</div>
+        <div class="hw-t"><h4>Task 1 – Sum API (8 min)</h4><p>GET /api/sum?a=5&b=7 banao jo JSON mein {"a":5,"b":7,"sum":12} return kare. Agar a ya b missing/NaN ho to 400 error do.</p></div>
+      </div>
+      <div class="hw">
+        <div class="hw-n">2</div>
+        <div class="hw-t"><h4>Task 2 – Static File Server (8 min)</h4><p><code class="cd">public/</code> folder banao, <code class="cd">index.html</code> usme rakho. <code class="cd">/</code> request par index.html stream karo. Missing file par 404 do.</p></div>
+      </div>
+      <div class="hw">
+        <div class="hw-n">3</div>
+        <div class="hw-t"><h4>Task 3 – Discussion (4 min)</h4><p>Discuss karo: readFile large files ke liye kyun risky hai? URL class kyu better hai? Path traversal kya risk hai?</p></div>
+      </div>
+    </section>
+
+    <!-- Homework -->
+    <section id="homework">
+      <div class="sec-hd">
+        <div class="sec-icon">📝</div>
+        <div class="sec-meta"><h2>Homework</h2><p>Ghar par karo!</p></div>
+      </div>
+
+      <div class="hw">
+        <div class="hw-n">1</div>
+        <div class="hw-t"><h4>POST Support Add Karo</h4><p>/api/echo mein POST support add karo — request body parho aur JSON mein wapas bhejo.</p></div>
+      </div>
+      <div class="hw">
+        <div class="hw-n">2</div>
+        <div class="hw-t"><h4>Logger Banao</h4><p>Har request ka timestamp, method, path, aur status code console mein print karo.</p></div>
+      </div>
+      <div class="hw">
+        <div class="hw-n">3</div>
+        <div class="hw-t"><h4>Download Route</h4><p>GET /download route banao jo ek file Content-Disposition header ke saath stream kare — browser automatically download kare.</p></div>
+      </div>
+      <div class="hw">
+        <div class="hw-n">4</div>
+        <div class="hw-t"><h4>Cache Headers</h4><p>Static files ke liye Cache-Control header add karo. Browser behavior observe karo — kya request dobara server par aayi?</p></div>
+      </div>
+    </section>
+
+    <!-- Recap -->
+    <section id="recap">
+      <div class="sec-hd">
+        <div class="sec-icon">✅</div>
+        <div class="sec-meta"><h2>Lecture Recap</h2><p>Aaj kya seekha?</p></div>
+      </div>
+
+      <div class="recap-grid">
+        <div class="rc g1">
+          <div class="ri">🌐</div>
+          <h4>HTTP Server</h4>
+          <p>http.createServer() se low-level server milta hai. req aur res se request/response handle karo.</p>
+        </div>
+        <div class="rc g2">
+          <div class="ri">🔗</div>
+          <h4>URL Module</h4>
+          <p>new URL(req.url, base) se pathname aur searchParams cleanly alag hote hain.</p>
+        </div>
+        <div class="rc g3">
+          <div class="ri">🗺️</div>
+          <h4>Routing</h4>
+          <p>Method + pathname = handler. Frameworks yahi kaam automate karte hain — logic same hai!</p>
+        </div>
+        <div class="rc g4">
+          <div class="ri">🌊</div>
+          <h4>Streams & FS</h4>
+          <p>Async APIs event loop block nahi karte. pipe() se large files efficiently serve hoti hain.</p>
+        </div>
+      </div>
+
+      <div class="alert success" style="margin-top:20px">
+        <span class="alert-i">🚀</span>
+        <div><strong>Agla Qadam</strong>In concepts ko Express.js ke saath dekhein ge — yahi sab kuch Express ke andar hota hai. Ab Express samajhna bahut aasaan hoga!</div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+// Sidebar
+function toggleSb() { document.getElementById('sidebar').classList.toggle('open'); }
+function goTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  document.getElementById('pg').style.width = pct + '%';
+
+  const secs = document.querySelectorAll('section[id]');
+  const navs = document.querySelectorAll('.nav-item');
+  let cur = '';
+  secs.forEach(s => { if (window.scrollY >= s.offsetTop - 130) cur = s.id; });
+  navs.forEach(n => {
+    n.classList.remove('active');
+    if (n.getAttribute('onclick')?.includes(cur)) n.classList.add('active');
+  });
+});
+
+// Copy
+function cp(btn) {
+  navigator.clipboard.writeText(btn.closest('.code-block').querySelector('pre').innerText);
+  btn.textContent = '✓ Done!';
+  setTimeout(() => btn.textContent = 'Copy', 1800);
+}
+
+// Quiz
+let cq = 0, ans = new Array(5).fill(null);
+const N = 5;
+const fb = [
+  'Sahi! req.url mein sirf path aur query string hoti hai, isliye parsing ke liye base URL dena parta hai.',
+  'Bilkul sahi! new URL(req.url, base) sabse reliable tarika hai — URL encoding bhi handle hoti hai.',
+  'Excellent! fs.createReadStream + pipe() large files ke liye best solution hai — memory efficient!',
+  'Correct! path.normalize() + startsWith() se path traversal attacks effectively rokay ja sakte hain.',
+  'Zabardast! "GET /api/time" key routes object mein GET method aur /api/time pathname ko match karta hai.'
+];
+const wfb = [
+  'Galat! req.url sirf path+query hai. "https://example.com/page?x=1" mein se sirf "/page?x=1" hogi.',
+  'Galat! Manual split errors deta hai. new URL(req.url, base) sahi aur safe tarika hai.',
+  'Galat! readFileSync aur poori file RAM mein load karna server block kar sakta hai. Streams use karo!',
+  'Galat! Sirf HTTPS ya GET restrict karna enough nahi. Path normalize + check zaroori hai.',
+  'Galat! Key "GET /api/time" specifically GET method aur /api/time path ko match karta hai — dono zaroori hain.'
+];
+
+function qa(btn, ok, qi) {
+  btn.closest('.qcard').querySelectorAll('.ob2').forEach(b => {
+    b.disabled = true;
+    if (b.getAttribute('onclick').includes('true')) b.classList.add('correct');
+  });
+  if (!ok) btn.classList.add('wrong');
+  ans[qi] = ok;
+  const f = document.getElementById('qf' + qi);
+  f.textContent = (ok ? '✅ ' : '❌ ') + (ok ? fb[qi] : wfb[qi]);
+  f.className = 'qfb show ' + (ok ? 'correct' : 'wrong');
+  updQ();
+  document.getElementById('qbn').disabled = false;
+}
+
+function updQ() {
+  const dots = document.querySelectorAll('.qdot');
+  dots.forEach((d, i) => {
+    d.className = 'qdot';
+    if (i === cq) d.classList.add('current');
+    if (ans[i] !== null) d.classList.add('answered');
+  });
+  document.getElementById('qprog').textContent = `Question ${cq + 1} of ${N}`;
+}
+
+function qNext() {
+  if (cq >= N - 1) { showQRes(); return; }
+  document.querySelectorAll('.qcard')[cq].classList.remove('active');
+  cq++;
+  document.querySelectorAll('.qcard')[cq].classList.add('active');
+  document.getElementById('qbp').disabled = false;
+  document.getElementById('qbn').disabled = ans[cq] === null;
+  if (cq === N - 1) document.getElementById('qbn').textContent = 'Result →';
+  updQ();
+}
+
+function qPrev() {
+  if (cq === 0) return;
+  document.querySelectorAll('.qcard')[cq].classList.remove('active');
+  cq--;
+  document.querySelectorAll('.qcard')[cq].classList.add('active');
+  document.getElementById('qbp').disabled = cq === 0;
+  document.getElementById('qbn').disabled = ans[cq] === null;
+  document.getElementById('qbn').textContent = cq === N - 1 ? 'Result →' : 'Agla →';
+  updQ();
+}
+
+function showQRes() {
+  const sc = ans.filter(Boolean).length;
+  document.getElementById('qnav').style.display = 'none';
+  document.querySelectorAll('.qcard').forEach(c => c.style.display = 'none');
+  const res = document.getElementById('qres');
+  res.classList.add('show');
+  const el = document.getElementById('qrs');
+  el.textContent = sc + '/5';
+  el.className = 'rs ' + (sc >= 4 ? 'good' : sc >= 2 ? 'ok' : 'bad');
+  document.getElementById('qrl').textContent = sc === 5 ? '🏆 Perfect Score! Class Topper!' : sc >= 3 ? '👍 Acha kiya! Thori aur practice karo.' : '📚 Dobara lecture padho aur try karo!';
+  document.getElementById('qrsub').textContent = `${sc} sahi jawab diye ${N} mein se`;
+}
+
+function retryQ() {
+  cq = 0; ans = new Array(5).fill(null);
+  document.getElementById('qres').classList.remove('show');
+  document.getElementById('qnav').style.display = 'flex';
+  document.querySelectorAll('.qcard').forEach((c, i) => {
+    c.style.display = ''; c.classList.remove('active');
+    c.querySelectorAll('.ob2').forEach(b => { b.classList.remove('correct','wrong'); b.disabled = false; });
+    const f = document.getElementById('qf' + i);
+    if (f) { f.className = 'qfb'; f.textContent = ''; }
+  });
+  document.querySelectorAll('.qcard')[0].classList.add('active');
+  document.getElementById('qbp').disabled = true;
+  document.getElementById('qbn').disabled = true;
+  document.getElementById('qbn').textContent = 'Agla →';
+  updQ();
+}
+</script>
+</body>
+</html>

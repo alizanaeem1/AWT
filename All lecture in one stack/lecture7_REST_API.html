@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecture 7 – REST API Design, Implementation & Security</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0d1320;
+    --surface2: #111827;
+    --border: #1e2d45;
+    --accent: #2563eb;
+    --accent2: #3b82f6;
+    --accent-glow: #1d4ed8;
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --sidebar-w: 280px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Sora', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    padding-bottom: 2rem;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .sidebar-header {
+    padding: 1.5rem 1.2rem 1rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 10;
+  }
+
+  .sidebar-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .sidebar-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 1.2rem 1.2rem 0.4rem;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.55rem 1.2rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+    background: rgba(37,99,235,0.08);
+    border-left-color: var(--accent2);
+  }
+
+  .nav-link.active {
+    color: var(--accent2);
+    background: rgba(37,99,235,0.12);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .nav-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* MAIN CONTENT */
+  #main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    padding: 0 0 4rem;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #080c14 0%, #0a1628 50%, #0d1a35 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 4rem 3rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 300px; height: 200px;
+    background: radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-label::before {
+    content: '';
+    width: 24px;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .hero h1 {
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #e2e8f0, #93c5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--text-dim);
+    max-width: 600px;
+    margin-bottom: 2rem;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+
+  .tag-blue { border-color: var(--accent2); color: var(--accent2); background: rgba(37,99,235,0.1); }
+  .tag-cyan { border-color: var(--cyan); color: var(--cyan); background: rgba(6,182,212,0.1); }
+  .tag-green { border-color: var(--green); color: var(--green); background: rgba(16,185,129,0.1); }
+  .tag-yellow { border-color: var(--yellow); color: var(--yellow); background: rgba(245,158,11,0.1); }
+  .tag-purple { border-color: var(--purple); color: var(--purple); background: rgba(139,92,246,0.1); }
+  .tag-red { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.1); }
+
+  /* SECTIONS */
+  .content-wrap {
+    padding: 0 3rem;
+  }
+
+  .section {
+    padding-top: 4rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .section-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .icon-blue { background: rgba(37,99,235,0.2); }
+  .icon-cyan { background: rgba(6,182,212,0.2); }
+  .icon-green { background: rgba(16,185,129,0.2); }
+  .icon-yellow { background: rgba(245,158,11,0.2); }
+  .icon-red { background: rgba(239,68,68,0.2); }
+  .icon-purple { background: rgba(139,92,246,0.2); }
+
+  .section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.5rem 0 0.7rem;
+  }
+
+  .section p {
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+    margin: 3.5rem 0 0;
+  }
+
+  /* CARDS */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.2rem 0;
+  }
+
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--accent2);
+    transform: translateY(-2px);
+  }
+
+  .card-icon { font-size: 1.6rem; margin-bottom: 0.6rem; }
+  .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; color: var(--text); }
+  .card-desc { font-size: 0.85rem; color: var(--text-dim); }
+
+  /* HIGHLIGHT BOX */
+  .highlight-box {
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+    border-left: 4px solid;
+  }
+
+  .hb-blue { background: rgba(37,99,235,0.08); border-color: var(--accent2); }
+  .hb-cyan { background: rgba(6,182,212,0.08); border-color: var(--cyan); }
+  .hb-green { background: rgba(16,185,129,0.08); border-color: var(--green); }
+  .hb-yellow { background: rgba(245,158,11,0.08); border-color: var(--yellow); }
+  .hb-red { background: rgba(239,68,68,0.08); border-color: var(--red); }
+  .hb-purple { background: rgba(139,92,246,0.08); border-color: var(--purple); }
+
+  .highlight-box strong { color: var(--text); }
+
+  /* TABLE */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin: 1rem 0;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    background: rgba(37,99,235,0.15);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.7rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 13.5px;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .method-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .get-badge { background: rgba(16,185,129,0.2); color: var(--green); }
+  .post-badge { background: rgba(37,99,235,0.2); color: var(--accent2); }
+  .put-badge { background: rgba(245,158,11,0.2); color: var(--yellow); }
+  .del-badge { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #040810;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    color: #a5f3fc;
+    position: relative;
+  }
+
+  .code-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .kw { color: #93c5fd; }
+  .fn { color: #a78bfa; }
+  .str { color: #86efac; }
+  .cm { color: #4b5563; font-style: italic; }
+  .num { color: #fde68a; }
+
+  /* STEPS */
+  .steps {
+    counter-reset: step-counter;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .step {
+    display: flex;
+    gap: 1rem;
+    counter-increment: step-counter;
+  }
+
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(37,99,235,0.2);
+    border: 2px solid var(--accent);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-content { flex: 1; }
+  .step-title { font-weight: 600; font-size: 0.9rem; color: var(--text); margin-bottom: 3px; }
+  .step-desc { font-size: 0.85rem; color: var(--text-dim); }
+
+  /* COMPARE */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .compare-box {
+    border-radius: 10px;
+    padding: 1.2rem;
+    border: 1px solid var(--border);
+  }
+
+  .compare-bad {
+    background: rgba(239,68,68,0.05);
+    border-color: rgba(239,68,68,0.3);
+  }
+
+  .compare-good {
+    background: rgba(16,185,129,0.05);
+    border-color: rgba(16,185,129,0.3);
+  }
+
+  .compare-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 0.8rem;
+  }
+
+  .compare-bad .compare-label { color: var(--red); }
+  .compare-good .compare-label { color: var(--green); }
+
+  .compare-item {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* STATUS CODES */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.7rem;
+    margin: 1rem 0;
+  }
+
+  .status-card {
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid;
+  }
+
+  .s2xx { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); }
+  .s4xx { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); }
+  .s5xx { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); }
+
+  .status-num {
+    font-family: var(--mono);
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .s2xx .status-num { color: var(--green); }
+  .s4xx .status-num { color: var(--yellow); }
+  .s5xx .status-num { color: var(--red); }
+
+  .status-text { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+
+  /* QUIZ */
+  .quiz-section {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .quiz-q {
+    margin-bottom: 1.5rem;
+  }
+
+  .quiz-question {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 0.7rem;
+    display: flex;
+    gap: 8px;
+  }
+
+  .q-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(37,99,235,0.2);
+    color: var(--accent2);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    color: var(--text-dim);
+    font-size: 13.5px;
+    font-family: var(--sans);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .option-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .option-btn.correct { background: rgba(16,185,129,0.15); border-color: var(--green); color: var(--green); }
+  .option-btn.wrong { background: rgba(239,68,68,0.12); border-color: var(--red); color: var(--red); }
+
+  .quiz-result {
+    display: none;
+    margin-top: 0.5rem;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+  }
+
+  .quiz-result.show { display: block; }
+  .result-correct { background: rgba(16,185,129,0.15); color: var(--green); }
+  .result-wrong { background: rgba(239,68,68,0.12); color: var(--red); }
+
+  /* RECAP */
+  .recap-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .recap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+  }
+
+  .recap-num {
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: rgba(37,99,235,0.4);
+    flex-shrink: 0;
+    min-width: 36px;
+    line-height: 1;
+  }
+
+  .recap-text strong { color: var(--text); display: block; font-size: 0.9rem; margin-bottom: 2px; }
+  .recap-text span { color: var(--text-dim); font-size: 0.83rem; }
+
+  /* SECURITY ATTACK CARDS */
+  .attack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .attack-card {
+    border-radius: 12px;
+    padding: 1.2rem;
+    border: 1px solid;
+  }
+
+  .attack-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  .attack-def { font-size: 12.5px; color: var(--text-dim); margin-bottom: 0.7rem; }
+
+  .attack-list { font-size: 12px; color: var(--text-dim); }
+  .attack-list li { margin-bottom: 3px; list-style: none; padding-left: 12px; position: relative; }
+  .attack-list li::before { content: '›'; position: absolute; left: 0; color: currentColor; }
+
+  /* PROGRESS BAR */
+  .progress-bar-outer {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 0.4rem;
+    overflow: hidden;
+  }
+
+  .progress-bar-inner {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--accent), var(--cyan));
+    transition: width 1s ease;
+  }
+
+  /* MOBILE TOGGLE */
+  .mob-toggle {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 200;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.5);
+  }
+
+  @media (max-width: 768px) {
+    :root { --sidebar-w: 260px; }
+    #sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; }
+    .hero, .content-wrap { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .mob-toggle { display: flex; align-items: center; justify-content: center; }
+  }
+
+  /* Smooth reveal */
+  .section { animation: fadeUp 0.5s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Inline highlight */
+  .hl { color: var(--accent2); font-weight: 600; }
+  .hl-green { color: var(--green); font-weight: 600; }
+  .hl-yellow { color: var(--yellow); font-weight: 600; }
+  .hl-red { color: var(--red); font-weight: 600; }
+  .hl-cyan { color: var(--cyan); font-weight: 600; }
+  .hl-purple { color: var(--purple); font-weight: 600; }
+
+  /* Scroll progress */
+  #scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(to right, var(--accent), var(--cyan));
+    z-index: 999;
+    transition: width 0.1s;
+  }
+</style>
+</head>
+<body>
+
+<div id="scroll-progress"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-badge">LECTURE 7</div>
+    <div class="sidebar-title">REST API – Design, Implementation & Security</div>
+    <div class="sidebar-subtitle">CS Students · 6 Hours Combined</div>
+  </div>
+
+  <div class="nav-section-label">📘 Part 1 – Design</div>
+  <a class="nav-link" href="#intro" onclick="setActive(this)">
+    <span class="nav-icon">🌐</span> API Kya Hoti Hai?
+  </a>
+  <a class="nav-link" href="#rest-kya" onclick="setActive(this)">
+    <span class="nav-icon">🔄</span> REST Kya Hai?
+  </a>
+  <a class="nav-link" href="#http-methods" onclick="setActive(this)">
+    <span class="nav-icon">📡</span> HTTP Methods
+  </a>
+  <a class="nav-link" href="#casestudy" onclick="setActive(this)">
+    <span class="nav-icon">📦</span> Case Study
+  </a>
+  <a class="nav-link" href="#endpoints" onclick="setActive(this)">
+    <span class="nav-icon">🔗</span> Endpoints Design
+  </a>
+  <a class="nav-link" href="#best-practices" onclick="setActive(this)">
+    <span class="nav-icon">✅</span> Best Practices
+  </a>
+
+  <div class="nav-section-label">⚙️ Part 2 – Implementation</div>
+  <a class="nav-link" href="#implementation" onclick="setActive(this)">
+    <span class="nav-icon">💻</span> Node.js Setup
+  </a>
+  <a class="nav-link" href="#crud" onclick="setActive(this)">
+    <span class="nav-icon">🗃️</span> CRUD Operations
+  </a>
+  <a class="nav-link" href="#postman" onclick="setActive(this)">
+    <span class="nav-icon">🧪</span> Postman Testing
+  </a>
+  <a class="nav-link" href="#advanced" onclick="setActive(this)">
+    <span class="nav-icon">🚀</span> Advanced Concepts
+  </a>
+
+  <div class="nav-section-label">🔐 Part 3 – Security</div>
+  <a class="nav-link" href="#security-intro" onclick="setActive(this)">
+    <span class="nav-icon">🛡️</span> Security Kyun?
+  </a>
+  <a class="nav-link" href="#cors" onclick="setActive(this)">
+    <span class="nav-icon">🌍</span> CORS
+  </a>
+  <a class="nav-link" href="#xss-ddos" onclick="setActive(this)">
+    <span class="nav-icon">⚠️</span> XSS & DDoS
+  </a>
+  <a class="nav-link" href="#authn-authz" onclick="setActive(this)">
+    <span class="nav-icon">🔑</span> Auth & Authorization
+  </a>
+  <a class="nav-link" href="#jwt" onclick="setActive(this)">
+    <span class="nav-icon">🪙</span> JWT Token
+  </a>
+  <a class="nav-link" href="#sessions" onclick="setActive(this)">
+    <span class="nav-icon">🔒</span> Session Handling
+  </a>
+
+  <div class="nav-section-label">📝 Final</div>
+  <a class="nav-link" href="#quiz" onclick="setActive(this)">
+    <span class="nav-icon">🧠</span> Quiz – MCQs
+  </a>
+  <a class="nav-link" href="#recap" onclick="setActive(this)">
+    <span class="nav-icon">⭐</span> Key Takeaways
+  </a>
+</nav>
+
+<!-- MOBILE TOGGLE -->
+<button class="mob-toggle" onclick="toggleSidebar()">☰</button>
+
+<!-- MAIN CONTENT -->
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-label">Lecture 7 · Computer Science</div>
+    <h1>REST API: Design, Implementation<br>& Security</h1>
+    <p class="hero-sub">
+      Is lecture mein hum seekhenge ke REST API kya hoti hai, kaise design karte hain, Node.js mein implement karte hain, aur usse secure kaise karte hain. Teen lectures ka complete package — ek jagah!
+    </p>
+    <div class="hero-tags">
+      <span class="tag tag-blue">REST API</span>
+      <span class="tag tag-cyan">Node.js</span>
+      <span class="tag tag-green">Express.js</span>
+      <span class="tag tag-yellow">Postman</span>
+      <span class="tag tag-purple">JWT</span>
+      <span class="tag tag-red">Security</span>
+    </div>
+  </section>
+
+  <div class="content-wrap">
+
+    <!-- =========================================
+         SECTION 1: API KYA HOTI HAI
+    ========================================= -->
+    <section class="section" id="intro">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🌐</div>
+        <h2>API Kya Hoti Hai?</h2>
+      </div>
+
+      <p><span class="hl">API</span> ka matlab hai <em>Application Programming Interface</em>. Yeh ek set of rules hota hai jo different software systems ko ek dosre se baat karne deta hai.</p>
+
+      <div class="highlight-box hb-cyan">
+        <strong>🍕 Real-life Example – Foodpanda ya Careem:</strong><br>
+        Jab tum app use karte ho, mobile app server se API ke through baat karta hai.<br>
+        App request bhejta hai: <em>"Show available restaurants"</em><br>
+        Server JSON format mein response bhejta hai.
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">📱</div>
+          <div class="card-title">Client (Frontend)</div>
+          <div class="card-desc">Woh jo request karta hai — mobile app ya browser</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔗</div>
+          <div class="card-title">API (Bridge)</div>
+          <div class="card-desc">Waiter ki tarah — client aur server ke beech connection</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🖥️</div>
+          <div class="card-title">Server (Backend)</div>
+          <div class="card-desc">Actual data store karta hai aur process karta hai</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 2: REST KYA HAI
+    ========================================= -->
+    <section class="section" id="rest-kya">
+      <div class="section-header">
+        <div class="section-icon icon-cyan">🔄</div>
+        <h2>REST Kya Hai?</h2>
+      </div>
+
+      <p><span class="hl-cyan">REST</span> ka matlab hai <em>Representational State Transfer</em>. Yeh ek architectural style hai jo web applications design karne ke liye use hoti hai. Isme HTTP protocol use hota hai.</p>
+
+      <h3>REST ke 6 Principles</h3>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🔌</div>
+          <div class="card-title">Client-Server</div>
+          <div class="card-desc">Frontend aur Backend alag alag hote hain</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📭</div>
+          <div class="card-title">Stateless</div>
+          <div class="card-desc">Server kuch yaad nahi rakhta — har request apna data khud laata hai</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">Cacheable</div>
+          <div class="card-desc">Responses cache ho sakte hain performance ke liye</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📐</div>
+          <div class="card-title">Uniform Interface</div>
+          <div class="card-desc">Standard URLs aur HTTP methods use hoti hain</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🏗️</div>
+          <div class="card-title">Layered System</div>
+          <div class="card-desc">Security layer, database layer — alag alag ho sakti hain</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📄</div>
+          <div class="card-title">Code on Demand</div>
+          <div class="card-desc">Optional — server code bhi bhej sakta hai</div>
+        </div>
+      </div>
+
+      <div class="highlight-box hb-yellow">
+        <strong>💡 Stateless ka example – ATM:</strong><br>
+        Har baar ATM pe jaate ho, apna card dobara daalna parta hai. Server kuch save nahi karta!
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 3: HTTP METHODS
+    ========================================= -->
+    <section class="section" id="http-methods">
+      <div class="section-header">
+        <div class="section-icon icon-green">📡</div>
+        <h2>HTTP Methods</h2>
+      </div>
+
+      <p>REST APIs mein <span class="hl">4 main HTTP methods</span> use hote hain — ek ek kaam ke liye alag method hota hai.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Kaam Kya Hai?</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method-badge get-badge">GET</span></td>
+              <td>Data retrieve karo (padhna)</td>
+              <td>Products ki list dekho</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge post-badge">POST</span></td>
+              <td>Naya data create karo</td>
+              <td>User register karo</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge put-badge">PUT</span></td>
+              <td>Existing data update karo</td>
+              <td>Profile update karo</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge del-badge">DELETE</span></td>
+              <td>Data delete karo</td>
+              <td>Account delete karo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box hb-blue">
+        <strong>🤔 Facebook Login mein kaunsa method?</strong><br>
+        Login ke liye <span class="hl">POST</span> use hota hai — kyunke credentials (password) request body mein securely bhejte hain. GET method URL mein data show karta hai jo unsafe hota hai!
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 4: CASE STUDY
+    ========================================= -->
+    <section class="section" id="casestudy">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">📦</div>
+        <h2>Case Study: Online Bookstore</h2>
+      </div>
+
+      <p>Hum ek <span class="hl-yellow">Online Bookstore REST API</span> design karein ge. Yeh system allow karta hai:</p>
+
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">User Registration & Login</div><div class="step-desc">Naye users register ho sakein aur login kar sakein</div></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Books Add/View/Update/Delete</div><div class="step-desc">Books ke saath CRUD operations — sab kuch manage ho sake</div></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Orders Place Karna</div><div class="step-desc">Customer order de sake aur orders track ho sakein</div></div></div>
+      </div>
+
+      <h3>Step 1: Resources Identify Karo</h3>
+      <p>REST mein har cheez ek <span class="hl">Resource</span> hoti hai. Bookstore ke liye:</p>
+      <div class="card-grid">
+        <div class="card"><div class="card-icon">👤</div><div class="card-title">Users</div><div class="card-desc">Customers aur admins</div></div>
+        <div class="card"><div class="card-icon">📚</div><div class="card-title">Books</div><div class="card-desc">Store ki inventory</div></div>
+        <div class="card"><div class="card-icon">🛒</div><div class="card-title">Orders</div><div class="card-desc">Customer ke orders</div></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 5: ENDPOINTS DESIGN
+    ========================================= -->
+    <section class="section" id="endpoints">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🔗</div>
+        <h2>Endpoints Design</h2>
+      </div>
+
+      <p>Har resource ke liye proper <span class="hl-purple">endpoints</span> define karte hain:</p>
+
+      <h3>📚 Books Endpoints</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Operation</th><th>Method</th><th>Endpoint</th></tr></thead>
+          <tbody>
+            <tr><td>Saari books dekho</td><td><span class="method-badge get-badge">GET</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/books</code></td></tr>
+            <tr><td>Ek book dekho</td><td><span class="method-badge get-badge">GET</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/books/{id}</code></td></tr>
+            <tr><td>Nayi book add karo</td><td><span class="method-badge post-badge">POST</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/books</code></td></tr>
+            <tr><td>Book update karo</td><td><span class="method-badge put-badge">PUT</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/books/{id}</code></td></tr>
+            <tr><td>Book delete karo</td><td><span class="method-badge del-badge">DELETE</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/books/{id}</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>👤 Users Endpoints</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Operation</th><th>Method</th><th>Endpoint</th></tr></thead>
+          <tbody>
+            <tr><td>Register karo</td><td><span class="method-badge post-badge">POST</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/users</code></td></tr>
+            <tr><td>Sab users dekho</td><td><span class="method-badge get-badge">GET</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/users</code></td></tr>
+            <tr><td>Ek user dekho</td><td><span class="method-badge get-badge">GET</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/users/{id}</code></td></tr>
+            <tr><td>User update karo</td><td><span class="method-badge put-badge">PUT</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/users/{id}</code></td></tr>
+            <tr><td>User delete karo</td><td><span class="method-badge del-badge">DELETE</span></td><td><code style="color:#a5f3fc;font-family:var(--mono);font-size:12px;">/users/{id}</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 6: BEST PRACTICES
+    ========================================= -->
+    <section class="section" id="best-practices">
+      <div class="section-header">
+        <div class="section-icon icon-green">✅</div>
+        <h2>REST API Design Best Practices</h2>
+      </div>
+
+      <h3>1. Nouns Use Karo, Verbs Nahi</h3>
+      <div class="compare-grid">
+        <div class="compare-box compare-bad">
+          <div class="compare-label">❌ GALAT</div>
+          <div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/getBooks</code></div>
+          <div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/deleteUser</code></div>
+          <div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/createOrder</code></div>
+        </div>
+        <div class="compare-box compare-good">
+          <div class="compare-label">✅ SAHI</div>
+          <div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/books</code></div>
+          <div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/users</code></div>
+          <div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/orders</code></div>
+        </div>
+      </div>
+
+      <h3>2. Plural Resource Names Use Karo</h3>
+      <div class="compare-grid">
+        <div class="compare-box compare-bad"><div class="compare-label">❌ GALAT</div><div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/book  /user  /order</code></div></div>
+        <div class="compare-box compare-good"><div class="compare-label">✅ SAHI</div><div class="compare-item"><code style="font-family:var(--mono);font-size:13px;">/books  /users  /orders</code></div></div>
+      </div>
+
+      <h3>3. Proper HTTP Status Codes Use Karo</h3>
+      <div class="status-grid">
+        <div class="status-card s2xx"><div class="status-num">200</div><div><div class="status-text">OK</div><div style="font-size:11px;color:var(--text-muted)">Request kaamyab</div></div></div>
+        <div class="status-card s2xx"><div class="status-num">201</div><div><div class="status-text">Created</div><div style="font-size:11px;color:var(--text-muted)">Naya data bana</div></div></div>
+        <div class="status-card s4xx"><div class="status-num">400</div><div><div class="status-text">Bad Request</div><div style="font-size:11px;color:var(--text-muted)">Client ki galti</div></div></div>
+        <div class="status-card s4xx"><div class="status-num">404</div><div><div class="status-text">Not Found</div><div style="font-size:11px;color:var(--text-muted)">Data nahi mila</div></div></div>
+        <div class="status-card s5xx"><div class="status-num">500</div><div><div class="status-text">Server Error</div><div style="font-size:11px;color:var(--text-muted)">Server ki galti</div></div></div>
+      </div>
+
+      <h3>4. JSON Format Use Karo</h3>
+      <span class="code-label">Example Response</span>
+      <div class="code-block">
+{<br>
+&nbsp;&nbsp;<span class="str">"id"</span>: <span class="num">1</span>,<br>
+&nbsp;&nbsp;<span class="str">"title"</span>: <span class="str">"Clean Code"</span>,<br>
+&nbsp;&nbsp;<span class="str">"author"</span>: <span class="str">"Robert C. Martin"</span>,<br>
+&nbsp;&nbsp;<span class="str">"price"</span>: <span class="num">500</span><br>
+}
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 7: IMPLEMENTATION
+    ========================================= -->
+    <section class="section" id="implementation">
+      <div class="section-header">
+        <div class="section-icon icon-blue">💻</div>
+        <h2>Practical Implementation – Node.js Setup</h2>
+      </div>
+
+      <p>Hum <span class="hl">Node.js + Express.js</span> use kar ke REST API banayenge. Pehle project setup karo:</p>
+
+      <h3>Step 1: Project Initialize Karo</h3>
+      <span class="code-label">Terminal</span>
+      <div class="code-block">
+<span class="cm"># Naya project banao</span><br>
+npm init -y<br><br>
+<span class="cm"># Express install karo</span><br>
+npm install express
+      </div>
+
+      <h3>Step 2: server.js File Banao</h3>
+      <span class="code-label">server.js</span>
+      <div class="code-block">
+<span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>);<br>
+<span class="kw">const</span> app = <span class="fn">express</span>();<br><br>
+<span class="cm">// JSON data parse karne ke liye</span><br>
+app.<span class="fn">use</span>(express.<span class="fn">json</span>());<br><br>
+app.<span class="fn">listen</span>(<span class="num">3000</span>, () => {<br>
+&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">"Server running on port 3000"</span>);<br>
+});
+      </div>
+
+      <h3>Step 3: Dummy Data Banao (Students Example)</h3>
+      <span class="code-label">Data</span>
+      <div class="code-block">
+<span class="kw">let</span> students = [<br>
+&nbsp;&nbsp;{ <span class="str">id</span>: <span class="num">1</span>, <span class="str">name</span>: <span class="str">"Ali"</span>, <span class="str">email</span>: <span class="str">"ali@gmail.com"</span>, <span class="str">dept</span>: <span class="str">"CS"</span> },<br>
+&nbsp;&nbsp;{ <span class="str">id</span>: <span class="num">2</span>, <span class="str">name</span>: <span class="str">"Sara"</span>, <span class="str">email</span>: <span class="str">"sara@gmail.com"</span>, <span class="str">dept</span>: <span class="str">"IT"</span> }<br>
+];
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 8: CRUD OPERATIONS
+    ========================================= -->
+    <section class="section" id="crud">
+      <div class="section-header">
+        <div class="section-icon icon-cyan">🗃️</div>
+        <h2>CRUD Operations Code</h2>
+      </div>
+
+      <p><span class="hl-cyan">CRUD</span> = Create, Read, Update, Delete — ye 4 main operations hain jo har API mein hote hain.</p>
+
+      <h3>GET – Saare Students Dekho</h3>
+      <div class="code-block">
+app.<span class="fn">get</span>(<span class="str">'/api/students'</span>, (req, res) => {<br>
+&nbsp;&nbsp;res.<span class="fn">json</span>(students); <span class="cm">// saara list bhejo</span><br>
+});
+      </div>
+
+      <h3>GET – ID se Ek Student Dekho</h3>
+      <div class="code-block">
+app.<span class="fn">get</span>(<span class="str">'/api/students/:id'</span>, (req, res) => {<br>
+&nbsp;&nbsp;<span class="kw">const</span> student = students.<span class="fn">find</span>(s => s.id == req.params.id);<br>
+&nbsp;&nbsp;<span class="kw">if</span> (!student) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ message: <span class="str">"Student nahi mila"</span> });<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;res.<span class="fn">json</span>(student);<br>
+});
+      </div>
+
+      <h3>POST – Naya Student Add Karo</h3>
+      <div class="code-block">
+app.<span class="fn">post</span>(<span class="str">'/api/students'</span>, (req, res) => {<br>
+&nbsp;&nbsp;<span class="kw">const</span> newStudent = { id: students.length + <span class="num">1</span>, ...req.body };<br>
+&nbsp;&nbsp;students.<span class="fn">push</span>(newStudent);<br>
+&nbsp;&nbsp;res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(newStudent); <span class="cm">// 201 = Created</span><br>
+});
+      </div>
+
+      <h3>PUT – Student Update Karo</h3>
+      <div class="code-block">
+app.<span class="fn">put</span>(<span class="str">'/api/students/:id'</span>, (req, res) => {<br>
+&nbsp;&nbsp;<span class="kw">const</span> student = students.<span class="fn">find</span>(s => s.id == req.params.id);<br>
+&nbsp;&nbsp;<span class="kw">if</span> (!student) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ message: <span class="str">"Nahi mila"</span> });<br>
+&nbsp;&nbsp;student.name = req.body.name;<br>
+&nbsp;&nbsp;student.email = req.body.email;<br>
+&nbsp;&nbsp;res.<span class="fn">json</span>(student);<br>
+});
+      </div>
+
+      <h3>DELETE – Student Delete Karo</h3>
+      <div class="code-block">
+app.<span class="fn">delete</span>(<span class="str">'/api/students/:id'</span>, (req, res) => {<br>
+&nbsp;&nbsp;students = students.<span class="fn">filter</span>(s => s.id != req.params.id);<br>
+&nbsp;&nbsp;res.<span class="fn">json</span>({ message: <span class="str">"Student delete ho gaya"</span> });<br>
+});
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 9: POSTMAN
+    ========================================= -->
+    <section class="section" id="postman">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">🧪</div>
+        <h2>Postman se Testing</h2>
+      </div>
+
+      <p><span class="hl-yellow">Postman</span> ek tool hai jisse hum apni API test karte hain bina frontend banaye.</p>
+
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Postman kholو</div><div class="step-desc">postman.com se download karo ya browser version use karo</div></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">HTTP Method Select Karo</div><div class="step-desc">GET, POST, PUT, ya DELETE — jo test karna ho</div></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">URL Enter Karo</div><div class="step-desc">Jaise: <code style="font-family:var(--mono);color:#a5f3fc;">http://localhost:3000/api/students</code></div></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Body Add Karo (POST/PUT ke liye)</div><div class="step-desc">JSON format mein data likho Body tab mein</div></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Send Karo aur Response Dekho</div><div class="step-desc">Status code aur JSON response check karo</div></div></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 10: ADVANCED
+    ========================================= -->
+    <section class="section" id="advanced">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🚀</div>
+        <h2>Advanced Concepts</h2>
+      </div>
+
+      <h3>Query Parameters – Filter Karo</h3>
+      <p>URL mein <span class="hl-purple">?</span> ke baad parameters likh sakte ho data filter karne ke liye:</p>
+      <div class="code-block">
+<span class="cm"># Author ke naam se books filter karo</span><br>
+GET /books?author=Ali<br><br>
+<span class="cm"># Pagination — pehla page, 10 results</span><br>
+GET /books?page=1&limit=10
+      </div>
+
+      <h3>Pagination Kyun Use Karte Hain?</h3>
+      <div class="highlight-box hb-purple">
+        <strong>Problem:</strong> Agar database mein 10,000 books hain aur hum sab ek saath bhejein to server slow ho jayega.<br><br>
+        <strong>Solution:</strong> <span class="hl-purple">Pagination</span> — thodi thodi data bhejo. Jaise Google ke pages hote hain — Page 1, Page 2...
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 11: SECURITY INTRO
+    ========================================= -->
+    <section class="section" id="security-intro">
+      <div class="section-header">
+        <div class="section-icon icon-red">🛡️</div>
+        <h2>REST API Security – Kyun Zaroori Hai?</h2>
+      </div>
+
+      <p>Agar API secure nahi hogi to kya ho sakta hai:</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🕵️</div>
+          <div class="card-title">Data Theft</div>
+          <div class="card-desc">Hacker user ka data chura sakta hai</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">💥</div>
+          <div class="card-title">Server Overload</div>
+          <div class="card-desc">Attacker server ko crash kar sakta hai</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🚪</div>
+          <div class="card-title">Unauthorized Access</div>
+          <div class="card-desc">Bina permission ke koi bhi data access kar le</div>
+        </div>
+      </div>
+
+      <div class="highlight-box hb-red">
+        <strong>⚠️ Banking API Example:</strong><br>
+        Agar ek bank ki API bina authentication ke hoti, to koi bhi kisi ka balance check kar sakta tha ya paise transfer kar sakta tha!
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 12: CORS
+    ========================================= -->
+    <section class="section" id="cors">
+      <div class="section-header">
+        <div class="section-icon icon-cyan">🌍</div>
+        <h2>CORS – Cross-Origin Resource Sharing</h2>
+      </div>
+
+      <p><span class="hl-cyan">CORS</span> ek security mechanism hai jo browser enforce karta hai. Yeh control karta hai ke kaunsa domain server se data maang sakta hai.</p>
+
+      <div class="highlight-box hb-cyan">
+        <strong>🏠 Hostel Example:</strong><br>
+        Tum Hostel A mein rehte ho. Sirf Hostel A ke log andar aa sakte hain.<br>
+        Agar Hostel B ka koi aana chahe to <em>permission chahiye</em> — yehi CORS hai!
+      </div>
+
+      <h3>CORS Headers Server pe Set Hote Hain</h3>
+      <div class="code-block">
+<span class="cm"># Server in headers bhejta hai</span><br>
+Access-Control-Allow-Origin: https://example.com<br>
+Access-Control-Allow-Methods: GET, POST<br>
+Access-Control-Allow-Headers: Content-Type
+      </div>
+
+      <h3>Best Practices</h3>
+      <div class="compare-grid">
+        <div class="compare-box compare-bad">
+          <div class="compare-label">❌ KABHI MAT KARO</div>
+          <div class="compare-item">Sensitive APIs ke liye <code style="font-family:var(--mono);">*</code> (sabko allow)</div>
+          <div class="compare-item">Banking/finance APIs pe unrestricted CORS</div>
+        </div>
+        <div class="compare-box compare-good">
+          <div class="compare-label">✅ SAHI TARIKA</div>
+          <div class="compare-item">Sirf trusted domains allow karo</div>
+          <div class="compare-item">Methods restrict karo</div>
+          <div class="compare-item">Server side token validate karo</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 13: XSS & DDOS
+    ========================================= -->
+    <section class="section" id="xss-ddos">
+      <div class="section-header">
+        <div class="section-icon icon-red">⚠️</div>
+        <h2>XSS aur DDoS Attacks</h2>
+      </div>
+
+      <div class="attack-grid">
+        <div class="attack-card" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.4);">
+          <div class="attack-title" style="color:var(--red);">🎭 XSS – Cross-Site Scripting</div>
+          <div class="attack-def">Attacker malicious script trusted website mein inject karta hai</div>
+          <ul class="attack-list" style="color:var(--red);">
+            <li>Cookie chori hoti hai</li>
+            <li>Session hijack hoti hai</li>
+            <li>User malicious site pe redirect hota hai</li>
+          </ul>
+        </div>
+        <div class="attack-card" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.4);">
+          <div class="attack-title" style="color:var(--yellow);">🌊 DDoS – Distributed Denial of Service</div>
+          <div class="attack-def">Hazaron computers ek saath server ko requests se flood karte hain</div>
+          <ul class="attack-list" style="color:var(--yellow);">
+            <li>Server crash ho jata hai</li>
+            <li>Real users access nahi kar paate</li>
+            <li>Service down ho jaati hai</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="highlight-box hb-yellow">
+        <strong>🏪 DDoS Real Example (2016):</strong><br>
+        Dyn company pe attack hua jisse Twitter, Netflix, aur GitHub sab down ho gaye the — yehi DDoS ka impact hota hai!
+      </div>
+
+      <h3>XSS Example – Comment Box Attack</h3>
+      <div class="code-block">
+<span class="cm"># Attacker comment box mein ye likhta hai:</span><br>
+&lt;<span class="kw">script</span>&gt;alert(<span class="str">"Hacked!"</span>)&lt;/<span class="kw">script</span>&gt;<br><br>
+<span class="cm"># Agar sanitize nahi kiya to har user page pe ye script chalti hai!</span>
+      </div>
+
+      <h3>Protection Techniques</h3>
+      <div class="card-grid">
+        <div class="card"><div class="card-icon">🧹</div><div class="card-title">Input Sanitize Karo</div><div class="card-desc">User input ko always clean karo — HTML/scripts strip karo</div></div>
+        <div class="card"><div class="card-icon">⏱️</div><div class="card-title">Rate Limiting</div><div class="card-desc">Ek IP se zyada requests block karo</div></div>
+        <div class="card"><div class="card-icon">🔒</div><div class="card-title">HTTPOnly Cookies</div><div class="card-desc">JavaScript cookies access nahi kar sake</div></div>
+        <div class="card"><div class="card-icon">🌐</div><div class="card-title">CDN + Load Balancer</div><div class="card-desc">DDoS traffic distribute karo, server protect karo</div></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 14: AUTH VS AUTHZ
+    ========================================= -->
+    <section class="section" id="authn-authz">
+      <div class="section-header">
+        <div class="section-icon icon-green">🔑</div>
+        <h2>Authentication vs Authorization</h2>
+      </div>
+
+      <div class="compare-grid">
+        <div class="compare-box" style="background:rgba(37,99,235,0.06);border-color:rgba(37,99,235,0.3);">
+          <div class="compare-label" style="color:var(--accent2);">🔐 AUTHENTICATION (AuthN)</div>
+          <div class="compare-item"><strong style="color:var(--text);">TUM KAUN HO?</strong></div>
+          <div class="compare-item">Username + Password check karna</div>
+          <div class="compare-item">OTP verify karna</div>
+          <div class="compare-item">Fingerprint scan</div>
+        </div>
+        <div class="compare-box" style="background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.3);">
+          <div class="compare-label" style="color:var(--green);">🔑 AUTHORIZATION (AuthZ)</div>
+          <div class="compare-item"><strong style="color:var(--text);">TUMHARA ACCESS KAHAN HAI?</strong></div>
+          <div class="compare-item">Student admin panel nahi dekh sakta</div>
+          <div class="compare-item">Teacher marks upload kar sakta hai</div>
+          <div class="compare-item">Admin sabko delete kar sakta hai</div>
+        </div>
+      </div>
+
+      <div class="highlight-box hb-blue">
+        <strong>🏫 University Example:</strong><br>
+        <span class="hl">ID Card Check</span> = Authentication (tum kaun ho?)<br>
+        <span class="hl-green">Lab Access</span> = Authorization (kya tum lab use kar sakte ho?)
+      </div>
+
+      <h3>Common Authentication Methods</h3>
+      <div class="card-grid">
+        <div class="card"><div class="card-icon">🔑</div><div class="card-title">Basic Auth</div><div class="card-desc">Username + Password — simple lekin less secure</div></div>
+        <div class="card"><div class="card-icon">🗝️</div><div class="card-title">API Keys</div><div class="card-desc">Unique key har app ko milti hai — machine-to-machine</div></div>
+        <div class="card"><div class="card-icon">🪙</div><div class="card-title">JWT Tokens</div><div class="card-desc">REST ka preferred method — stateless aur secure</div></div>
+        <div class="card"><div class="card-icon">🌐</div><div class="card-title">OAuth 2.0</div><div class="card-desc">"Login with Google/Facebook" — delegated auth</div></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 15: JWT
+    ========================================= -->
+    <section class="section" id="jwt">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">🪙</div>
+        <h2>JWT – JSON Web Token</h2>
+      </div>
+
+      <p><span class="hl-yellow">JWT</span> ek compact token format hai jo REST APIs mein authentication ke liye use hota hai. RFC 7519 standard follow karta hai.</p>
+
+      <h3>JWT Structure – 3 Parts Hain</h3>
+      <div class="code-block">
+<span class="cm"># Format: Header.Payload.Signature</span><br>
+eyJhbGciOiJIUzI1NiJ9.<span class="str">eyJ1c2VySWQiOjF9</span>.<span class="kw">SflKxwRJSMeKKF2QT4fwpMeJf</span>
+      </div>
+
+      <div class="card-grid">
+        <div class="card"><div class="card-icon">📋</div><div class="card-title">Header</div><div class="card-desc">Algorithm batata hai — jaise HS256</div></div>
+        <div class="card"><div class="card-icon">📦</div><div class="card-title">Payload</div><div class="card-desc">User data hota hai — jaise user ID, role</div></div>
+        <div class="card"><div class="card-icon">✍️</div><div class="card-title">Signature</div><div class="card-desc">Verify karta hai token genuine hai ya nahi</div></div>
+      </div>
+
+      <h3>JWT Flow – Login se Access Tak</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">User Login Karta Hai</div><div class="step-desc">Username + password bhejta hai</div></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Server Verify Karta Hai</div><div class="step-desc">Credentials database se match karta hai</div></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">JWT Token Generate Hota Hai</div><div class="step-desc">Server token bana ke client ko deta hai</div></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Client Token Store Karta Hai</div><div class="step-desc">LocalStorage ya cookie mein save hota hai</div></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Har Request mein Token Bhejta Hai</div><div class="step-desc"><code style="font-family:var(--mono);font-size:12px;">Authorization: Bearer &lt;token&gt;</code> header mein</div></div></div>
+        <div class="step"><div class="step-num">6</div><div class="step-content"><div class="step-title">Server Token Verify Karta Hai</div><div class="step-desc">Sahi hai to access milta hai, nahi to 401 error</div></div></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         SECTION 16: SESSIONS
+    ========================================= -->
+    <section class="section" id="sessions">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🔒</div>
+        <h2>Session Handling in REST</h2>
+      </div>
+
+      <p>REST <span class="hl-purple">stateless</span> hota hai — matlab server kuch yaad nahi rakhta. To session kaise handle karein?</p>
+
+      <div class="compare-grid">
+        <div class="compare-box compare-bad">
+          <div class="compare-label">❌ OLD METHOD – Session-Based</div>
+          <div class="compare-item">Server session store karta tha</div>
+          <div class="compare-item">Client ke paas sirf Session ID hoti thi</div>
+          <div class="compare-item">Scale karna mushkil tha</div>
+          <div class="compare-item">Microservices mein kaam nahi karta</div>
+        </div>
+        <div class="compare-box compare-good">
+          <div class="compare-label">✅ NEW METHOD – Token-Based (JWT)</div>
+          <div class="compare-item">Server sirf token verify karta hai</div>
+          <div class="compare-item">Client token store karta hai</div>
+          <div class="compare-item">Stateless — scale easily hota hai</div>
+          <div class="compare-item">Mobile apps ke saath bhi kaam karta hai</div>
+        </div>
+      </div>
+
+      <h3>Secure Session Practices</h3>
+      <div class="card-grid">
+        <div class="card"><div class="card-icon">🔐</div><div class="card-title">HTTPS Use Karo</div><div class="card-desc">Sab traffic encrypted honi chahiye</div></div>
+        <div class="card"><div class="card-icon">⏰</div><div class="card-title">Short Token Expiry</div><div class="card-desc">Token jald expire ho — 15 min ya 1 hour</div></div>
+        <div class="card"><div class="card-icon">🔄</div><div class="card-title">Refresh Tokens</div><div class="card-desc">Expired token renew karne ke liye</div></div>
+        <div class="card"><div class="card-icon">🚫</div><div class="card-title">Compromised Token Revoke</div><div class="card-desc">Stolen token ko blacklist karo</div></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         QUIZ SECTION
+    ========================================= -->
+    <section class="section" id="quiz">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🧠</div>
+        <h2>Quiz – MCQs Test Karo Apne Aap Ko</h2>
+      </div>
+
+      <p>Har question pe click karo — sahi jawab green mein aur galat red mein show hoga!</p>
+
+      <div class="quiz-section">
+
+        <!-- Q1 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">1</span>REST ka full form kya hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q1')">Remote Execution State Transfer</button>
+            <button class="option-btn" onclick="answer(this, true, 'q1')">Representational State Transfer</button>
+            <button class="option-btn" onclick="answer(this, false, 'q1')">Relational Server Transaction</button>
+            <button class="option-btn" onclick="answer(this, false, 'q1')">Resource Exchange System Transfer</button>
+          </div>
+          <div class="quiz-result" id="q1"></div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">2</span>Naya user register karne ke liye kaunsa HTTP method use hoga?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q2')">GET</button>
+            <button class="option-btn" onclick="answer(this, true, 'q2')">POST</button>
+            <button class="option-btn" onclick="answer(this, false, 'q2')">PUT</button>
+            <button class="option-btn" onclick="answer(this, false, 'q2')">DELETE</button>
+          </div>
+          <div class="quiz-result" id="q2"></div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">3</span>Book id=10 update karne ke liye sahi endpoint kaunsa hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q3')">/updateBook/10</button>
+            <button class="option-btn" onclick="answer(this, false, 'q3')">/book/update?id=10</button>
+            <button class="option-btn" onclick="answer(this, true, 'q3')">/books/10 (PUT method se)</button>
+            <button class="option-btn" onclick="answer(this, false, 'q3')">/books/update/10</button>
+          </div>
+          <div class="quiz-result" id="q3"></div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">4</span>Jab resource successfully create ho jaye to kaunsa status code aata hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q4')">200 OK</button>
+            <button class="option-btn" onclick="answer(this, true, 'q4')">201 Created</button>
+            <button class="option-btn" onclick="answer(this, false, 'q4')">404 Not Found</button>
+            <button class="option-btn" onclick="answer(this, false, 'q4')">500 Server Error</button>
+          </div>
+          <div class="quiz-result" id="q4"></div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">5</span>CORS kya protect karta hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q5')">Server ko DDoS se</button>
+            <button class="option-btn" onclick="answer(this, false, 'q5')">Database ko XSS se</button>
+            <button class="option-btn" onclick="answer(this, true, 'q5')">Browser ko unwanted cross-origin requests se</button>
+            <button class="option-btn" onclick="answer(this, false, 'q5')">JWT token expire hone se</button>
+          </div>
+          <div class="quiz-result" id="q5"></div>
+        </div>
+
+        <!-- Q6 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">6</span>XSS attack mein attacker kya karta hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q6')">Server pe hazaron requests bhejta hai</button>
+            <button class="option-btn" onclick="answer(this, true, 'q6')">Malicious script trusted website mein inject karta hai</button>
+            <button class="option-btn" onclick="answer(this, false, 'q6')">JWT token clone karta hai</button>
+            <button class="option-btn" onclick="answer(this, false, 'q6')">CORS headers change karta hai</button>
+          </div>
+          <div class="quiz-result" id="q6"></div>
+        </div>
+
+        <!-- Q7 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">7</span>"Tum kaun ho?" — ye kaunsi concept hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q7')">Authorization</button>
+            <button class="option-btn" onclick="answer(this, true, 'q7')">Authentication</button>
+            <button class="option-btn" onclick="answer(this, false, 'q7')">Session Handling</button>
+            <button class="option-btn" onclick="answer(this, false, 'q7')">CORS Validation</button>
+          </div>
+          <div class="quiz-result" id="q7"></div>
+        </div>
+
+        <!-- Q8 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">8</span>JWT token ka structure kya hota hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q8')">Username.Password.Role</button>
+            <button class="option-btn" onclick="answer(this, false, 'q8')">ID.Name.Email</button>
+            <button class="option-btn" onclick="answer(this, true, 'q8')">Header.Payload.Signature</button>
+            <button class="option-btn" onclick="answer(this, false, 'q8')">Method.URL.Body</button>
+          </div>
+          <div class="quiz-result" id="q8"></div>
+        </div>
+
+        <!-- Q9 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">9</span>REST API stateless kyun hoti hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q9')">Code likhna aasaan hota hai</button>
+            <button class="option-btn" onclick="answer(this, true, 'q9')">Scalability ke liye — server session store nahi karta</button>
+            <button class="option-btn" onclick="answer(this, false, 'q9')">JWT kaam nahi karta</button>
+            <button class="option-btn" onclick="answer(this, false, 'q9')">Database fast hoti hai</button>
+          </div>
+          <div class="quiz-result" id="q9"></div>
+        </div>
+
+        <!-- Q10 -->
+        <div class="quiz-q">
+          <div class="quiz-question"><span class="q-num">10</span>Rate limiting kaunse attack se protect karta hai?</div>
+          <div class="options">
+            <button class="option-btn" onclick="answer(this, false, 'q10')">XSS</button>
+            <button class="option-btn" onclick="answer(this, false, 'q10')">CORS Bypass</button>
+            <button class="option-btn" onclick="answer(this, true, 'q10')">DDoS</button>
+            <button class="option-btn" onclick="answer(this, false, 'q10')">SQL Injection</button>
+          </div>
+          <div class="quiz-result" id="q10"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- =========================================
+         RECAP SECTION
+    ========================================= -->
+    <section class="section" id="recap">
+      <div class="section-header">
+        <div class="section-icon icon-green">⭐</div>
+        <h2>Key Takeaways – 10 Zaroori Baatein</h2>
+      </div>
+
+      <p>Exam se pehle ye 10 points zaroor yaad karo:</p>
+
+      <div class="recap-grid">
+        <div class="recap-item">
+          <div class="recap-num">01</div>
+          <div class="recap-text"><strong>REST = Representational State Transfer</strong><span>Architectural style hai — HTTP use karta hai</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">02</div>
+          <div class="recap-text"><strong>4 HTTP Methods: GET, POST, PUT, DELETE</strong><span>CRUD operations se directly map hote hain</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">03</div>
+          <div class="recap-text"><strong>Endpoints mein Nouns use karo, Verbs nahi</strong><span>/books sahi hai, /getBooks galat hai</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">04</div>
+          <div class="recap-text"><strong>Status Codes: 200, 201, 404, 500</strong><span>Proper status code batata hai request kya hui</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">05</div>
+          <div class="recap-text"><strong>CORS browser-side security hai</strong><span>Cross-origin requests control karta hai</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">06</div>
+          <div class="recap-text"><strong>XSS = User pe attack, DDoS = Server pe attack</strong><span>Dono alag cheezein hain — confuse mat hona</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">07</div>
+          <div class="recap-text"><strong>Authentication ≠ Authorization</strong><span>AuthN = kaun ho, AuthZ = kya access hai</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">08</div>
+          <div class="recap-text"><strong>JWT = Header.Payload.Signature</strong><span>REST ka preferred stateless auth method</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">09</div>
+          <div class="recap-text"><strong>Token-Based Session REST ke liye best hai</strong><span>Stateless + Scalable + Mobile-friendly</span></div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num">10</div>
+          <div class="recap-text"><strong>Security multi-layered honi chahiye</strong><span>CORS + Auth + Input Validation + HTTPS = Safe API</span></div>
+        </div>
+      </div>
+
+      <div class="highlight-box hb-green" style="margin-top:1.5rem;">
+        <strong>🎓 Assignment Reminder:</strong><br>
+        E-Commerce System ke liye REST API design karo — Customers, Products, Cart, Orders, Payments.<br>
+        Endpoints, HTTP methods aur sample JSON sab likho!<br><br>
+        Bonus: MongoDB connect karo + JWT authentication add karo!
+      </div>
+    </section>
+
+    <div style="padding-bottom:4rem;"></div>
+
+  </div>
+</main>
+
+<script>
+  // Quiz logic
+  function answer(btn, isCorrect, qId) {
+    const parent = btn.closest('.quiz-q');
+    const btns = parent.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+
+    const resultEl = document.getElementById(qId);
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      resultEl.textContent = '✅ Shabash! Bilkul sahi jawab diya!';
+      resultEl.className = 'quiz-result show result-correct';
+    } else {
+      btn.classList.add('wrong');
+      // highlight correct
+      btns.forEach(b => {
+        if (b.onclick.toString().includes('true')) b.classList.add('correct');
+      });
+      resultEl.textContent = '❌ Galat! Sahi jawab green mein dekho.';
+      resultEl.className = 'quiz-result show result-wrong';
+    }
+  }
+
+  // Sidebar active state
+  function setActive(el) {
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Mobile toggle
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  // Scroll progress
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (scrollTop / docHeight) * 100;
+    document.getElementById('scroll-progress').style.width = progress + '%';
+  });
+
+  // Active nav on scroll
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Close sidebar on mobile when link clicked
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth < 769) {
+        document.getElementById('sidebar').classList.remove('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>

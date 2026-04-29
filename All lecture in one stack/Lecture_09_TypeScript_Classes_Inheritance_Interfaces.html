@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lecture 09 — TypeScript Classes, Inheritance &amp; Interfaces | CSC337</title>
+<meta name="description" content="TypeScript classes, access modifiers, extends, implements, interfaces vs classes — Roman Urdu lecture notes." />
+<meta name="topic" content="TypeScript Language Constructs: Classes, Inheritance, and Interfaces" />
+<meta name="subject" content="Advanced Web Technologies (CSC337)" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0a0c10;
+    --surface:   #111318;
+    --card:      #161a22;
+    --border:    #252b38;
+    --accent:    #00e5ff;
+    --accent2:   #ff6b35;
+    --accent3:   #7c3aed;
+    --green:     #22c55e;
+    --yellow:    #facc15;
+    --red:       #ef4444;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --text3:     #475569;
+    --sidebar-w: 270px;
+    --font-head: 'Sora', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-head);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    z-index: 100;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sidebar-logo .tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+  .sidebar-logo h2 {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  .nav-group-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 8px 24px 4px;
+    font-family: var(--font-mono);
+  }
+
+  #sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 400;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+  #sidebar a .icon { font-size: 15px; flex-shrink: 0; }
+  #sidebar a:hover { color: var(--text); background: rgba(0,229,255,.05); }
+  #sidebar a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(0,229,255,.08);
+    font-weight: 600;
+  }
+
+  #hamburger {
+    display: none;
+    position: fixed;
+    top: 16px; left: 16px;
+    z-index: 200;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0 48px 80px;
+    max-width: calc(100% - var(--sidebar-w));
+  }
+
+  #hero {
+    padding: 80px 0 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  #hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,229,255,.1);
+    border: 1px solid rgba(0,229,255,.2);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .hero-badge::before { content: '◉'; font-size: 8px; }
+  #hero h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+  #hero h1 span { color: var(--accent); }
+  #hero p {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 680px;
+    line-height: 1.8;
+    animation: fadeDown 0.6s 0.2s ease both;
+  }
+  .hero-meta {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 680px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    animation: fadeDown 0.6s 0.25s ease both;
+  }
+  .hero-meta strong { color: var(--text); display: block; margin-bottom: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-mono); color: var(--accent); }
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+    animation: fadeDown 0.6s 0.3s ease both;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  section {
+    padding: 60px 0 20px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .section-icon {
+    width: 40px; height: 40px;
+    background: rgba(0,229,255,.1);
+    border: 1px solid rgba(0,229,255,.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .section-header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(0,229,255,.05), transparent);
+    transition: opacity 0.3s;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(0,229,255,.3); }
+  .card:hover::before { opacity: 1; }
+  .card-icon { font-size: 28px; margin-bottom: 14px; }
+  .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+  .card .tag-pill {
+    display: inline-block;
+    background: rgba(0,229,255,.1);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+  }
+
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead tr { background: rgba(0,229,255,.07); }
+  th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  td { padding: 14px 18px; border-top: 1px solid var(--border); color: var(--muted); }
+  tr:hover td { background: rgba(255,255,255,.02); color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge.green { background: rgba(34,197,94,.1); color: var(--green); }
+  .badge.yellow { background: rgba(250,204,21,.1); color: var(--yellow); }
+  .badge.red { background: rgba(239,68,68,.1); color: var(--red); }
+  .badge.blue { background: rgba(0,229,255,.1); color: var(--accent); }
+
+  .alert {
+    display: flex;
+    gap: 14px;
+    padding: 18px 20px;
+    border-radius: 12px;
+    border-left: 4px solid;
+    margin-bottom: 16px;
+    animation: fadeLeft 0.4s ease both;
+  }
+  .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert p { font-size: 14px; line-height: 1.7; }
+  .alert strong { display: block; margin-bottom: 4px; font-size: 13px; }
+  .alert.info { background: rgba(0,229,255,.06); border-color: var(--accent); }
+  .alert.info strong, .alert.info .alert-icon { color: var(--accent); }
+  .alert.warn { background: rgba(250,204,21,.06); border-color: var(--yellow); }
+  .alert.warn strong, .alert.warn .alert-icon { color: var(--yellow); }
+  .alert.error { background: rgba(239,68,68,.06); border-color: var(--red); }
+  .alert.error strong, .alert.error .alert-icon { color: var(--red); }
+  .alert.success { background: rgba(34,197,94,.06); border-color: var(--green); }
+  .alert.success strong, .alert.success .alert-icon { color: var(--green); }
+
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(255,255,255,.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  pre {
+    padding: 20px 18px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.8;
+    font-family: var(--font-mono);
+  }
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .cm { color: #6272a4; font-style: italic; }
+
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex;
+    gap: 20px;
+    position: relative;
+  }
+  .step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 44px;
+    bottom: -10px;
+    width: 2px;
+    background: var(--border);
+  }
+  .step-num {
+    width: 40px; height: 40px;
+    background: rgba(0,229,255,.1);
+    border: 2px solid rgba(0,229,255,.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .step-body { padding: 8px 0 32px; }
+  .step-body h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .step-body p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+
+  #quiz-section .quiz-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .quiz-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .quiz-progress span {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 16px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .question-block { display: none; }
+  .question-block.active { display: block; animation: fadeUp 0.3s ease; }
+  .question-block h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .question-block h3 .qnum {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .opt-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 18px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 14px;
+    font-family: var(--font-head);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .opt-btn .opt-letter {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+  .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0,229,255,.05); }
+  .opt-btn.correct { border-color: var(--green); background: rgba(34,197,94,.08); }
+  .opt-btn.correct .opt-letter { background: var(--green); color: #000; }
+  .opt-btn.wrong { border-color: var(--red); background: rgba(239,68,68,.08); }
+  .opt-btn.wrong .opt-letter { background: var(--red); color: #fff; }
+  .opt-btn:disabled { cursor: not-allowed; }
+  .feedback-msg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .feedback-msg.show { display: block; }
+  .feedback-msg.correct { background: rgba(34,197,94,.1); color: var(--green); }
+  .feedback-msg.wrong { background: rgba(239,68,68,.1); color: var(--red); }
+  .quiz-nav {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-head);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #29ecff; transform: translateY(-2px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .quiz-result {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .quiz-result.show { display: block; animation: fadeUp 0.4s ease; }
+  .result-score {
+    font-size: 72px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  .result-msg { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .result-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  .hw-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .hw-list li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .hw-list li:hover { border-color: var(--accent2); color: var(--text); }
+  .hw-num {
+    background: rgba(255,107,53,.1);
+    color: var(--accent2);
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .recap-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .recap-item:hover { border-color: var(--accent3); color: var(--text); transform: scale(1.02); }
+  .recap-item .ri { font-size: 26px; margin-bottom: 10px; }
+  .recap-item strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+
+  .mini-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .mini-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .mini-card:hover { border-color: rgba(124,58,237,.4); transform: translateY(-2px); }
+  .mini-card h4 { font-size: 14px; margin-bottom: 8px; color: var(--accent3); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (max-width: 820px) {
+    :root { --sidebar-w: 0px; }
+    #sidebar { transform: translateX(-270px); width: 270px; }
+    #sidebar.open { transform: translateX(0); }
+    #hamburger { display: flex; }
+    #main { margin-left: 0; padding: 0 20px 80px; max-width: 100%; }
+    #hero { padding-top: 70px; }
+    .hero-stats { gap: 20px; }
+  }
+
+  /* lec-index-nav */
+  a.lec-back-home {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 250;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 8px 14px;
+    background: var(--card, var(--surface2, rgba(22, 26, 34, 0.95)));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-head, inherit);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+  a.lec-back-home:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+</style>
+
+<a href="index.html" class="lec-back-home">← Advanced Web Technologies</a>
+</head>
+<body>
+
+<button id="hamburger" onclick="toggleSidebar()" title="Menu">☰</button>
+
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="tag">Lecture 09 • CSC337</div>
+    <h2>TypeScript •<br>Classes / Interfaces</h2>
+  </div>
+
+  <div class="nav-group-label">Start</div>
+  <a href="#hero" class="active"><span class="icon">🏠</span> Hero</a>
+  <a href="#schedule"><span class="icon">⏱️</span> Plan</a>
+  <a href="#objectives"><span class="icon">🎯</span> Objectives</a>
+
+  <div class="nav-group-label">Core</div>
+  <a href="#classes-ts"><span class="icon">📦</span> Classes</a>
+  <a href="#modifiers"><span class="icon">🔐</span> Access modifiers</a>
+  <a href="#inheritance"><span class="icon">🌿</span> Inheritance</a>
+  <a href="#interfaces"><span class="icon">📜</span> Interfaces</a>
+  <a href="#comparison"><span class="icon">⚖️</span> Class vs Interface</a>
+
+  <div class="nav-group-label">Practice</div>
+  <a href="#practice-design"><span class="icon">💻</span> Design task</a>
+  <a href="#activities"><span class="icon">🎯</span> Activities</a>
+  <a href="#errors"><span class="icon">🐛</span> Pitfalls</a>
+  <a href="#references"><span class="icon">📚</span> References</a>
+  <a href="#quiz-section"><span class="icon">🧠</span> Quiz</a>
+  <a href="#homework"><span class="icon">📝</span> Homework</a>
+  <a href="#recap"><span class="icon">✅</span> Recap</a>
+</nav>
+
+
+
+<main id="main">
+
+  <section id="hero">
+    <div class="hero-badge">Advanced Web Technologies (CSC337)</div>
+    <h1>Lecture 09:<br><span>TypeScript — Classes, Inheritance, Interfaces</span></h1>
+    <p>
+      Roman Urdu deep-dive: <strong>class</strong> blueprint, <code>constructor</code> / methods, <code>public</code> <code>private</code> <code>protected</code>,
+      phir <code>extends</code> se inheritance + method overriding, <code>interface</code> + <code>implements</code> se contract,
+      aur class vs interface comparison — PDF “Lectuer 09” flow ke mutabiq.
+    </p>
+    <div class="hero-meta" aria-label="Topic aur Subject">
+      <strong>Topic:</strong>
+      TypeScript Language Constructs — Classes, Inheritance, and Interfaces
+      <br><br>
+      <strong>Subject:</strong>
+      Advanced Web Technologies (CSC337) • Duration ~2 Hours • Theory
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">4</span><span class="stat-label">Parts</span></div>
+      <div class="stat"><span class="stat-num">extends</span><span class="stat-label">Inheritance</span></div>
+      <div class="stat"><span class="stat-num">implements</span><span class="stat-label">Contracts</span></div>
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Quiz MCQs</span></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="schedule">
+    <div class="section-header">
+      <div class="section-icon">⏱️</div>
+      <div>
+        <h2>Lecture Breakdown</h2>
+        <p>2 hours — PDF timing</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Topic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0 – 30 min</td>
+            <td>Classes in TypeScript</td>
+          </tr>
+          <tr>
+            <td>30 – 60 min</td>
+            <td>Inheritance</td>
+          </tr>
+          <tr>
+            <td>60 – 90 min</td>
+            <td>Interfaces</td>
+          </tr>
+          <tr>
+            <td>90 – 120 min</td>
+            <td>Comparison + Practice + Quiz</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="objectives">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div>
+        <h2>Learning Objectives</h2>
+        <p>End of lecture — students should…</p>
+      </div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li>TypeScript mein <strong>classes</strong> samajh kar likh sakain</li>
+      <li><strong>Inheritance</strong> explain + implement kar sakain</li>
+      <li><strong>Interfaces</strong> define karke classes par <code>implements</code> kar sakain</li>
+      <li><strong>Interface vs class</strong> differentiate kar sakain</li>
+      <li>Ye concepts simple real-world examples se map kar sakain</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="classes-ts">
+    <div class="section-header">
+      <div class="section-icon">📦</div>
+      <div>
+        <h2>Part 1 — Classes</h2>
+        <p>Blueprint → objects</p>
+      </div>
+    </div>
+    <div class="alert info">
+      <span class="alert-icon">📌</span>
+      <div>
+        <strong>Class kya hai?</strong>
+        <p>Class <strong>blueprint</strong> hai objects banane ka — jaise car ka blueprint → bohot cars;
+          student template → multiple student instances.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">TypeScript</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>class Student {
+  name: string;
+  age: number;
+
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+
+  display(): void {
+    console.log(`Name: ${this.name}, Age: ${this.age}`);
+  }
+}</pre>
+    </div>
+
+    <div class="mini-grid">
+      <div class="mini-card">
+        <h4>Properties</h4>
+        <p>Class ke andar variables — state hold karti hain.</p>
+      </div>
+      <div class="mini-card">
+        <h4>Constructor</h4>
+        <p>Object initialize — values set karta hai.</p>
+      </div>
+      <div class="mini-card">
+        <h4>Methods</h4>
+        <p>Class ke andar functions — behaviour.</p>
+      </div>
+    </div>
+
+    <div class="alert success">
+      <span class="alert-icon">🏦</span>
+      <div>
+        <strong>Bank account example (notes)</strong>
+        <p>Properties: account number, balance • Methods: <code>deposit()</code>, <code>withdraw()</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="modifiers">
+    <div class="section-header">
+      <div class="section-icon">🔐</div>
+      <div>
+        <h2>Access Modifiers</h2>
+        <p>Encapsulation — TypeScript</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Modifier</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge blue">public</span></td>
+            <td>Har jagah accessible (default behaviour bhi often public treat)</td>
+          </tr>
+          <tr>
+            <td><span class="badge red">private</span></td>
+            <td>Sirf class ke <strong>andar</strong> — bahar direct access nahi</td>
+          </tr>
+          <tr>
+            <td><span class="badge yellow">protected</span></td>
+            <td>Class + <strong>subclasses</strong> ke liye</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">private balance</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>class BankAccount {
+  private balance: number;
+
+  constructor(balance: number) {
+    this.balance = balance;
+  }
+
+  deposit(amount: number) {
+    this.balance += amount;
+  }
+}</pre>
+    </div>
+
+    <div class="alert warn">
+      <span class="alert-icon">💬</span>
+      <div>
+        <strong>Discussion prompt:</strong>
+        <p>Agar fields <code>private</code> kar dein to kya hota hai? — direct tampering kam, controlled methods zyada (encapsulation).</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="inheritance">
+    <div class="section-header">
+      <div class="section-icon">🌿</div>
+      <div>
+        <h2>Part 2 — Inheritance</h2>
+        <p><code>extends</code> — reuse + specialization</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;margin-bottom:16px;">
+      Inheritance = ek class doosri class ki properties/methods <strong>dobara use</strong> karti hai.
+      Real-life intuition: child inherits traits from parents — code me <strong>base → derived</strong>.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">extends</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>class Animal {
+  move(): void {
+    console.log("Moving...");
+  }
+}
+
+class Dog extends Animal {
+  bark(): void {
+    console.log("Barking...");
+  }
+}</pre>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">🔑</span>
+      <div>
+        <strong>Keyword:</strong> <code>extends</code> — class inheritance ke liye.
+      </div>
+    </div>
+
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;">
+      Hierarchy example: Parent <strong>Vehicle</strong> → children <strong>Car</strong>, <strong>Bike</strong>.
+    </p>
+
+    <h3 style="font-size:16px;margin:28px 0 12px;color:var(--text);">Method overriding</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">override speak()</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>class Animal {
+  speak(): void {
+    console.log("Animal speaks");
+  }
+}
+
+class Cat extends Animal {
+  speak(): void {
+    console.log("Cat meows");
+  }
+}</pre>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">♻️</div>
+        <h3>Code reuse</h3>
+        <p>Common logic base class me — specific child me.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧹</div>
+        <h3>Cleaner structure</h3>
+        <p>Hierarchy se domain model readable.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛠️</div>
+        <h3>Maintenance</h3>
+        <p>Base change careful — ripple effect samajh ke.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="interfaces">
+    <div class="section-header">
+      <div class="section-icon">📜</div>
+      <div>
+        <h2>Part 3 — Interfaces</h2>
+        <p>Contract — <code>implements</code></p>
+      </div>
+    </div>
+    <div class="alert info">
+      <span class="alert-icon">📌</span>
+      <div>
+        <strong>Interface kya hai?</strong>
+        <p>Ye <strong>contract</strong> define karta hai jo class follow kare — jaise job description / USB standard:
+          “kya shapes honi chahiye”, implementation details interface me nahi hoti.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">implements Person</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>interface Person {
+  name: string;
+  age: number;
+}
+
+class Student implements Person {
+  name: string;
+  age: number;
+
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+}</pre>
+    </div>
+    <div class="alert info">
+      <span class="alert-icon">✅</span>
+      <div>
+        <strong>Type match:</strong>
+        <p>Interface <code>Person</code> ke <code>age: number</code> ke sath class properties bhi same shape me hon — warna TS error.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Shape + Circle</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>interface Shape {
+  area(): number;
+}
+
+class Circle implements Shape {
+  radius: number;
+
+  constructor(radius: number) {
+    this.radius = radius;
+  }
+
+  area(): number {
+    return Math.PI * this.radius * this.radius;
+  }
+}</pre>
+    </div>
+
+    <h3 style="font-size:16px;margin:28px 0 12px;color:var(--text);">Multiple interfaces</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">implements A, B</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>interface A { a: number; }
+interface B { b: number; }
+
+class Test implements A, B {
+  a = 10;
+  b = 20;
+}</pre>
+    </div>
+
+    <div class="alert warn">
+      <span class="alert-icon">❓</span>
+      <div>
+        <strong>Discussion:</strong>
+        <p>Interfaces par “constructor” directly interface body me waise hi nahi jaise class — TS me pattern alag hai; contract fields/method signatures pe focus.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="comparison">
+    <div class="section-header">
+      <div class="section-icon">⚖️</div>
+      <div>
+        <h2>Part 4 — Classes vs Interfaces</h2>
+        <p>PDF comparison table</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Class</th>
+            <th>Interface</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Implementation</td>
+            <td>Haan — methods ki body ho sakti hai</td>
+            <td>Nahi — structure / signatures</td>
+          </tr>
+          <tr>
+            <td>Object creation (<code>new</code>)</td>
+            <td>Class se instance</td>
+            <td>Interface se directly object nahi</td>
+          </tr>
+          <tr>
+            <td>Constructor</td>
+            <td>Haan</td>
+            <td>Nahi (interface me constructor pattern alag discussion)</td>
+          </tr>
+          <tr>
+            <td>Inheritance-style extension</td>
+            <td><code>extends</code> single class</td>
+            <td>Interfaces can <code>extends</code> multiple interfaces</td>
+          </tr>
+          <tr>
+            <td>Multiple “inheritance” for one class</td>
+            <td>Single superclass (TS) — multiple <code>implements</code></td>
+            <td>Multiple interfaces implement ho sakti hain</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert success">
+      <span class="alert-icon">💡</span>
+      <div>
+        <strong>When to use?</strong>
+        <p><strong>Class</strong> jab runtime behaviour + state + implementation chahiye.
+          <strong>Interface</strong> jab shared <strong>shape/contract</strong> chahiye (APIs, testing mocks, multiple classes same contract).</p>
+      </div>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">🌍</span>
+      <div>
+        <strong>Combined example (notes)</strong>
+        <p><code>interface VehicleRules</code> → <code>class Car implements VehicleRules</code> → <code>class ElectricCar extends Car</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="practice-design">
+    <div class="section-header">
+      <div class="section-icon">💻</div>
+      <div>
+        <h2>Practice Task (PDF)</h2>
+        <p>Design exercise</p>
+      </div>
+    </div>
+    <ul class="hw-list">
+      <li><span class="hw-num">1</span><strong>Interface</strong> <code>Device</code> — jo fields/methods zaroori hon (e.g. power on/off ya specs).</li>
+      <li><span class="hw-num">2</span><strong>Class</strong> <code>Laptop</code> jo <code>Device</code> implement kare.</li>
+      <li><span class="hw-num">3</span><strong>Subclass</strong> <code>GamingLaptop</code> jo <code>Laptop</code> extend kare + extra behaviour.</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="activities">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div>
+        <h2>Student Activities</h2>
+        <p>PDF prompts</p>
+      </div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li><strong>~30 min:</strong> Class <code>Car</code> — <code>brand</code>, <code>speed</code>, method <code>displayInfo</code>. Private fields par discussion.</li>
+      <li><strong>~60 min:</strong> <code>Person</code> parent, <code>Teacher</code> child — method override.</li>
+      <li><strong>~90 min:</strong> Interface <code>Employee</code> (<code>name</code>, <code>salary</code>) → class <code>Manager</code> implements.</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="errors">
+    <div class="section-header">
+      <div class="section-icon">🐛</div>
+      <div>
+        <h2>Common Pitfalls</h2>
+        <p>Debug hints</p>
+      </div>
+    </div>
+    <div class="alert error"><span class="alert-icon">🔤</span><div><strong><code>implement</code> vs <code>implements</code></strong><p>Inheritance <code>extends</code>; interface contract <code>implements</code> — keywords mix mat karo.</p></div></div>
+    <div class="alert warn"><span class="alert-icon">🏗️</span><div><strong>Interface = object factory nahi</strong><p><code>new InterfaceName()</code> — TS me ye kaam nahi; class/instance alag concept.</p></div></div>
+    <div class="alert warn"><span class="alert-icon">🔒</span><div><strong>private field subclasses</strong><p>Subclass parent ki <code>private</code> fields directly touch nahi kar sakti — <code>protected</code> ya getters consider karo.</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="references">
+    <div class="section-header">
+      <div class="section-icon">📚</div>
+      <div>
+        <h2>References</h2>
+        <p>TypeScript + OOP</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.9;">
+      Concepts TypeScript official docs + standard OOP: <strong>Encapsulation</strong>, <strong>Inheritance</strong>, <strong>Abstraction</strong>.
+      PDF note: conceptual material — external citations optional.
+    </p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="quiz-section">
+    <div class="section-header">
+      <div class="section-icon">🧠</div>
+      <div>
+        <h2>Interactive Quiz — 5 MCQs</h2>
+        <p>Classes • Inheritance • Interfaces</p>
+      </div>
+    </div>
+
+    <div class="quiz-wrap">
+      <div class="quiz-progress">
+        <span id="q-counter">1 / 5</span>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+        <span id="score-display">Score: 0</span>
+      </div>
+
+      <div class="question-block active" data-answer="0">
+        <h3><span class="qnum">Q1</span>Class inheritance (child class parent se) ke liye TypeScript me konsa keyword use hota hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> extends</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> implements</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> inherit</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> interface</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="1">
+        <h3><span class="qnum">Q2</span>Interface primarily kya carry karta hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> Sirf runnable implementation / bodies har cheez ki</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Definitions / contract (shape) — implementation class ki zimmedari</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> Sirf compiled binary</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> Database schema only</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="1">
+        <h3><span class="qnum">Q3</span>Class ko interface ka contract follow karwane ke liye keyword kya hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> extends</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> implements</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> inherits</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> contract</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="0">
+        <h3><span class="qnum">Q4</span><code>private</code> member class ke bahar se typically:</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> Sirf usi class ke andar accessible</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Subclasses ke liye bhi open</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> Globally public</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> Sirf interface me use</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="0">
+        <h3><span class="qnum">Q5</span>Ek TypeScript class ek saath multiple interfaces follow kar sakti hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> Haan — implements A, B, C …</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Nahi — sirf ek interface kabhi</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> Sirf JavaScript mode me</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> Sirf abstract class ke sath</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="showResult()" disabled>Natija Dekho 🎉</button></div>
+      </div>
+
+      <div class="quiz-result" id="quiz-result">
+        <div class="result-score" id="result-score">0/5</div>
+        <div class="result-msg" id="result-msg"></div>
+        <div class="result-sub" id="result-sub"></div>
+        <button type="button" class="btn btn-primary" onclick="restartQuiz()">Dobara Try Karo 🔄</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="homework">
+    <div class="section-header">
+      <div class="section-icon">📝</div>
+      <div>
+        <h2>Homework — Short + Practice</h2>
+        <p>PDF verbal questions extend</p>
+      </div>
+    </div>
+    <ul class="hw-list">
+      <li><span class="hw-num">1</span><strong>Class vs interface</strong> — apne alfaz mein 5–7 lines.</li>
+      <li><span class="hw-num">2</span><strong>Method overriding</strong> kya hai + ek chota TS example outline.</li>
+      <li><span class="hw-num">3</span><strong>Encapsulation</strong> — <code>private</code> balance + <code>deposit</code> kyu better ho sakta hai?</li>
+      <li><span class="hw-num">4</span><strong>Practice:</strong> <code>Device</code> / <code>Laptop</code> / <code>GamingLaptop</code> task complete karo.</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="recap">
+    <div class="section-header">
+      <div class="section-icon">✅</div>
+      <div>
+        <h2>Quick Recap</h2>
+        <p>TypeScript OOP essentials</p>
+      </div>
+    </div>
+    <div class="recap-grid">
+      <div class="recap-item"><div class="ri">📦</div><strong>Class</strong>Blueprint + constructor + methods.</div>
+      <div class="recap-item"><div class="ri">🔐</div><strong>Modifiers</strong>public • private • protected.</div>
+      <div class="recap-item"><div class="ri">🌿</div><strong>extends</strong>Inheritance + override.</div>
+      <div class="recap-item"><div class="ri">📜</div><strong>interface</strong>Contract + implements.</div>
+      <div class="recap-item"><div class="ri">⚖️</div><strong>Pick right</strong>Implementation vs shape.</div>
+      <div class="recap-item"><div class="ri">🔌</div><strong>Multiple</strong>implements A, B.</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const links = document.querySelectorAll('#sidebar a');
+  const sections = document.querySelectorAll('section[id], #hero');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector('#sidebar a[href="#' + entry.target.id + '"]');
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+  document.getElementById('main').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+  });
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  }
+
+  let currentQ = 0;
+  let score = 0;
+  const questions = document.querySelectorAll('.question-block');
+  const feedbacks = [
+    'Sahi! Class inheritance ke liye extends.',
+    'Theek! Interface shapes/definitions deta hai — implementation class par.',
+    'Bilkul! Interface contract ke liye implements.',
+    'Perfect! private sirf class body ke andar.',
+    'Great! Ek class multiple interfaces: implements A, B.'
+  ];
+  const wrongs = [
+    'Nahi — implements interface ke liye; extends class inheritance.',
+    'Nahi — interface primarily contract/signatures.',
+    'Nahi — extends superclass; implements interface.',
+    'Nahi — protected subclasses; private bahar block.',
+    'Nahi — TS me multiple implements allowed.'
+  ];
+
+  function answer(btn, selected) {
+    const qBlock = btn.closest('.question-block');
+    const correct = parseInt(qBlock.dataset.answer, 10);
+    const btns = qBlock.querySelectorAll('.opt-btn');
+    const fb = qBlock.querySelector('.feedback-msg');
+    const nextBtn = qBlock.querySelector('.btn-primary');
+
+    btns.forEach(b => { b.disabled = true; });
+
+    if (selected === correct) {
+      btn.classList.add('correct');
+      fb.textContent = '✅ ' + feedbacks[currentQ];
+      fb.className = 'feedback-msg show correct';
+      score++;
+      document.getElementById('score-display').textContent = 'Score: ' + score;
+    } else {
+      btn.classList.add('wrong');
+      btns[correct].classList.add('correct');
+      fb.textContent = '❌ ' + wrongs[currentQ];
+      fb.className = 'feedback-msg show wrong';
+    }
+    nextBtn.disabled = false;
+  }
+
+  function nextQ() {
+    questions[currentQ].classList.remove('active');
+    currentQ++;
+    if (currentQ < questions.length) {
+      questions[currentQ].classList.add('active');
+      document.getElementById('q-counter').textContent = (currentQ + 1) + ' / 5';
+      document.getElementById('progress-fill').style.width = ((currentQ + 1) * 20) + '%';
+    }
+  }
+
+  function showResult() {
+    questions[currentQ].classList.remove('active');
+    document.getElementById('quiz-result').classList.add('show');
+    document.getElementById('result-score').textContent = score + '/5';
+    const msgs = ['Koshish karo dobara! 💪', 'Thoda aur practice! 📚', 'Theek hai, improve karo 👍', 'Acha score! 🔥', 'Bahut acha! 🌟', 'Perfect! TypeScript OOP champion! 🎉'];
+    document.getElementById('result-msg').textContent = msgs[score];
+    document.getElementById('result-sub').textContent = score >= 4 ? 'Classes + extends + implements clear!' : 'Modifiers, extends vs implements, aur interface contract dubara dekho.';
+    document.getElementById('q-counter').textContent = '5 / 5';
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('score-display').textContent = 'Score: ' + score;
+  }
+
+  function restartQuiz() {
+    currentQ = 0;
+    score = 0;
+    document.getElementById('quiz-result').classList.remove('show');
+    document.getElementById('score-display').textContent = 'Score: 0';
+    document.getElementById('q-counter').textContent = '1 / 5';
+    document.getElementById('progress-fill').style.width = '20%';
+    questions.forEach(q => {
+      q.classList.remove('active');
+      q.querySelectorAll('.opt-btn').forEach(b => {
+        b.classList.remove('correct', 'wrong');
+        b.disabled = false;
+      });
+      const fb = q.querySelector('.feedback-msg');
+      fb.className = 'feedback-msg';
+      q.querySelector('.btn-primary').disabled = true;
+    });
+    questions[0].classList.add('active');
+  }
+</script>
+</body>
+</html>

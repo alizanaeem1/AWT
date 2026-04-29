@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angular Seekhain — CSC337</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #e63946;
+  --green: #06d6a0;
+  --blue: #118ab2;
+  --yellow: #ffd166;
+  --dark: #0d1117;
+  --darker: #080d13;
+  --card: #161b22;
+  --card2: #1e2530;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --border: #30363d;
+  --accent: #58a6ff;
+  --sidebar-w: 270px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--darker);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar {
+  position: fixed; top:0; left:0; height:3px;
+  background: linear-gradient(90deg, var(--red), var(--accent), var(--green));
+  z-index: 9999; width:0%; transition: width 0.1s;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  position: fixed; top:0; left:0; bottom:0;
+  z-index: 200;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+.sidebar-logo {
+  padding: 1.5rem 1.2rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo .badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--red), #c1121f);
+  color: #fff; font-size: 0.7rem; font-weight: 800;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 0.25rem 0.7rem; border-radius: 999px;
+  margin-bottom: 0.6rem;
+}
+.sidebar-logo h1 {
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: 1.3rem; font-weight: 800;
+  background: linear-gradient(135deg, #fff, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+.sidebar-logo p {
+  font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem;
+}
+
+/* Nav sections */
+.nav-section-label {
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted);
+  padding: 1rem 1.2rem 0.3rem;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  border-radius: 0; border-left: 3px solid transparent;
+  transition: all 0.2s;
+  text-decoration: none; color: var(--muted);
+  font-size: 0.88rem; font-weight: 600;
+}
+.nav-item:hover {
+  background: rgba(88,166,255,0.08);
+  color: var(--text);
+  border-left-color: var(--accent);
+}
+.nav-item.active {
+  background: rgba(88,166,255,0.12);
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+.nav-item .icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink:0; }
+.nav-item .dot {
+  width:6px; height:6px; border-radius:50%;
+  background: var(--border); margin-left:auto; flex-shrink:0;
+  transition: background 0.2s;
+}
+.nav-item.active .dot,
+.nav-item:hover .dot { background: var(--accent); }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem 1.2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem; color: var(--muted);
+  text-align: center;
+}
+
+/* ===== MOBILE TOGGLE ===== */
+.mob-toggle {
+  display: none;
+  position: fixed; top: 1rem; left: 1rem;
+  z-index: 500;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  align-items: center; justify-content: center;
+}
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 150;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+}
+
+/* ===== STARS ===== */
+.stars {
+  position: fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+}
+.star {
+  position:absolute; border-radius:50%; background:white;
+  animation: twinkle var(--dur) infinite var(--delay) ease-in-out;
+}
+@keyframes twinkle {
+  0%,100%{opacity:.1;transform:scale(1)}
+  50%{opacity:.9;transform:scale(1.5)}
+}
+
+/* ===== HERO ===== */
+.hero {
+  position:relative; z-index:1;
+  min-height: 90vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; padding: 3rem 2rem;
+  background: radial-gradient(ellipse at 50% 0%, #1a2a4a 0%, transparent 65%);
+}
+.hero h2 {
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1.1; margin-bottom: 1rem;
+  animation: fadeUp 0.9s ease 0.2s both;
+}
+.hero p {
+  color: var(--muted); max-width: 540px; line-height:1.7;
+  animation: fadeUp 0.9s ease 0.4s both;
+  margin-bottom: 2rem;
+}
+.hero-stats {
+  display:flex; gap:1.2rem; flex-wrap:wrap; justify-content:center;
+  animation: fadeUp 0.9s ease 0.6s both;
+}
+.stat {
+  background: var(--card); border:1px solid var(--border);
+  padding: 0.8rem 1.4rem; border-radius:12px; text-align:center;
+}
+.stat-num { font-size:1.8rem; font-weight:800; color:var(--accent); font-family:'Baloo Bhaijaan 2',cursive; }
+.stat-label { font-size:0.75rem; color:var(--muted); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* ===== SECTION WRAPPER ===== */
+.section {
+  position:relative; z-index:1;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  scroll-margin-top: 1rem;
+}
+.section-tag {
+  display:inline-block;
+  font-size:0.7rem; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--accent);
+  background: rgba(88,166,255,0.1);
+  padding: 0.25rem 0.7rem; border-radius:999px;
+  margin-bottom:0.7rem;
+}
+.section-title {
+  font-family:'Baloo Bhaijaan 2',cursive;
+  font-size: clamp(1.6rem,3.5vw,2.4rem);
+  font-weight:800; margin-bottom:0.5rem; line-height:1.2;
+}
+.section-desc { color:var(--muted); max-width:680px; line-height:1.7; margin-bottom:2rem; }
+
+hr.divider {
+  border:none; border-top:1px solid var(--border);
+  max-width:860px; margin:0 auto;
+}
+
+/* ===== GRID ===== */
+.grid-2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; }
+.grid-3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; }
+
+/* ===== CONCEPT CARD ===== */
+.ccard {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:1.4rem;
+  position:relative; overflow:hidden;
+  opacity:0; transform:translateY(24px);
+  transition: all 0.5s ease;
+}
+.ccard::before { content:''; position:absolute; top:0;left:0;right:0;height:3px; }
+.ccard.red::before{background:var(--red)}
+.ccard.blue::before{background:var(--blue)}
+.ccard.green::before{background:var(--green)}
+.ccard.yellow::before{background:var(--yellow)}
+.ccard.accent::before{background:var(--accent)}
+.ccard.visible{opacity:1;transform:translateY(0)}
+.ccard:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(0,0,0,.35);border-color:var(--accent)}
+.ccard .ci{font-size:1.8rem;margin-bottom:.6rem}
+.ccard .ct{font-family:'Baloo Bhaijaan 2',cursive;font-size:1rem;font-weight:800;margin-bottom:.4rem}
+.ccard .cd{color:var(--muted);font-size:.88rem;line-height:1.6}
+
+/* ===== FLOW ===== */
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;justify-content:center;margin:1.2rem 0}
+.fbox{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:.55rem 1.1rem;
+  font-size:.88rem;font-weight:700;
+  transition:all .3s;
+}
+.fbox:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.05)}
+.farr{color:var(--accent);font-size:1.1rem}
+
+/* ===== CODE BLOCK ===== */
+.code-block{
+  background:#0d1117;border:1px solid var(--border);
+  border-radius:12px;padding:1.4rem;
+  font-family:'Courier New',monospace;font-size:.88rem;line-height:1.9;
+  overflow-x:auto;position:relative;
+}
+.code-block .lb{position:absolute;top:.7rem;right:.9rem;font-size:.68rem;color:var(--muted);background:var(--card2);padding:.15rem .5rem;border-radius:5px;font-family:'Nunito',sans-serif}
+.kw{color:#ff7b72}.str{color:#a5d6ff}.dec{color:#d2a8ff}.val{color:#79c0ff}.cm{color:#8b949e;font-style:italic}.tag{color:#7ee787}.attr{color:#ffa657}.fn{color:#e3b341}
+
+/* ===== TABLE ===== */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--card2);padding:.85rem 1.1rem;text-align:left;font-size:.82rem;color:var(--accent);font-weight:700;border-bottom:1px solid var(--border)}
+td{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);font-size:.86rem}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(88,166,255,.05)}
+.pill{display:inline-block;background:rgba(88,166,255,.15);color:var(--accent);padding:.15rem .55rem;border-radius:6px;font-family:monospace;font-size:.83rem}
+
+/* ===== ALERT ===== */
+.alert{border-radius:12px;padding:1.1rem 1.3rem;margin:.8rem 0;border-left:4px solid;display:flex;gap:.7rem;align-items:flex-start}
+.alert-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
+.alert.warn{background:rgba(255,209,102,.1);border-color:var(--yellow);color:#ffd166}
+.alert.tip{background:rgba(6,214,160,.1);border-color:var(--green);color:var(--green)}
+.alert.exam{background:rgba(230,57,70,.1);border-color:var(--red);color:#ff8b94}
+.alert-body{font-size:.88rem;line-height:1.6}
+.alert-body strong{display:block;font-weight:700;margin-bottom:.2rem}
+
+/* ===== STEPS ===== */
+.steps{display:flex;flex-direction:column;gap:1rem}
+.step{display:flex;gap:1rem;align-items:flex-start;opacity:0;transform:translateX(-15px);transition:all .5s}
+.step.visible{opacity:1;transform:translateX(0)}
+.snum{width:34px;height:34px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#388bff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.88rem}
+.stitle{font-weight:700;margin-bottom:.2rem}
+.sdesc{color:var(--muted);font-size:.88rem}
+.scode{display:inline-block;background:var(--darker);border:1px solid var(--border);padding:.18rem .55rem;border-radius:6px;font-family:monospace;font-size:.83rem;color:var(--accent);margin-top:.35rem}
+
+/* ===== BINDING DEMO ===== */
+.demo-box{background:var(--card);border:1px solid var(--green);border-radius:14px;padding:1.3rem}
+.demo-box h3{font-family:'Baloo Bhaijaan 2',cursive;color:var(--green);margin-bottom:.8rem;font-size:1rem}
+.demo-input{
+  width:100%;background:var(--card2);border:1px solid var(--border);
+  color:var(--text);padding:.65rem 1rem;border-radius:10px;
+  font-size:.95rem;font-family:'Nunito',sans-serif;outline:none;
+  transition:border-color .2s;
+}
+.demo-input:focus{border-color:var(--green)}
+.demo-output{background:var(--darker);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;margin-top:.7rem}
+.demo-output .label{font-size:.75rem;color:var(--muted)}
+.demo-output p{font-family:'Baloo Bhaijaan 2',cursive;font-size:1.15rem;margin-top:.2rem}
+
+/* ===== QUIZ ===== */
+.quiz-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.3rem;margin-bottom:1rem;opacity:0;transform:translateY(18px);transition:all .5s}
+.quiz-card.visible{opacity:1;transform:translateY(0)}
+.quiz-q{font-family:'Baloo Bhaijaan 2',cursive;font-size:.98rem;font-weight:700;margin-bottom:.9rem}
+.qnum{color:var(--accent);margin-right:.4rem}
+.options{display:flex;flex-direction:column;gap:.45rem}
+.option{padding:.6rem 1rem;border-radius:9px;border:1px solid var(--border);cursor:pointer;font-size:.88rem;transition:all .2s;background:var(--card2)}
+.option:hover{border-color:var(--accent);background:rgba(88,166,255,.1)}
+.option.correct{background:rgba(6,214,160,.2);border-color:var(--green);color:var(--green)}
+.option.wrong{background:rgba(230,57,70,.15);border-color:var(--red);color:#ff8b94}
+.qresult{margin-top:.5rem;font-size:.83rem;font-weight:600;min-height:1rem}
+
+/* ===== FADE IN ===== */
+.fi{opacity:0;transform:translateY(22px);transition:all .6s ease}
+.fi.visible{opacity:1;transform:translateY(0)}
+
+/* ===== FOOTER ===== */
+footer{position:relative;z-index:1;text-align:center;padding:2.5rem 1rem;border-top:1px solid var(--border);color:var(--muted);font-size:.88rem}
+footer strong{color:var(--accent)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .mob-toggle{display:flex}
+  .overlay.show{display:block}
+  .main{margin-left:0}
+  .hero h2{font-size:2rem}
+  .section{padding:3rem 1rem}
+}
+
+/* lec-index-nav */
+a.lec-back-home {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 250;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 8px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+a.lec-back-home:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+</style>
+</head>
+<body>
+<a href="index.html" class="lec-back-home">← Advanced Web Technologies</a>
+
+<div class="progress-bar" id="pb"></div>
+<div class="stars" id="stars"></div>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="badge">CSC337</div>
+    <h1>Angular<br>Seekhain 🚀</h1>
+    <p>Advanced Web Technologies</p>
+  </div>
+
+  <div class="nav-section-label">Shuru karo</div>
+  <a class="nav-item active" href="#hero" onclick="setActive(this)">
+    <span class="icon">🏠</span> Home
+    <span class="dot"></span>
+  </a>
+
+  <div class="nav-section-label">Lecture Topics</div>
+  <a class="nav-item" href="#kyun" onclick="setActive(this)">
+    <span class="icon">🤔</span> Kyun Angular?
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#architecture" onclick="setActive(this)">
+    <span class="icon">🗺️</span> Architecture
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#setup" onclick="setActive(this)">
+    <span class="icon">⚙️</span> App Setup
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#modules" onclick="setActive(this)">
+    <span class="icon">📦</span> Modules
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#components" onclick="setActive(this)">
+    <span class="icon">🧩</span> Components
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#binding" onclick="setActive(this)">
+    <span class="icon">❤️</span> Data Binding
+    <span class="dot"></span>
+  </a>
+
+  <div class="nav-section-label">Practice</div>
+  <a class="nav-item" href="#debugging" onclick="setActive(this)">
+    <span class="icon">🐛</span> Debugging
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#quiz" onclick="setActive(this)">
+    <span class="icon">🧠</span> Quiz
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#homework" onclick="setActive(this)">
+    <span class="icon">📝</span> Homework
+    <span class="dot"></span>
+  </a>
+  <a class="nav-item" href="#recap" onclick="setActive(this)">
+    <span class="icon">🔑</span> Recap
+    <span class="dot"></span>
+  </a>
+
+  <div class="sidebar-footer">
+    🇵🇰 Pakistani Students ke liye<br>
+    <strong style="color:var(--accent)">2 Ghante ka Lecture</strong>
+  </div>
+</aside>
+
+<!-- Mobile toggle -->
+<button class="mob-toggle" id="mobToggle" onclick="openSidebar()">☰</button>
+
+<!-- ========== MAIN ========== -->
+<main class="main">
+
+  <!-- HERO -->
+  <section class="section" id="hero" style="min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 0%,#1a2a4a 0%,transparent 65%)">
+    <div style="animation:fadeUp .7s ease .1s both;display:inline-block;background:linear-gradient(135deg,var(--red),#c1121f);color:#fff;font-size:.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:.3rem 1rem;border-radius:999px;margin-bottom:1.2rem">📚 Unit 6 — Angular + TypeScript</div>
+    <h2 style="font-family:'Baloo Bhaijaan 2',cursive;font-size:clamp(2.2rem,6vw,4.2rem);font-weight:800;background:linear-gradient(135deg,#fff 0%,var(--accent) 50%,var(--green) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;margin-bottom:1rem;animation:fadeUp .9s ease .2s both">Angular Seekhain! 🎓</h2>
+    <p style="color:var(--muted);max-width:520px;line-height:1.7;animation:fadeUp .9s ease .4s both;margin-bottom:2rem">Decorators, Modules, Components aur Data Binding — sab kuch aasaan Roman Urdu mein! Pakistani students ke liye specially tayar ki gayi lecture!</p>
+    <div class="hero-stats" style="animation:fadeUp .9s ease .6s both">
+      <div class="stat"><div class="stat-num">2</div><div class="stat-label">Ghante</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">Data Bindings</div></div>
+      <div class="stat"><div class="stat-num">8</div><div class="stat-label">Topics</div></div>
+      <div class="stat"><div class="stat-num">5</div><div class="stat-label">Quiz MCQs</div></div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== KYUN ANGULAR ===== -->
+  <section class="section" id="kyun">
+    <div class="section-tag">Part A — 0 se 10 Minute</div>
+    <h2 class="section-title fi">Angular Kyun Seekhein? 🤔</h2>
+    <p class="section-desc fi">Jab app barhti hai, mushkilaat bhi barhti hain — state manage karna, code organize karna. Angular in sab ka hal deta hai!</p>
+    <div class="grid-2">
+      <div class="ccard red"><div class="ci">📚</div><div class="ct">Framework vs Library</div><div class="cd">Angular poora framework hai — routing, DI, tooling sab built-in. React sirf library hai. Angular mein sab ready milta hai!</div></div>
+      <div class="ccard blue"><div class="ci">🏢</div><div class="ct">Enterprise ke liye Best</div><div class="cd">Banking apps, HR portals, admin dashboards — bade projects ke liye Angular ideal hai. Strong conventions se code maintainable rehta hai.</div></div>
+      <div class="ccard green"><div class="ci">💪</div><div class="ct">TypeScript First</div><div class="cd">Type safety milti hai, errors compile time pe pakri jaati hain. Code professional aur error-free rehta hai!</div></div>
+      <div class="ccard yellow"><div class="ci">🧩</div><div class="ct">Component-Based UI</div><div class="cd">Pura UI chhoti chhoti reusable components mein banta hai. Ek baar banao, hazaar jagah use karo!</div></div>
+    </div>
+    <div class="alert tip fi" style="margin-top:1.2rem">
+      <span class="alert-icon">💡</span>
+      <div class="alert-body"><strong>Ek Line Summary</strong>Angular = Opinionated, scalable, TypeScript-first SPA framework. Ye yaad kar lo!</div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== ARCHITECTURE ===== -->
+  <section class="section" id="architecture">
+    <div class="section-tag">Part B — 10 se 25 Minute</div>
+    <h2 class="section-title fi">Angular ka Bada Picture 🗺️</h2>
+    <p class="section-desc fi">Angular apps modules aur components se milke banti hain. Neeche dekho sab kaise connected hai!</p>
+    <div class="flow fi">
+      <div class="fbox">AppModule</div><span class="farr">→</span>
+      <div class="fbox">AppComponent</div><span class="farr">→</span>
+      <div class="fbox">Template (HTML)</div><span class="farr">→</span>
+      <div class="fbox">DOM (Browser)</div>
+    </div>
+    <div class="grid-3" style="margin-top:1.2rem">
+      <div class="ccard red"><div class="ci">⚙️</div><div class="ct">Angular CLI</div><div class="cd">Poora project ek command se banata hai. Build, serve, generate — sab kuch CLI!</div></div>
+      <div class="ccard blue"><div class="ci">📦</div><div class="ct">Module</div><div class="cd">Components ko organize karta hai. Root module hamesha AppModule hota hai.</div></div>
+      <div class="ccard green"><div class="ci">🎨</div><div class="ct">Component</div><div class="cd">TS logic + HTML template + CSS. UI ka reusable tukra!</div></div>
+    </div>
+    <div class="alert tip fi" style="margin-top:1.2rem">
+      <span class="alert-icon">✅</span>
+      <div class="alert-body"><strong>Important Baat</strong>Angular mein har cheez component hai, aur modules unhe organize karte hain!</div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== SETUP ===== -->
+  <section class="section" id="setup">
+    <div class="section-tag">Part C — 25 se 45 Minute</div>
+    <h2 class="section-title fi">Pehla Angular App Banana 🚀</h2>
+    <p class="section-desc fi">Chalo actually app banate hain! Ye steps follow karo — thori der mein pehla Angular app ready!</p>
+    <div class="steps">
+      <div class="step"><div class="snum">1</div><div><div class="stitle">CLI Install karo</div><div class="sdesc">Pehle Angular CLI globally install karo</div><div class="scode">npm i -g @angular/cli</div></div></div>
+      <div class="step"><div class="snum">2</div><div><div class="stitle">Project Banao</div><div class="sdesc">Ek nayi Angular app create karo</div><div class="scode">ng new awt-angular-demo</div></div></div>
+      <div class="step"><div class="snum">3</div><div><div class="stitle">App Run karo</div><div class="sdesc">Folder mein jao aur dev server start karo</div><div class="scode">cd awt-angular-demo &nbsp; ng serve -o</div></div></div>
+      <div class="step"><div class="snum">4</div><div><div class="stitle">Important Files Dekho</div><div class="sdesc">Ye files sabse zaroori hain:</div><div class="scode">src/app/app.module.ts</div><br><div class="scode" style="margin-top:.3rem">src/app/app.component.ts</div></div></div>
+      <div class="step"><div class="snum">5</div><div><div class="stitle">HTML badlo — Instant Update!</div><div class="sdesc">app.component.html mein kuch likho — browser mein turant dikh jaega!</div><div class="scode">&lt;h1&gt;Hello AWT Students! 🎉&lt;/h1&gt;</div></div></div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== MODULES ===== -->
+  <section class="section" id="modules">
+    <div class="section-tag">Part D — 45 se 65 Minute</div>
+    <h2 class="section-title fi">Modules aur @NgModule 📦</h2>
+    <p class="section-desc fi">Module Angular ka configuration map hai — batata hai kya compile karna hai, kya use karna hai!</p>
+    <div class="code-block fi">
+      <span class="lb">app.module.ts</span>
+<pre><span class="dec">@NgModule</span>({
+  <span class="attr">declarations</span>: [
+    <span class="val">AppComponent</span>,        <span class="cm">// Mere apne components</span>
+    <span class="val">UserCardComponent</span>    <span class="cm">// Ye bhi mera component hai</span>
+  ],
+  <span class="attr">imports</span>: [
+    <span class="val">BrowserModule</span>,       <span class="cm">// Browser features</span>
+    <span class="val">FormsModule</span>          <span class="cm">// ngModel ke liye ZARURI!</span>
+  ],
+  <span class="attr">providers</span>: [<span class="val">UserService</span>],   <span class="cm">// Services inject karo</span>
+  <span class="attr">bootstrap</span>: [<span class="val">AppComponent</span>]   <span class="cm">// App yahan se start hoti hai</span>
+})
+<span class="kw">export class</span> <span class="fn">AppModule</span> {}</pre>
+    </div>
+    <div class="table-wrap fi" style="margin-top:1.2rem">
+      <table>
+        <thead><tr><th>Property</th><th>Matlab</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill">declarations</span></td><td>Mere apne components, pipes, directives</td><td>AppComponent</td></tr>
+          <tr><td><span class="pill">imports</span></td><td>Doosre modules jo main use karta hoon</td><td>FormsModule</td></tr>
+          <tr><td><span class="pill">providers</span></td><td>Services jo inject karni hain</td><td>UserService</td></tr>
+          <tr><td><span class="pill">bootstrap</span></td><td>App ka starting point</td><td>AppComponent</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="alert warn fi" style="margin-top:1.2rem">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body"><strong>Common Galtiyan!</strong>Component ko imports mein mat daalo — wo declarations mein jaata hai! ngModel use karo to FormsModule import ZARURI hai!</div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== COMPONENTS ===== -->
+  <section class="section" id="components">
+    <div class="section-tag">Part E — 65 se 90 Minute</div>
+    <h2 class="section-title fi">Components aur @Component 🧩</h2>
+    <p class="section-desc fi">Component ek reusable UI block hai. Selector + template + styles = Component ready!</p>
+    <div class="grid-2">
+      <div class="code-block fi">
+        <span class="lb">user-card.component.ts</span>
+<pre><span class="dec">@Component</span>({
+  <span class="attr">selector</span>: <span class="str">'app-user-card'</span>,
+  <span class="cm">// HTML mein use:</span>
+  <span class="cm">// &lt;app-user-card&gt;&lt;/app-user-card&gt;</span>
+  <span class="attr">templateUrl</span>: <span class="str">'./user-card.html'</span>,
+  <span class="attr">styleUrls</span>: [<span class="str">'./user-card.css'</span>]
+})
+<span class="kw">export class</span> <span class="fn">UserCardComponent</span> {
+  <span class="attr">userName</span> = <span class="str">'Ali Raza'</span>;
+  <span class="attr">role</span> = <span class="str">'Student'</span>;
+
+  <span class="fn">greet</span>() {
+    alert(<span class="str">'Assalam o Alaikum!'</span>);
+  }
+}</pre>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.8rem">
+        <div class="alert tip fi" style="margin:0">
+          <span class="alert-icon">🎯</span>
+          <div class="alert-body"><strong>Exam Tip!</strong>selector → HTML mein use hota hai → component ka template render hota hai. Ye link yaad rakho!</div>
+        </div>
+        <div class="ccard blue fi" style="opacity:1;transform:none">
+          <div class="ci">🔧</div>
+          <div class="ct">Shortcut — CLI se Generate!</div>
+          <div class="cd">Terminal mein likho:</div>
+          <div class="scode">ng generate component user-card</div>
+          <div class="cd" style="margin-top:.6rem">CLI khud 4 files bana deta hai — TS, HTML, CSS, spec!</div>
+        </div>
+        <div class="alert exam fi" style="margin:0">
+          <span class="alert-icon">📌</span>
+          <div class="alert-body"><strong>Yaad Rakhna!</strong>1 file logic ke liye (TS), 1 view ke liye (HTML). Separation of concerns!</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== DATA BINDING ===== -->
+  <section class="section" id="binding">
+    <div class="section-tag">Part F — 90 se 110 Minute</div>
+    <h2 class="section-title fi">Data Binding — Angular ka Dil ❤️</h2>
+    <p class="section-desc fi">Data binding component aur template ko connect karta hai. 4 types hain — ek ek samjho!</p>
+
+    <div class="grid-2">
+      <div class="ccard red fi" style="opacity:1;transform:none">
+        <div class="ci">1️⃣</div>
+        <div class="ct">Interpolation — TS se HTML</div>
+        <div class="cd">Component ki value template mein dikhao. Double curly braces!</div>
+        <div class="code-block" style="margin-top:.7rem;padding:.8rem">
+<pre><span class="cm">// Component:</span>
+<span class="attr">userName</span> = <span class="str">'Ahmed'</span>;
+<span class="cm">// Template:</span>
+<span class="tag">&lt;h2&gt;</span>Hello, <span class="dec">{{ userName }}</span><span class="tag">&lt;/h2&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="ccard blue fi" style="opacity:1;transform:none">
+        <div class="ci">2️⃣</div>
+        <div class="ct">Property Binding — DOM set karo</div>
+        <div class="cd">HTML element ki property dynamically set karo. Square brackets!</div>
+        <div class="code-block" style="margin-top:.7rem;padding:.8rem">
+<pre><span class="cm">// Component:</span>
+<span class="attr">isDisabled</span> = <span class="kw">true</span>;
+<span class="cm">// Template:</span>
+<span class="tag">&lt;button</span> <span class="dec">[disabled]</span>=<span class="str">"isDisabled"</span><span class="tag">&gt;</span>
+  Submit
+<span class="tag">&lt;/button&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="ccard green fi" style="opacity:1;transform:none">
+        <div class="ci">3️⃣</div>
+        <div class="ct">Event Binding — Action pakro</div>
+        <div class="cd">Click, input events pakro aur function chalao. Round brackets!</div>
+        <div class="code-block" style="margin-top:.7rem;padding:.8rem">
+<pre><span class="cm">// Component:</span>
+<span class="fn">save</span>() { alert(<span class="str">'Saved!'</span>); }
+<span class="cm">// Template:</span>
+<span class="tag">&lt;button</span> <span class="dec">(click)</span>=<span class="str">"save()"</span><span class="tag">&gt;</span>
+  Save
+<span class="tag">&lt;/button&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="ccard yellow fi" style="opacity:1;transform:none">
+        <div class="ci">4️⃣</div>
+        <div class="ct">Two-Way Binding — Dono Taraf!</div>
+        <div class="cd">Input change → component update, component change → input update. "Banana in a box"!</div>
+        <div class="code-block" style="margin-top:.7rem;padding:.8rem">
+<pre><span class="cm">// FormsModule import karo!</span>
+<span class="attr">userName</span> = <span class="str">''</span>;
+<span class="cm">// Template:</span>
+<span class="tag">&lt;input</span> <span class="dec">[(ngModel)]</span>=<span class="str">"userName"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;p&gt;</span><span class="dec">{{ userName }}</span><span class="tag">&lt;/p&gt;</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Reference -->
+    <h3 class="fi" style="margin:1.8rem 0 .8rem;font-family:'Baloo Bhaijaan 2',cursive">Quick Reference Table</h3>
+    <div class="table-wrap fi">
+      <table>
+        <thead><tr><th>Type</th><th>Direction</th><th>Syntax</th><th>Use Case</th></tr></thead>
+        <tbody>
+          <tr><td>Interpolation</td><td>TS → HTML</td><td><span class="pill">{{ x }}</span></td><td>Text dikhana</td></tr>
+          <tr><td>Property Binding</td><td>TS → DOM</td><td><span class="pill">[prop]="x"</span></td><td>DOM property set</td></tr>
+          <tr><td>Event Binding</td><td>DOM → TS</td><td><span class="pill">(event)="fn()"</span></td><td>User action handle</td></tr>
+          <tr><td>Two-Way</td><td>TS ↔ HTML</td><td><span class="pill">[(ngModel)]="x"</span></td><td>Forms / inputs</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Live Demo -->
+    <div class="demo-box fi" style="margin-top:1.5rem">
+      <h3>🎮 Live Demo — Two-Way Binding Try Karo!</h3>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:.8rem">Apna naam likho — neeche turant dikhe ga!</p>
+      <input class="demo-input" type="text" placeholder="Yahan apna naam likho..." oninput="document.getElementById('dout').textContent=this.value||'...'">
+      <div class="demo-output">
+        <div class="label">Template output:</div>
+        <p>Assalam o Alaikum, <span id="dout" style="color:var(--green)">...</span>! 👋</p>
+      </div>
+    </div>
+
+    <div class="alert warn fi" style="margin-top:1rem">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body"><strong>Common Galtiyan!</strong>= ki jagah () ya [] likhna bhoolna, ngModel ke liye FormsModule import na karna, attribute value mein {{ }} likhna — ye galtiyan mat karo!</div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== DEBUGGING ===== -->
+  <section class="section" id="debugging">
+    <div class="section-tag">Part G — 110 se 118 Minute</div>
+    <h2 class="section-title fi">Debugging Clinic 🐛</h2>
+    <p class="section-desc fi">Sabse common errors aur unka hal — ye yaad rakho to kabhi phase nahi khao ge!</p>
+    <div class="grid-2">
+      <div class="alert warn fi" style="margin:0">
+        <span class="alert-icon">🔴</span>
+        <div class="alert-body"><strong>Error: "Can't bind to 'ngModel'"</strong>Matlab: FormsModule import nahi kiya. AppModule ke imports mein FormsModule add karo!</div>
+      </div>
+      <div class="alert warn fi" style="margin:0">
+        <span class="alert-icon">🔴</span>
+        <div class="alert-body"><strong>Component nazar nahi aa raha</strong>Matlab: Selector spelling galat hai ya component declarations mein register nahi. Dono check karo!</div>
+      </div>
+      <div class="alert warn fi" style="margin:0">
+        <span class="alert-icon">🔴</span>
+        <div class="alert-body"><strong>Event fire nahi ho raha</strong>Matlab: Wrong (click) placement ya method name mismatch. Template aur TS dono check karo!</div>
+      </div>
+      <div class="alert tip fi" style="margin:0">
+        <span class="alert-icon">💡</span>
+        <div class="alert-body"><strong>Pro Tip</strong>Browser DevTools Console kholo — error message khud batata hai kya problem hai. Hamesha console check karo pehle!</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== QUIZ ===== -->
+  <section class="section" id="quiz">
+    <div class="section-tag">Exit Ticket</div>
+    <h2 class="section-title fi">Apna Test Karo! 🧠</h2>
+    <p class="section-desc fi">Pach sawaal — sahi jawab green, galat red ho jaega. End mein score bhi milega!</p>
+    <div id="quizContainer"></div>
+    <div id="quizScore" style="display:none;margin-top:1rem" class="alert tip">
+      <span class="alert-icon">🎉</span>
+      <div class="alert-body"><strong id="scoreText"></strong></div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== HOMEWORK ===== -->
+  <section class="section" id="homework">
+    <div class="section-tag">Ghar ka Kaam</div>
+    <h2 class="section-title fi">Homework aur Lab Task 📝</h2>
+    <p class="section-desc fi">Practice se hi mastery aati hai — ye do tasks karo!</p>
+    <div class="grid-2">
+      <div class="ccard red fi" style="opacity:1;transform:none">
+        <div class="ci">🏠</div>
+        <div class="ct">Homework: Student Form</div>
+        <div class="cd">
+          <strong style="color:var(--text)">student-form component banao</strong><br><br>
+          ✅ Name, Roll No, Semester fields<br>
+          ✅ ngModel se two-way binding<br>
+          ✅ "Preview" button — data neeche dikhe<br>
+          ✅ "Clear" button — sab reset ho<br><br>
+          <span style="color:var(--muted)">Submission: GitHub link ya zip + screenshots</span>
+        </div>
+      </div>
+      <div class="ccard green fi" style="opacity:1;transform:none">
+        <div class="ci">💻</div>
+        <div class="ct">Lab Task: Mini Todo App</div>
+        <div class="cd">
+          1️⃣ <code style="color:var(--accent)">ng new todo-basic</code><br>
+          2️⃣ <code style="color:var(--accent)">ng g c todo</code><br>
+          3️⃣ ngModel input + addTask() button<br>
+          4️⃣ *ngFor se list dikhao<br>
+          5️⃣ Remove button har item pe<br><br>
+          <strong style="color:var(--yellow)">🌟 Bonus:</strong> Completed toggle + filter!
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== RECAP ===== -->
+  <section class="section" id="recap">
+    <div class="section-tag">Quick Recap</div>
+    <h2 class="section-title fi">5 Key Yaad Rakhne Wali Baatein 🔑</h2>
+    <div class="steps">
+      <div class="step"><div class="snum">1</div><div><div class="stitle">Components core UI blocks hain</div><div class="sdesc">Pura UI chhote chhote reusable components mein banta hai</div></div></div>
+      <div class="step"><div class="snum">2</div><div><div class="stitle">Modules components organize karte hain</div><div class="sdesc">AppModule root module hai — yahan se sab shuru hota hai</div></div></div>
+      <div class="step"><div class="snum">3</div><div><div class="stitle">Decorators metadata dete hain</div><div class="sdesc">@NgModule, @Component — Angular ko class ka role batate hain</div></div></div>
+      <div class="step"><div class="snum">4</div><div><div class="stitle">Data Binding TS aur HTML connect karta hai</div><div class="sdesc">Interpolation, Property, Event, Two-Way — charon yaad karo!</div></div></div>
+      <div class="step"><div class="snum">5</div><div><div class="stitle">Sabse common errors binding syntax + imports</div><div class="sdesc">FormsModule bhoolna aur galat brackets — ye mistakes mat karo!</div></div></div>
+    </div>
+
+    <div class="alert exam fi" style="margin-top:1.5rem">
+      <span class="alert-icon">🎯</span>
+      <div class="alert-body"><strong>Exam ke liye Jawab!</strong>"Angular UI kaise render karta hai?" → Component class + template + data binding (decorators se driven). Ye jawab likhna!</div>
+    </div>
+  </section>
+
+  <footer>
+    <p>CSC337 — Advanced Web Technologies 🇵🇰</p>
+    <p style="margin-top:.4rem">Banaya gaya Pakistani students ke liye ❤️ — <strong>Angular Seekhain, Pakistan Banain!</strong></p>
+  </footer>
+
+</main>
+
+<script>
+// === STARS ===
+const sc = document.getElementById('stars');
+for(let i=0;i<100;i++){
+  const s=document.createElement('div'); s.className='star';
+  const sz=Math.random()>0.8?3:2;
+  s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s`;
+  sc.appendChild(s);
+}
+
+// === PROGRESS ===
+window.addEventListener('scroll',()=>{
+  const t=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById('pb').style.width=(window.scrollY/t*100)+'%';
+  updateActiveNav();
+});
+
+// === SIDEBAR MOBILE ===
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function setActive(el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  if(window.innerWidth<=768) closeSidebar();
+}
+
+// Auto-highlight nav based on scroll
+function updateActiveNav(){
+  const sections=['hero','kyun','architecture','setup','modules','components','binding','debugging','quiz','homework','recap'];
+  let current='hero';
+  sections.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&window.scrollY>=el.offsetTop-120) current=id;
+  });
+  document.querySelectorAll('.nav-item').forEach(a=>{
+    a.classList.remove('active');
+    if(a.getAttribute('href')==='#'+current) a.classList.add('active');
+  });
+}
+
+// === INTERSECTION OBSERVER ===
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting) setTimeout(()=>e.target.classList.add('visible'),i%5*100);
+  });
+},{threshold:0.1});
+document.querySelectorAll('.ccard,.step,.quiz-card,.fi').forEach(el=>obs.observe(el));
+
+// === QUIZ ===
+const qs=[
+  {q:"Angular ko best describe kaise karein?",opts:["Ek database engine","Ek CSS framework","Front-end framework for SPAs","Ek web server"],ans:2},
+  {q:"Component define karne ke liye kaunsa decorator?",opts:["@Module","@Component","@InjectableOnly","@Bind"],ans:1},
+  {q:"Module mein components kahan register hote hain?",opts:["imports","declarations","providers","bootstrap"],ans:1},
+  {q:"Event binding ka sahi syntax?",opts:['[click]="save()"','(click)="save()"','{{click}}="save()"','[(click)]="save()"'],ans:1},
+  {q:"Two-way binding ke liye kya use hota hai?",opts:["{{x}}","[x]","(x)","[(ngModel)]"],ans:3}
+];
+let answered=0,score=0;
+const qc=document.getElementById('quizContainer');
+qs.forEach((q,qi)=>{
+  const card=document.createElement('div');
+  card.className='quiz-card';
+  card.innerHTML=`<div class="quiz-q"><span class="qnum">Q${qi+1}.</span>${q.q}</div>
+  <div class="options">${q.opts.map((o,oi)=>`<div class="option" data-qi="${qi}" data-oi="${oi}">${String.fromCharCode(65+oi)}) ${o}</div>`).join('')}</div>
+  <div class="qresult" id="qr${qi}"></div>`;
+  qc.appendChild(card);
+  obs.observe(card);
+});
+document.querySelectorAll('.option').forEach(o=>{
+  o.addEventListener('click',function(){
+    const qi=+this.dataset.qi,oi=+this.dataset.oi;
+    const rd=document.getElementById('qr'+qi);
+    if(rd.dataset.done) return;
+    rd.dataset.done='1'; answered++;
+    if(oi===qs[qi].ans){
+      this.classList.add('correct');
+      rd.textContent='✅ Bilkul sahi! Shabash!'; rd.style.color='#06d6a0'; score++;
+    } else {
+      this.classList.add('wrong');
+      document.querySelectorAll(`[data-qi="${qi}"]`)[qs[qi].ans].classList.add('correct');
+      rd.textContent='❌ Galat — sahi jawab green mein dekho!'; rd.style.color='#ff8b94';
+    }
+    if(answered===qs.length){
+      const sd=document.getElementById('quizScore');
+      const p=score/qs.length*100;
+      sd.style.display='flex';
+      document.getElementById('scoreText').textContent=
+        p===100?'🌟 Perfect 5/5! Ustad ho aap!':
+        p>=80?`🎉 ${score}/5 — Bohat acha! Thori practice aur!`:
+        p>=60?`📚 ${score}/5 — Theek hai, dobara parho!`:
+        `💪 ${score}/5 — Himmat mat haro, koshish karo!`;
+      sd.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  });
+});
+</script>
+</body>
+</html>

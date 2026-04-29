@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Module 7 — REST API: Design, Implementation &amp; Security | CSC337</title>
+<meta name="description" content="Designing REST APIs, Express CRUD, Postman, CORS, XSS, DDoS, authentication, JWT — Roman Urdu module notes (7.1–7.3)." />
+<meta name="topic" content="Designing, Implementing, and Securing REST APIs (Case Studies, Express, Security Overview)" />
+<meta name="subject" content="Advanced Web Technologies (CSC337)" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0a0c10;
+    --surface:   #111318;
+    --card:      #161a22;
+    --border:    #252b38;
+    --accent:    #00e5ff;
+    --accent2:   #ff6b35;
+    --accent3:   #7c3aed;
+    --green:     #22c55e;
+    --yellow:    #facc15;
+    --red:       #ef4444;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --text3:     #475569;
+    --sidebar-w: 270px;
+    --font-head: 'Sora', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-head);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    z-index: 100;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sidebar-logo .tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+  .sidebar-logo h2 {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  .nav-group-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 8px 24px 4px;
+    font-family: var(--font-mono);
+  }
+
+  #sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 400;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+  #sidebar a .icon { font-size: 15px; flex-shrink: 0; }
+  #sidebar a:hover { color: var(--text); background: rgba(0,229,255,.05); }
+  #sidebar a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(0,229,255,.08);
+    font-weight: 600;
+  }
+
+  #hamburger {
+    display: none;
+    position: fixed;
+    top: 16px; left: 16px;
+    z-index: 200;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0 48px 80px;
+    max-width: calc(100% - var(--sidebar-w));
+  }
+
+  #hero {
+    padding: 80px 0 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  #hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,229,255,.1);
+    border: 1px solid rgba(0,229,255,.2);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .hero-badge::before { content: '◉'; font-size: 8px; }
+  #hero h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+  #hero h1 span { color: var(--accent); }
+  #hero p {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 680px;
+    line-height: 1.8;
+    animation: fadeDown 0.6s 0.2s ease both;
+  }
+  .hero-meta {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 680px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    animation: fadeDown 0.6s 0.25s ease both;
+  }
+  .hero-meta strong { color: var(--text); display: block; margin-bottom: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-mono); color: var(--accent); }
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+    animation: fadeDown 0.6s 0.3s ease both;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  section {
+    padding: 60px 0 20px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .section-icon {
+    width: 40px; height: 40px;
+    background: rgba(0,229,255,.1);
+    border: 1px solid rgba(0,229,255,.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .section-header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(0,229,255,.05), transparent);
+    transition: opacity 0.3s;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(0,229,255,.3); }
+  .card:hover::before { opacity: 1; }
+  .card-icon { font-size: 28px; margin-bottom: 14px; }
+  .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+  .card .tag-pill {
+    display: inline-block;
+    background: rgba(0,229,255,.1);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+  }
+
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead tr { background: rgba(0,229,255,.07); }
+  th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  td { padding: 14px 18px; border-top: 1px solid var(--border); color: var(--muted); }
+  tr:hover td { background: rgba(255,255,255,.02); color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge.green { background: rgba(34,197,94,.1); color: var(--green); }
+  .badge.yellow { background: rgba(250,204,21,.1); color: var(--yellow); }
+  .badge.red { background: rgba(239,68,68,.1); color: var(--red); }
+  .badge.blue { background: rgba(0,229,255,.1); color: var(--accent); }
+
+  .alert {
+    display: flex;
+    gap: 14px;
+    padding: 18px 20px;
+    border-radius: 12px;
+    border-left: 4px solid;
+    margin-bottom: 16px;
+    animation: fadeLeft 0.4s ease both;
+  }
+  .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert p { font-size: 14px; line-height: 1.7; }
+  .alert strong { display: block; margin-bottom: 4px; font-size: 13px; }
+  .alert.info { background: rgba(0,229,255,.06); border-color: var(--accent); }
+  .alert.info strong, .alert.info .alert-icon { color: var(--accent); }
+  .alert.warn { background: rgba(250,204,21,.06); border-color: var(--yellow); }
+  .alert.warn strong, .alert.warn .alert-icon { color: var(--yellow); }
+  .alert.error { background: rgba(239,68,68,.06); border-color: var(--red); }
+  .alert.error strong, .alert.error .alert-icon { color: var(--red); }
+  .alert.success { background: rgba(34,197,94,.06); border-color: var(--green); }
+  .alert.success strong, .alert.success .alert-icon { color: var(--green); }
+
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(255,255,255,.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  pre {
+    padding: 20px 18px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.8;
+    font-family: var(--font-mono);
+  }
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .cm { color: #6272a4; font-style: italic; }
+
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex;
+    gap: 20px;
+    position: relative;
+  }
+  .step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 44px;
+    bottom: -10px;
+    width: 2px;
+    background: var(--border);
+  }
+  .step-num {
+    width: 40px; height: 40px;
+    background: rgba(0,229,255,.1);
+    border: 2px solid rgba(0,229,255,.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .step-body { padding: 8px 0 32px; }
+  .step-body h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .step-body p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+
+  #quiz-section .quiz-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .quiz-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .quiz-progress span {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 16px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .question-block { display: none; }
+  .question-block.active { display: block; animation: fadeUp 0.3s ease; }
+  .question-block h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .question-block h3 .qnum {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .opt-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 18px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 14px;
+    font-family: var(--font-head);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .opt-btn .opt-letter {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+  .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0,229,255,.05); }
+  .opt-btn.correct { border-color: var(--green); background: rgba(34,197,94,.08); }
+  .opt-btn.correct .opt-letter { background: var(--green); color: #000; }
+  .opt-btn.wrong { border-color: var(--red); background: rgba(239,68,68,.08); }
+  .opt-btn.wrong .opt-letter { background: var(--red); color: #fff; }
+  .opt-btn:disabled { cursor: not-allowed; }
+  .feedback-msg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .feedback-msg.show { display: block; }
+  .feedback-msg.correct { background: rgba(34,197,94,.1); color: var(--green); }
+  .feedback-msg.wrong { background: rgba(239,68,68,.1); color: var(--red); }
+  .quiz-nav {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-head);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #29ecff; transform: translateY(-2px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .quiz-result {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .quiz-result.show { display: block; animation: fadeUp 0.4s ease; }
+  .result-score {
+    font-size: 72px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  .result-msg { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .result-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  .hw-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .hw-list li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .hw-list li:hover { border-color: var(--accent2); color: var(--text); }
+  .hw-num {
+    background: rgba(255,107,53,.1);
+    color: var(--accent2);
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .recap-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .recap-item:hover { border-color: var(--accent3); color: var(--text); transform: scale(1.02); }
+  .recap-item .ri { font-size: 26px; margin-bottom: 10px; }
+  .recap-item strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+
+  .mini-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .mini-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .mini-card:hover { border-color: rgba(124,58,237,.4); transform: translateY(-2px); }
+  .mini-card h4 { font-size: 14px; margin-bottom: 8px; color: var(--accent3); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (max-width: 820px) {
+    :root { --sidebar-w: 0px; }
+    #sidebar { transform: translateX(-270px); width: 270px; }
+    #sidebar.open { transform: translateX(0); }
+    #hamburger { display: flex; }
+    #main { margin-left: 0; padding: 0 20px 80px; max-width: 100%; }
+    #hero { padding-top: 70px; }
+    .hero-stats { gap: 20px; }
+  }
+
+  /* lec-index-nav */
+  a.lec-back-home {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 250;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 8px 14px;
+    background: var(--card, var(--surface2, rgba(22, 26, 34, 0.95)));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-head, inherit);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+  a.lec-back-home:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+</style>
+
+<a href="index.html" class="lec-back-home">← Advanced Web Technologies</a>
+</head>
+<body>
+
+<button id="hamburger" onclick="toggleSidebar()" title="Menu">☰</button>
+
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="tag">Module 7 • CSC337</div>
+    <h2>REST API •<br>Design → Build → Secure</h2>
+  </div>
+
+  <div class="nav-group-label">Overview</div>
+  <a href="#hero" class="active"><span class="icon">🏠</span> Hero</a>
+  <a href="#schedule"><span class="icon">⏱️</span> Plan (7.1–7.3)</a>
+  <a href="#objectives"><span class="icon">🎯</span> Objectives</a>
+
+  <div class="nav-group-label">7.1 Designing</div>
+  <a href="#api-rest-basics"><span class="icon">🌐</span> API &amp; REST</a>
+  <a href="#case-bookstore"><span class="icon">📚</span> Bookstore case study</a>
+  <a href="#design-practices"><span class="icon">✅</span> Best practices</a>
+  <a href="#design-advanced"><span class="icon">🔎</span> Query &amp; pagination</a>
+
+  <div class="nav-group-label">7.2 Implementing</div>
+  <a href="#rest-principles"><span class="icon">📐</span> Six principles</a>
+  <a href="#student-crud"><span class="icon">⚙️</span> Express CRUD</a>
+  <a href="#testing-postman"><span class="icon">🧪</span> Postman &amp; status codes</a>
+
+  <div class="nav-group-label">7.3 Security</div>
+  <a href="#security-why"><span class="icon">🔐</span> Why secure APIs?</a>
+  <a href="#cors"><span class="icon">🌍</span> CORS</a>
+  <a href="#xss-ddos"><span class="icon">⚠️</span> XSS &amp; DDoS</a>
+  <a href="#authn-authz"><span class="icon">🎫</span> AuthN vs AuthZ</a>
+  <a href="#session-tokens"><span class="icon">🔄</span> Sessions &amp; JWT</a>
+
+  <div class="nav-group-label">Wrap-up</div>
+  <a href="#activities"><span class="icon">🎯</span> Activities</a>
+  <a href="#pitfalls"><span class="icon">🐛</span> Pitfalls</a>
+  <a href="#references"><span class="icon">📚</span> References</a>
+  <a href="#quiz-section"><span class="icon">🧠</span> Quiz</a>
+  <a href="#homework"><span class="icon">📝</span> Homework</a>
+  <a href="#recap"><span class="icon">✅</span> Recap</a>
+</nav>
+
+
+
+<main id="main">
+
+  <section id="hero">
+    <div class="hero-badge">Advanced Web Technologies (CSC337)</div>
+    <h1>Module 7:<br><span>REST API — Design • Implement • Secure</span></h1>
+    <p>
+      Teen PDFs ka merged Roman Urdu guide: <strong>7.1 Designing REST API</strong> (case study, endpoints, best practices),
+      <strong>7.2 Implementing REST API</strong> (six principles, Express CRUD, Postman),
+      aur <strong>7.3 REST API Security</strong> (CORS, XSS, DDoS, authentication vs authorization, JWT / sessions).
+    </p>
+    <div class="hero-meta" aria-label="Topic aur Subject">
+      <strong>Sources:</strong>
+      “7 1 Designing REST API” • “7.2 Implementing REST API” • “7.3 REST API Security Overview”
+      <br><br>
+      <strong>Subject:</strong>
+      Advanced Web Technologies (CSC337) • Theory + Practical orientation • ~6 hours material (self-paced sections)
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">7.1</span><span class="stat-label">Design</span></div>
+      <div class="stat"><span class="stat-num">7.2</span><span class="stat-label">Build</span></div>
+      <div class="stat"><span class="stat-num">7.3</span><span class="stat-label">Secure</span></div>
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Quiz MCQs</span></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="schedule">
+    <div class="section-header">
+      <div class="section-icon">⏱️</div>
+      <div>
+        <h2>Module Overview</h2>
+        <p>Har PDF ka apna 2-hour plan — yahan sequence</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>PDF</th>
+            <th>Focus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>7.1 Designing REST API</strong></td>
+            <td>API/REST intro • Online Bookstore case • endpoints • nouns/plural • status codes • JSON • Express preview • query/pagination/JWT hint</td>
+          </tr>
+          <tr>
+            <td><strong>7.2 Implementing REST API</strong></td>
+            <td>Six REST principles • Student Management CRUD • Node/Express • Postman • testing</td>
+          </tr>
+          <tr>
+            <td><strong>7.3 Security Overview</strong></td>
+            <td>CORS • XSS • DDoS • AuthN vs AuthZ • JWT/OAuth • session vs token • secure practices</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="objectives">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div>
+        <h2>Learning Objectives (combined)</h2>
+        <p>7.2 PDF list + security outcomes</p>
+      </div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li>REST API aur REST architectural style samajhna</li>
+      <li>Resources identify karke endpoints + HTTP verbs design karna</li>
+      <li>Express.js me CRUD implement + status codes use karna</li>
+      <li>Postman se test karna</li>
+      <li>CORS, XSS, DDoS, authentication/authorization, token-based sessions ka overview</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="api-rest-basics">
+    <div class="section-header">
+      <div class="section-icon">🌐</div>
+      <div>
+        <h2>7.1 — API &amp; REST (Introduction)</h2>
+        <p>Designing REST API — PDF flow</p>
+      </div>
+    </div>
+    <div class="alert info">
+      <span class="alert-icon">📡</span>
+      <div>
+        <strong>API (Application Programming Interface)</strong>
+        <p>Woh rules jo different software systems ko aapas me baat karwate hain — client server communication bridge.</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;">
+      Real-life: Foodpanda / Careem — app server ko request bhejti hai (“available restaurants”), server JSON response deta hai.
+    </p>
+    <div class="alert success">
+      <span class="alert-icon">📐</span>
+      <div>
+        <strong>REST (Representational State Transfer)</strong>
+        <p>Networked applications design karne ka architectural style — HTTP protocol, standard methods, stateless communication.</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;margin-bottom:16px;">
+      <strong>REST principles (short):</strong> Stateless • Client–Server • Uniform Interface • Resource-based (detail 7.2 me six principles bhi).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Purpose</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>GET</td><td>Retrieve</td><td>View product / list books</td></tr>
+          <tr><td>POST</td><td>Create</td><td>Register user / add book</td></tr>
+          <tr><td>PUT</td><td>Update</td><td>Update profile / book</td></tr>
+          <tr><td>DELETE</td><td>Remove</td><td>Delete account / book</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert warn">
+      <span class="alert-icon">🎯</span>
+      <div>
+        <strong>Activity — Facebook login</strong>
+        <p>Kaun sa HTTP method? — <strong>POST</strong> (credentials body me bhejne ke liye; GET query string me sensitive data risky).</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="case-bookstore">
+    <div class="section-header">
+      <div class="section-icon">📚</div>
+      <div>
+        <h2>Case Study — Online Bookstore API</h2>
+        <p>Resources → endpoints</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;">
+      Requirements snapshot: user registration/login • books CRUD • orders — PDF me <strong>Users</strong>, <strong>Books</strong>, <strong>Orders</strong> resources.
+    </p>
+
+    <h3 style="font-size:16px;margin:24px 0 12px;color:var(--text);">Users</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Operation</th><th>Method</th><th>Endpoint</th></tr></thead>
+        <tbody>
+          <tr><td>Register</td><td>POST</td><td><code>/users</code></td></tr>
+          <tr><td>Get all</td><td>GET</td><td><code>/users</code></td></tr>
+          <tr><td>Get one</td><td>GET</td><td><code>/users/{id}</code></td></tr>
+          <tr><td>Update</td><td>PUT</td><td><code>/users/{id}</code></td></tr>
+          <tr><td>Delete</td><td>DELETE</td><td><code>/users/{id}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:16px;margin:24px 0 12px;color:var(--text);">Books</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Operation</th><th>Method</th><th>Endpoint</th></tr></thead>
+        <tbody>
+          <tr><td>Add</td><td>POST</td><td><code>/books</code></td></tr>
+          <tr><td>List</td><td>GET</td><td><code>/books</code></td></tr>
+          <tr><td>Get</td><td>GET</td><td><code>/books/{id}</code></td></tr>
+          <tr><td>Update</td><td>PUT</td><td><code>/books/{id}</code></td></tr>
+          <tr><td>Delete</td><td>DELETE</td><td><code>/books/{id}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:16px;margin:24px 0 12px;color:var(--text);">Orders</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Operation</th><th>Method</th><th>Endpoint</th></tr></thead>
+        <tbody>
+          <tr><td>Create order</td><td>POST</td><td><code>/orders</code></td></tr>
+          <tr><td>Get orders</td><td>GET</td><td><code>/orders</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">❓</span>
+      <div>
+        <strong>Quick checks</strong>
+        <p>Book id=10 update → <code>PUT /books/10</code> • User delete → <code>DELETE</code> • <code>/getAllBooks</code> verb-style — avoid; use <code>/books</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="design-practices">
+    <div class="section-header">
+      <div class="section-icon">✅</div>
+      <div>
+        <h2>REST Design Best Practices</h2>
+        <p>7.1 PDF</p>
+      </div>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📛</div>
+        <h3>Nouns, not verbs</h3>
+        <p>❌ <code>/getBooks</code> → ✅ <code>/books</code></p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📋</div>
+        <h3>Plural resources</h3>
+        <p>❌ <code>/book</code> → ✅ <code>/books</code></p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔢</div>
+        <h3>HTTP status codes</h3>
+        <p>Client ko clear signal — success vs error.</p>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:20px;">
+      <table>
+        <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>200</td><td>OK</td></tr>
+          <tr><td>201</td><td>Created</td></tr>
+          <tr><td>400</td><td>Bad Request</td></tr>
+          <tr><td>404</td><td>Not Found</td></tr>
+          <tr><td>500</td><td>Server Error</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JSON response sample</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>{
+  "id": 1,
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "price": 500
+}</pre>
+    </div>
+
+    <div class="alert warn">
+      <span class="alert-icon">🎓</span>
+      <div>
+        <strong>Group task</strong>
+        <p>University Management — resources Students, Courses, Teachers + endpoints present karo.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="design-advanced">
+    <div class="section-header">
+      <div class="section-icon">🔎</div>
+      <div>
+        <h2>Query Parameters, Pagination, Auth (intro)</h2>
+        <p>7.1 PDF — advanced slice</p>
+      </div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li><strong>Filter:</strong> <code>GET /books?author=Ali</code></li>
+      <li><strong>Pagination:</strong> <code>GET /books?page=1&amp;limit=10</code></li>
+      <li><strong>Authentication (basic idea):</strong> JWT tokens secure APIs — login → verify → token → header me bhejo (detail Module JWT lecture / 7.3).</li>
+    </ul>
+    <div class="alert info">
+      <span class="alert-icon">💻</span>
+      <div>
+        <strong>7.1 hands-on (summary)</strong>
+        <p><code>npm init -y</code> • <code>express</code> + <code>express.json()</code> • Books in-memory CRUD • Postman se POST/GET/PUT/DELETE — implementation detail neeche 7.2 ke saath align.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="rest-principles">
+    <div class="section-header">
+      <div class="section-icon">📐</div>
+      <div>
+        <h2>7.2 — Six REST Principles</h2>
+        <p>Implementing lecture</p>
+      </div>
+    </div>
+    <div class="mini-grid">
+      <div class="mini-card"><h4>① Client–Server</h4><p>Frontend / backend alag — scale independently.</p></div>
+      <div class="mini-card"><h4>② Stateless</h4><p>Har request complete context; server client session memory pe depend nahi.</p></div>
+      <div class="mini-card"><h4>③ Cacheable</h4><p>Responses cache ho sakti hain — performance.</p></div>
+      <div class="mini-card"><h4>④ Uniform Interface</h4><p>URLs + HTTP methods consistent.</p></div>
+      <div class="mini-card"><h4>⑤ Layered System</h4><p>Security, DB layers — client ko transparent.</p></div>
+      <div class="mini-card"><h4>⑥ Code on Demand</h4><p>Optional — rarely emphasized in basic REST APIs.</p></div>
+    </div>
+
+    <div class="alert warn">
+      <span class="alert-icon">💬</span>
+      <div>
+        <strong>Discussion</strong>
+        <p>Stateless kyu? • Session server pe store ho to scaling issues • GET se sensitive data fetch kyu avoid — caching/bookmarks/logging risks.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="student-crud">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <div>
+        <h2>Express — Student Management CRUD</h2>
+        <p>7.2 step-by-step</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;">
+      Resource: <strong>Student</strong> — fields <code>id</code>, <code>name</code>, <code>email</code>, <code>department</code>. Base path: <code>/api/students</code>.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">server.js — setup + data</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>const express = require('express');
+const app = express();
+app.use(express.json());
+app.listen(3000, () => console.log('Server running on port 3000'));
+
+let students = [
+  { id: 1, name: 'Ali', email: 'ali@gmail.com', department: 'CS' },
+  { id: 2, name: 'Sara', email: 'sara@gmail.com', department: 'IT' }
+];</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">CRUD routes</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>app.get('/api/students', (req, res) => res.json(students));
+
+app.get('/api/students/:id', (req, res) => {
+  const student = students.find(s => s.id == req.params.id);
+  if (!student) return res.status(404).json({ message: 'Student not found' });
+  res.json(student);
+});
+
+app.post('/api/students', (req, res) => {
+  const newStudent = { id: students.length + 1, ...req.body };
+  students.push(newStudent);
+  res.status(201).json(newStudent);
+});
+
+app.put('/api/students/:id', (req, res) => {
+  const student = students.find(s => s.id == req.params.id);
+  if (!student) return res.status(404).json({ message: 'Student not found' });
+  student.name = req.body.name;
+  student.email = req.body.email;
+  student.department = req.body.department;
+  res.json(student);
+});
+
+app.delete('/api/students/:id', (req, res) => {
+  students = students.filter(s => s.id != req.params.id);
+  res.json({ message: 'Student deleted successfully' });
+});</pre>
+    </div>
+    <p style="color:var(--text3);font-size:13px;">Bookstore <code>/books</code> routes same pattern — sirf resource name badlo.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="testing-postman">
+    <div class="section-header">
+      <div class="section-icon">🧪</div>
+      <div>
+        <h2>Testing with Postman</h2>
+        <p>7.2 PDF</p>
+      </div>
+    </div>
+    <ol style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li>Postman open → HTTP method select</li>
+      <li>URL enter → Body (JSON) jab POST/PUT</li>
+      <li>Send → status + response check</li>
+    </ol>
+    <div class="alert success">
+      <span class="alert-icon">✅</span>
+      <div>
+        <strong>Hands-on checklist</strong>
+        <p>3 books POST • list GET • ek PUT • ek DELETE — ya students par same flow.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="security-why">
+    <div class="section-header">
+      <div class="section-icon">🔐</div>
+      <div>
+        <h2>7.3 — Why REST API Security?</h2>
+        <p>Overview PDF</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;">
+      Agar APIs secure na hon: data theft • server overload • unauthorized access — e.g. banking API without authentication = disaster.
+      REST methods <code>GET POST PUT DELETE</code> — security layer alag se design karni parti hai.
+    </p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="cors">
+    <div class="section-header">
+      <div class="section-icon">🌍</div>
+      <div>
+        <h2>CORS (Cross-Origin Resource Sharing)</h2>
+        <p>Browser-enforced</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;">
+      CORS control karta hai ke <strong>dusre domain</strong> se resources kaise request ho — Same-Origin Policy ke sath.
+      Example: frontend <code>http://example.com</code> vs API <code>http://api.example.com</code> different origins.
+    </p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Response headers (concept)</span><button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre>Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Methods: GET, POST
+Access-Control-Allow-Headers: Content-Type</pre>
+    </div>
+    <div class="alert error">
+      <span class="alert-icon">⛔</span>
+      <div>
+        <strong>Sensitive APIs</strong>
+        <p><code>Access-Control-Allow-Origin: *</code> avoid — sirf trusted domains • methods restrict • tokens server-side verify.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="xss-ddos">
+    <div class="section-header">
+      <div class="section-icon">⚠️</div>
+      <div>
+        <h2>XSS &amp; DDoS</h2>
+        <p>7.3 PDF</p>
+      </div>
+    </div>
+    <div class="two-col-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;">
+      <div class="card">
+        <h3>XSS</h3>
+        <p>Malicious script injection — stored / reflected / DOM-based. Impact: cookies, session hijack, redirects.</p>
+        <p style="margin-top:10px;"><strong>Mitigation:</strong> input validation, output encoding, HttpOnly cookies, CSP.</p>
+      </div>
+      <div class="card">
+        <h3>DDoS</h3>
+        <p>Traffic flood → availability loss. Example ref: 2016 Dyn incident (Twitter, Netflix, GitHub affected).</p>
+        <p style="margin-top:10px;"><strong>Mitigation:</strong> rate limiting, CAPTCHA, API gateway, load balancers, CDN.</p>
+      </div>
+    </div>
+    <div class="alert info">
+      <span class="alert-icon">⚖️</span>
+      <div>
+        <strong>Targets</strong>
+        <p>XSS often <strong>users</strong> / browser context • DDoS <strong>servers</strong> / availability.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="authn-authz">
+    <div class="section-header">
+      <div class="section-icon">🎫</div>
+      <div>
+        <h2>Authentication vs Authorization</h2>
+        <p>AuthN • AuthZ</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Authentication</th><th>Authorization</th></tr></thead>
+        <tbody>
+          <tr><td>Means</td><td><strong>Kaun ho?</strong></td><td><strong>Kya kar sakte ho?</strong></td></tr>
+          <tr><td>Examples</td><td>Password, OTP, biometrics</td><td>Student vs admin routes</td></tr>
+          <tr><td>Analogy</td><td>University ID check</td><td>Lab access permission</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.85;margin-top:16px;">
+      Common REST methods list: Basic auth • API keys • JWT • OAuth 2.0 (“Login with Google”).
+      <strong>JWT:</strong> compact token — <code>Header.Payload.Signature</code> • <code>Authorization: Bearer &lt;token&gt;</code> (RFC 7519).
+    </p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="session-tokens">
+    <div class="section-header">
+      <div class="section-icon">🔄</div>
+      <div>
+        <h2>Session Handling in REST</h2>
+        <p>Traditional vs token-based</p>
+      </div>
+    </div>
+    <div class="alert warn">
+      <span class="alert-icon">⚡</span>
+      <div>
+        <strong>Tension</strong>
+        <p>REST stateless philosophy • phir bhi user state chahiye — is liye patterns align carefully.</p>
+      </div>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Session-based</h3>
+        <p>Server session store • cookie me session id — scaling / microservices me mushkil.</p>
+      </div>
+      <div class="card">
+        <h3>Token-based (JWT)</h3>
+        <p>Server token issue • client har request me bhejta hai • scalable • mobile-friendly.</p>
+      </div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li>HTTPS • HttpOnly / Secure cookies jab cookies use hon</li>
+      <li>Short expiry • refresh tokens • revoke compromised tokens</li>
+      <li>Flow: login → validate → JWT → header me verify → allow/deny</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="activities">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div>
+        <h2>Activities (from PDFs)</h2>
+        <p>Think-pair-share • groups • quiz</p>
+      </div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li>Login GET vs POST • stateless discussion • status codes importance</li>
+      <li>Library / online store API design (groups)</li>
+      <li>E-commerce assignment: Customers, Products, Cart, Orders, Payments — endpoints + JSON samples</li>
+      <li>Security groups: banking / e-commerce / university — auth method, XSS/DDoS mitigation, authorization levels</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="pitfalls">
+    <div class="section-header">
+      <div class="section-icon">🐛</div>
+      <div>
+        <h2>Common Pitfalls</h2>
+        <p>Design + security</p>
+      </div>
+    </div>
+    <div class="alert error"><span class="alert-icon">🔗</span><div><strong>Verb URLs</strong><p><code>/getAllBooks</code> — REST me nouns + HTTP verbs.</p></div></div>
+    <div class="alert warn"><span class="alert-icon">🔓</span><div><strong>CORS * on sensitive APIs</strong><p>Origin whitelist + token validation.</p></div></div>
+    <div class="alert warn"><span class="alert-icon">🧂</span><div><strong>AuthN without AuthZ</strong><p>Login ho gaya lekin role checks missing — admin routes expose.</p></div></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="references">
+    <div class="section-header">
+      <div class="section-icon">📚</div>
+      <div>
+        <h2>References</h2>
+        <p>Academic / standards</p>
+      </div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;line-height:2;margin-left:1.2rem;">
+      <li>Roy Fielding — REST dissertation (2000)</li>
+      <li>HTTP — RFC 7230+ family (successor to older RFC 2616 mentions in PDFs)</li>
+      <li>JWT — RFC 7519 • OAuth 2.0 — IETF</li>
+      <li>Same-Origin Policy — browser security model</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="quiz-section">
+    <div class="section-header">
+      <div class="section-icon">🧠</div>
+      <div>
+        <h2>Quiz — 5 MCQs</h2>
+        <p>Design • Implement • Security</p>
+      </div>
+    </div>
+
+    <div class="quiz-wrap">
+      <div class="quiz-progress">
+        <span id="q-counter">1 / 5</span>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+        <span id="score-display">Score: 0</span>
+      </div>
+
+      <div class="question-block active" data-answer="1">
+        <h3><span class="qnum">Q1</span>User credentials bhej kar login karte waqt kaun sa HTTP method generally prefer hota hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> GET</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> POST</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> DELETE</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> PUT</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="0">
+        <h3><span class="qnum">Q2</span>REST-friendly resource path kaun sa hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> /books</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> /getAllBooks</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> /fetchBooksNow</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> /book/get</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="1">
+        <h3><span class="qnum">Q3</span>Naya resource successfully create hone par kaun sa status code notes me commonly use hota hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> 404</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> 201 Created</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> 500</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> 400</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="0">
+        <h3><span class="qnum">Q4</span><strong>Authentication</strong> primarily kya verify karta hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> User ki identity (kaun hai)</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Kaun se endpoints allowed hain (roles) — ye zyada authorization</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> Sirf database indexes</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> Sirf CORS headers</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="nextQ()" disabled>Agla Sawal →</button></div>
+      </div>
+
+      <div class="question-block" data-answer="1">
+        <h3><span class="qnum">Q5</span>Rate limiting / throttling APIs par mainly kis threat ko kam karne me madad karti hai?</h3>
+        <div class="options">
+          <button type="button" class="opt-btn" onclick="answer(this, 0)"><span class="opt-letter">A</span> Same-Origin Policy remove karna</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 1)"><span class="opt-letter">B</span> Traffic flood / abuse (DDoS-style overload)</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 2)"><span class="opt-letter">C</span> HTTPS encryption</button>
+          <button type="button" class="opt-btn" onclick="answer(this, 3)"><span class="opt-letter">D</span> JSON format enforce karna</button>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="quiz-nav"><button type="button" class="btn btn-primary" onclick="showResult()" disabled>Natija Dekho 🎉</button></div>
+      </div>
+
+      <div class="quiz-result" id="quiz-result">
+        <div class="result-score" id="result-score">0/5</div>
+        <div class="result-msg" id="result-msg"></div>
+        <div class="result-sub" id="result-sub"></div>
+        <button type="button" class="btn btn-primary" onclick="restartQuiz()">Dobara Try Karo 🔄</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="homework">
+    <div class="section-header">
+      <div class="section-icon">📝</div>
+      <div>
+        <h2>Homework (merged)</h2>
+        <p>7.1 + 7.2 + 7.3</p>
+      </div>
+    </div>
+    <ul class="hw-list">
+      <li><span class="hw-num">1</span><strong>E-Commerce API design:</strong> Customers, Products, Cart, Orders, Payments — endpoints + methods + sample JSON.</li>
+      <li><span class="hw-num">2</span><strong>MongoDB:</strong> student/book API ko DB se connect karo (7.2 homework).</li>
+      <li><span class="hw-num">3</span><strong>Validation</strong> request body par — errors + status codes.</li>
+      <li><span class="hw-num">4</span><strong>JWT</strong> authentication flow implement / extend.</li>
+      <li><span class="hw-num">5</span><strong>Deploy</strong> trial — Render / Railway style hosting.</li>
+      <li><span class="hw-num">6</span><strong>Security short notes:</strong> CORS whitelist • XSS prevention • rate limiting — apni API par apply karne ka plan.</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="recap">
+    <div class="section-header">
+      <div class="section-icon">✅</div>
+      <div>
+        <h2>Key Takeaways</h2>
+        <p>Teeno PDFs</p>
+      </div>
+    </div>
+    <div class="recap-grid">
+      <div class="recap-item"><div class="ri">📐</div><strong>Design</strong>Nouns • plural • JSON • status codes.</div>
+      <div class="recap-item"><div class="ri">⚙️</div><strong>Build</strong>Express CRUD • Postman.</div>
+      <div class="recap-item"><div class="ri">🌍</div><strong>CORS</strong>Origins control.</div>
+      <div class="recap-item"><div class="ri">💉</div><strong>XSS</strong>Users — sanitize.</div>
+      <div class="recap-item"><div class="ri">🌊</div><strong>DDoS</strong>Availability — rate limits.</div>
+      <div class="recap-item"><div class="ri">🎫</div><strong>Auth</strong>AuthN ≠ AuthZ • JWT.</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const links = document.querySelectorAll('#sidebar a');
+  const sections = document.querySelectorAll('section[id], #hero');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector('#sidebar a[href="#' + entry.target.id + '"]');
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+  document.getElementById('main').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+  });
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  }
+
+  let currentQ = 0;
+  let score = 0;
+  const questions = document.querySelectorAll('.question-block');
+  const feedbacks = [
+    'Sahi! Login credentials body me — POST zyada appropriate.',
+    'Bilkul! Noun + plural /books — verb path avoid.',
+    'Theek! 201 Created naya resource create ke liye common.',
+    'Perfect! Authentication = identity (kaun hai).',
+    'Great! Rate limiting abuse / flood traffic control me help.'
+  ];
+  const wrongs = [
+    'Nahi — GET se sensitive body risky; login POST typical.',
+    'Nahi — /getAllBooks verb style; REST resource path + HTTP method.',
+    'Nahi — 201 create success; 404 not found.',
+    'Nahi — roles/permissions authorization side.',
+    'Nahi — rate limit mainly volume/DDoS-style abuse; HTTPS alag concern.'
+  ];
+
+  function answer(btn, selected) {
+    const qBlock = btn.closest('.question-block');
+    const correct = parseInt(qBlock.dataset.answer, 10);
+    const btns = qBlock.querySelectorAll('.opt-btn');
+    const fb = qBlock.querySelector('.feedback-msg');
+    const nextBtn = qBlock.querySelector('.btn-primary');
+
+    btns.forEach(b => { b.disabled = true; });
+
+    if (selected === correct) {
+      btn.classList.add('correct');
+      fb.textContent = '✅ ' + feedbacks[currentQ];
+      fb.className = 'feedback-msg show correct';
+      score++;
+      document.getElementById('score-display').textContent = 'Score: ' + score;
+    } else {
+      btn.classList.add('wrong');
+      btns[correct].classList.add('correct');
+      fb.textContent = '❌ ' + wrongs[currentQ];
+      fb.className = 'feedback-msg show wrong';
+    }
+    nextBtn.disabled = false;
+  }
+
+  function nextQ() {
+    questions[currentQ].classList.remove('active');
+    currentQ++;
+    if (currentQ < questions.length) {
+      questions[currentQ].classList.add('active');
+      document.getElementById('q-counter').textContent = (currentQ + 1) + ' / 5';
+      document.getElementById('progress-fill').style.width = ((currentQ + 1) * 20) + '%';
+    }
+  }
+
+  function showResult() {
+    questions[currentQ].classList.remove('active');
+    document.getElementById('quiz-result').classList.add('show');
+    document.getElementById('result-score').textContent = score + '/5';
+    const msgs = ['Koshish karo dobara! 💪', 'Thoda aur practice! 📚', 'Theek hai, improve karo 👍', 'Acha score! 🔥', 'Bahut acha! 🌟', 'Perfect! REST API module champion! 🎉'];
+    document.getElementById('result-msg').textContent = msgs[score];
+    document.getElementById('result-sub').textContent = score >= 4 ? 'Design + Express + security basics solid!' : 'Endpoints, status codes, AuthN vs AuthZ, CORS dubara dekho.';
+    document.getElementById('q-counter').textContent = '5 / 5';
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('score-display').textContent = 'Score: ' + score;
+  }
+
+  function restartQuiz() {
+    currentQ = 0;
+    score = 0;
+    document.getElementById('quiz-result').classList.remove('show');
+    document.getElementById('score-display').textContent = 'Score: 0';
+    document.getElementById('q-counter').textContent = '1 / 5';
+    document.getElementById('progress-fill').style.width = '20%';
+    questions.forEach(q => {
+      q.classList.remove('active');
+      q.querySelectorAll('.opt-btn').forEach(b => {
+        b.classList.remove('correct', 'wrong');
+        b.disabled = false;
+      });
+      const fb = q.querySelector('.feedback-msg');
+      fb.className = 'feedback-msg';
+      q.querySelector('.btn-primary').disabled = true;
+    });
+    questions[0].classList.add('active');
+  }
+</script>
+</body>
+</html>

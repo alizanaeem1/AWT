@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  background: #0b0c14;
+  color: #e5e7eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page-animate {
+  animation: pageFadeIn 260ms ease-out;
+}
+
+.page-animate > * {
+  animation: sectionFadeIn 340ms ease-out both;
+}
+
+.page-animate > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+
+.page-animate > *:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.page-animate > *:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.page-animate > *:nth-child(4) {
+  animation-delay: 190ms;
+}
+
+/* Global micro-interactions for a smoother UI feel across pages */
+button {
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+/* Modals: avoid global button transform (breaks click hit-testing with fixed layers / portals) */
+button.app-modal-cta,
+button.app-modal-cta:hover,
+button.app-modal-cta:active {
+  transform: none;
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.page-animate section,
+.page-animate article {
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.page-animate section:hover,
+.page-animate article:hover {
+  transform: translateY(-1px);
+}
