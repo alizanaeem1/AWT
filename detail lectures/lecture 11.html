@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angular Seekho - Complete Guide</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1629;
+    --bg3: #141d35;
+    --sidebar: #0d1225;
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --accent3: #06b6d4;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --border: #1e2d4d;
+    --card: #111827;
+    --code-bg: #0d1117;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; min-height: 100vh; }
+
+  /* Progress Bar */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    z-index: 9999; transition: width 0.1s;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: 260px; min-height: 100vh; background: var(--sidebar);
+    border-right: 1px solid var(--border); position: fixed; top: 0; left: 0;
+    overflow-y: auto; z-index: 100; transition: transform 0.3s;
+    padding-bottom: 2rem;
+  }
+  .sidebar-logo {
+    padding: 1.5rem 1.2rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo h2 { color: var(--accent); font-size: 1.2rem; }
+  .sidebar-logo p { color: var(--text2); font-size: 0.72rem; margin-top: 3px; }
+  .nav-section { padding: 0.8rem 0.8rem 0.2rem; }
+  .nav-section-title { color: var(--text2); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 0 0.4rem; margin-bottom: 0.4rem; }
+  .nav-link {
+    display: flex; align-items: center; gap: 8px; padding: 0.52rem 0.8rem;
+    color: var(--text2); text-decoration: none; border-radius: 8px;
+    font-size: 0.84rem; transition: all 0.2s; margin-bottom: 2px;
+  }
+  .nav-link:hover { background: rgba(79,142,247,0.12); color: var(--accent); }
+  .nav-link.active { background: rgba(79,142,247,0.18); color: var(--accent); font-weight: 600; }
+  .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+  .nav-link.active .nav-dot { background: var(--accent); }
+  .hamburger { display: none; position: fixed; top: 14px; left: 14px; z-index: 200; background: var(--accent); border: none; color: #fff; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
+
+  /* Main Content */
+  #main { margin-left: 260px; padding: 2rem 2.5rem; max-width: 1000px; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 90; }
+
+  /* Sections */
+  .section { margin-bottom: 4rem; opacity: 0; transform: translateY(30px); transition: opacity 0.6s, transform 0.6s; }
+  .section.visible { opacity: 1; transform: translateY(0); }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #0f1629 0%, #1a0d2e 50%, #0d1a2e 100%);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 3rem 2.5rem; margin-bottom: 4rem; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(79,142,247,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-badge { display: inline-block; background: rgba(79,142,247,0.15); color: var(--accent); padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; margin-bottom: 1rem; border: 1px solid rgba(79,142,247,0.3); }
+  .hero h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+  .hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { color: var(--text2); font-size: 1.05rem; line-height: 1.7; max-width: 600px; margin-bottom: 1.5rem; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .hero-tag { background: var(--bg3); border: 1px solid var(--border); padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; color: var(--text2); }
+
+  /* Section Titles */
+  .section-title { font-size: 1.7rem; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 10px; }
+  .section-title .icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .icon-blue { background: rgba(79,142,247,0.15); }
+  .icon-purple { background: rgba(124,58,237,0.15); }
+  .icon-cyan { background: rgba(6,182,212,0.15); }
+  .icon-green { background: rgba(16,185,129,0.15); }
+  .icon-yellow { background: rgba(245,158,11,0.15); }
+  .section-sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 1.8rem; padding-left: 46px; }
+  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+  /* Cards */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.3rem; transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(79,142,247,0.1); }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0; transition: opacity 0.3s; }
+  .card:hover::before { opacity: 1; }
+  .card-icon { font-size: 1.6rem; margin-bottom: 0.6rem; }
+  .card h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+  .card p { color: var(--text2); font-size: 0.84rem; line-height: 1.6; }
+
+  /* Code Blocks */
+  .code-block { background: var(--code-bg); border: 1px solid #1e3a5f; border-radius: 12px; overflow: hidden; margin: 1.2rem 0; }
+  .code-header { background: #161b2e; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e3a5f; }
+  .code-header span { color: var(--text2); font-size: 0.78rem; font-family: monospace; }
+  .code-lang { background: rgba(79,142,247,0.15); color: var(--accent); padding: 2px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
+  .code-block pre { padding: 1.2rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.7; font-family: 'Courier New', monospace; color: #cdd9e5; }
+  .kw { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .fn { color: #d2a8ff; }
+  .cls { color: #ffa657; }
+  .tag { color: #7ee787; }
+  .attr { color: #79c0ff; }
+  .val { color: #a5d6ff; }
+
+  /* Alerts */
+  .alert { padding: 1rem 1.2rem; border-radius: 10px; margin: 1rem 0; border-left: 4px solid; }
+  .alert-tip { background: rgba(16,185,129,0.08); border-color: var(--green); }
+  .alert-tip .alert-title { color: var(--green); }
+  .alert-warn { background: rgba(245,158,11,0.08); border-color: var(--yellow); }
+  .alert-warn .alert-title { color: var(--yellow); }
+  .alert-exam { background: rgba(79,142,247,0.08); border-color: var(--accent); }
+  .alert-exam .alert-title { color: var(--accent); }
+  .alert-title { font-weight: 700; font-size: 0.88rem; margin-bottom: 0.3rem; }
+  .alert p { color: var(--text2); font-size: 0.86rem; line-height: 1.6; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--bg3); color: var(--accent); padding: 0.75rem 1rem; text-align: left; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 0.75rem 1rem; color: var(--text2); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.04); }
+  td:first-child { color: var(--text); font-weight: 600; }
+
+  /* Explain Box */
+  .explain-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; margin: 1rem 0; }
+  .explain-box h4 { color: var(--accent3); font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .explain-box p, .explain-box li { color: var(--text2); font-size: 0.875rem; line-height: 1.7; }
+  .explain-box ul { padding-left: 1.2rem; }
+  .explain-box li { margin-bottom: 0.3rem; }
+
+  /* Step List */
+  .step-list { list-style: none; margin: 1rem 0; }
+  .step-list li { display: flex; gap: 12px; margin-bottom: 1rem; align-items: flex-start; }
+  .step-num { width: 28px; height: 28px; min-width: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: #fff; }
+  .step-text h4 { font-size: 0.9rem; color: var(--text); margin-bottom: 0.25rem; }
+  .step-text p { font-size: 0.83rem; color: var(--text2); line-height: 1.6; }
+
+  /* Badge */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; margin: 2px; }
+  .badge-blue { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+  .badge-purple { background: rgba(124,58,237,0.2); color: #a78bfa; }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+
+  /* Live Demo */
+  .demo-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 1.2rem 0; }
+  .demo-box h4 { color: var(--accent); font-size: 0.95rem; margin-bottom: 1rem; }
+  .demo-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 0.7rem 1rem; color: var(--text); font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
+  .demo-input:focus { border-color: var(--accent); }
+  .demo-output { margin-top: 0.8rem; background: var(--bg3); border-radius: 8px; padding: 0.7rem 1rem; color: var(--accent3); font-size: 0.9rem; min-height: 42px; }
+  .demo-btn { margin-top: 0.7rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; padding: 0.6rem 1.4rem; border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; transition: opacity 0.2s; }
+  .demo-btn:hover { opacity: 0.85; }
+
+  /* Quiz */
+  .quiz-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.2rem; }
+  .quiz-q { font-size: 0.95rem; color: var(--text); font-weight: 600; margin-bottom: 1rem; }
+  .quiz-q span { color: var(--accent); }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-opt { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 1rem; cursor: pointer; font-size: 0.85rem; color: var(--text2); transition: all 0.2s; text-align: left; }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+  .quiz-opt.correct { background: rgba(16,185,129,0.12); border-color: var(--green); color: var(--green); }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.1); border-color: var(--red); color: var(--red); }
+  .quiz-result { margin-top: 0.8rem; font-size: 0.84rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 8px; display: none; }
+  .quiz-result.show { display: block; }
+  .res-correct { background: rgba(16,185,129,0.1); color: var(--green); }
+  .res-wrong { background: rgba(239,68,68,0.1); color: var(--red); }
+
+  /* Score */
+  .quiz-score { background: linear-gradient(135deg, rgba(79,142,247,0.1), rgba(124,58,237,0.1)); border: 1px solid rgba(79,142,247,0.2); border-radius: 14px; padding: 1.5rem; text-align: center; margin-top: 1rem; }
+  .score-num { font-size: 3rem; font-weight: 800; color: var(--accent); }
+  .score-label { color: var(--text2); font-size: 0.9rem; }
+
+  /* Footer */
+  footer { background: var(--sidebar); border-top: 1px solid var(--border); margin-top: 3rem; padding: 2rem; text-align: center; }
+  footer p { color: var(--text2); font-size: 0.85rem; }
+  footer span { color: var(--accent); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 1rem 1rem 1rem; }
+    .hamburger { display: block; }
+    .overlay.show { display: block; }
+    .hero h1 { font-size: 1.7rem; }
+  }
+
+  /* Highlight inline code */
+  code { background: rgba(79,142,247,0.12); color: var(--accent3); padding: 2px 7px; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.85em; }
+  p { line-height: 1.7; color: var(--text2); margin-bottom: 0.8rem; }
+  h3 { color: var(--text); font-size: 1.1rem; margin: 1.2rem 0 0.5rem; }
+
+  /* Pipe filter demo */
+  .pipe-inputs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+  .pipe-inputs input { flex: 1; min-width: 140px; }
+  .filter-list { background: var(--bg3); border-radius: 8px; padding: 0.8rem; list-style: none; min-height: 60px; }
+  .filter-list li { padding: 4px 0; color: var(--text2); font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+  .filter-list li:last-child { border: none; }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <h2>🅰 Angular Seekho</h2>
+    <p>Complete Roman Urdu Guide</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Shuruaat</div>
+    <a href="#hero" class="nav-link active"><span class="nav-dot"></span> Parichay</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Angular 6 — Pehla Hissa</div>
+    <a href="#decorators" class="nav-link"><span class="nav-dot"></span> Decorators</a>
+    <a href="#modules" class="nav-link"><span class="nav-dot"></span> Modules</a>
+    <a href="#components" class="nav-link"><span class="nav-dot"></span> Components</a>
+    <a href="#databinding" class="nav-link"><span class="nav-dot"></span> Data Binding</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Doosra Hissa</div>
+    <a href="#templating" class="nav-link"><span class="nav-dot"></span> Templating</a>
+    <a href="#directives" class="nav-link"><span class="nav-dot"></span> Directives</a>
+    <a href="#pipes" class="nav-link"><span class="nav-dot"></span> Pipes</a>
+    <a href="#di" class="nav-link"><span class="nav-dot"></span> Dependency Injection</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Teesra Hissa</div>
+    <a href="#services" class="nav-link"><span class="nav-dot"></span> Services</a>
+    <a href="#routing" class="nav-link"><span class="nav-dot"></span> Routing</a>
+    <a href="#observable" class="nav-link"><span class="nav-dot"></span> Observable / RxJS</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Test Karo</div>
+    <a href="#demo" class="nav-link"><span class="nav-dot"></span> Live Demo</a>
+    <a href="#quiz" class="nav-link"><span class="nav-dot"></span> Quiz</a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main id="main">
+
+  <!-- HERO -->
+  <div class="hero section" id="hero">
+    <div class="hero-badge">📚 Complete Angular Course — Roman Urdu</div>
+    <h1>Angular <span>Asaan Tariqe</span> se Seekho</h1>
+    <p>Yeh guide un students ke liye hai jo Angular framework bilkul zero se seekhna chahte hain. Har concept simple Urdu mein, examples ke saath samjhaya gaya hai.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">🅰 Angular 6+</span>
+      <span class="hero-tag">⚡ TypeScript</span>
+      <span class="hero-tag">🔄 RxJS</span>
+      <span class="hero-tag">📦 Modules</span>
+      <span class="hero-tag">🧩 Components</span>
+      <span class="hero-tag">🛣 Routing</span>
+    </div>
+  </div>
+
+  <!-- ===== DECORATORS ===== -->
+  <section class="section" id="decorators">
+    <div class="section-title">
+      <div class="icon icon-blue">🏷️</div>
+      Decorators — Labelling System
+    </div>
+    <div class="section-sub">Angular mein class ko "kaun hai yeh" batane ka tarika</div>
+
+    <p>Socho ek school mein students hain — kisi ke ID card par likha hai "Teacher", kisi par "Student", kisi par "Principal". Angular mein bhi yahi kaam Decorator karta hai. Yeh TypeScript ka ek special feature hai jo class ya function ke upar <code>@</code> sign se likha jaata hai aur Angular ko batata hai — "Yeh class kya hai aur kya karti hai."</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🧩</div>
+        <h3>@Component</h3>
+        <p>Batata hai ke yeh class ek <strong>UI Component</strong> hai. Iske saath template (HTML) aur style (CSS) attach hoti hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📦</div>
+        <h3>@NgModule</h3>
+        <p>Puri application ko organize karta hai. Modules ke andar Components, Services, aur Imports define hote hain.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔧</div>
+        <h3>@Injectable</h3>
+        <p>Service class par lagata hain — batata hai ke yeh class dusri jagah <strong>inject</strong> ho sakti hai (use ho sakti hai).</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📥</div>
+        <h3>@Input / @Output</h3>
+        <p>Parent se child component mein data bhejna (@Input) ya child se parent ko event bhejne ke liye (@Output).</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 app.component.ts</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="cm">// @Component decorator — class ko component banata hai</span>
+<span class="kw">import</span> { Component } <span class="kw">from</span> <span class="str">'@angular/core'</span>;
+
+<span class="fn">@Component</span>({
+  selector: <span class="str">'app-root'</span>,       <span class="cm">// HTML tag naam</span>
+  templateUrl: <span class="str">'./app.component.html'</span>,  <span class="cm">// HTML file</span>
+  styleUrls: [<span class="str">'./app.component.css'</span>]   <span class="cm">// CSS file</span>
+})
+<span class="kw">export class</span> <span class="cls">AppComponent</span> {
+  title = <span class="str">'Meri Pehli Angular App'</span>;
+}</pre>
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-title">💡 Yaad Rakho (Tip)</div>
+      <p>Decorator hamesha <code>@</code> sign se shuru hota hai aur class se <strong>upar</strong> likha jaata hai. Yeh class ke behaviour ko define karta hai — class khud nahi karta.</p>
+    </div>
+
+    <div class="alert alert-exam">
+      <div class="alert-title">📝 Exam Tip</div>
+      <p>Exam mein poochhein: "Angular mein Decorator kya hai?" — Jawab: Yeh TypeScript metadata hai jo class ko Angular ke liye label karta hai. <code>@Component</code>, <code>@NgModule</code>, <code>@Injectable</code> common examples hain.</p>
+    </div>
+  </section>
+
+  <!-- ===== MODULES ===== -->
+  <section class="section" id="modules">
+    <div class="section-title">
+      <div class="icon icon-purple">📦</div>
+      Modules — Application ki Almari
+    </div>
+    <div class="section-sub">Angular app ko organize karne ka tarika</div>
+
+    <p>Socho tumhare ghar mein ek bari almari hai. Us almari mein alag alag drawers hain — ek kapdon ke liye, ek kitabon ke liye, ek khilonon ke liye. Angular mein <strong>Module</strong> wahi almari ka kaam karta hai. Har module mein related components, services, aur pipes hoti hain.</p>
+
+    <div class="explain-box">
+      <h4>📋 NgModule ke 4 main properties:</h4>
+      <ul>
+        <li><strong>declarations:</strong> Woh components/directives/pipes jo is module ke hain</li>
+        <li><strong>imports:</strong> Dusre modules jo is module ko chahiye (jaise BrowserModule, FormsModule)</li>
+        <li><strong>providers:</strong> Services jo poori app mein use hongi</li>
+        <li><strong>bootstrap:</strong> Woh root component jo pehle load hoga (sirf AppModule mein)</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 app.module.ts</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="kw">import</span> { NgModule } <span class="kw">from</span> <span class="str">'@angular/core'</span>;
+<span class="kw">import</span> { BrowserModule } <span class="kw">from</span> <span class="str">'@angular/platform-browser'</span>;
+<span class="kw">import</span> { FormsModule } <span class="kw">from</span> <span class="str">'@angular/forms'</span>;
+<span class="kw">import</span> { <span class="cls">AppComponent</span> } <span class="kw">from</span> <span class="str">'./app.component'</span>;
+
+<span class="fn">@NgModule</span>({
+  declarations: [<span class="cls">AppComponent</span>],  <span class="cm">// Hamare components</span>
+  imports: [
+    BrowserModule,              <span class="cm">// Browser support ke liye</span>
+    FormsModule                 <span class="cm">// Form handling ke liye</span>
+  ],
+  providers: [],                <span class="cm">// Services yahan aati hain</span>
+  bootstrap: [<span class="cls">AppComponent</span>]  <span class="cm">// Pehle yeh load hoga</span>
+})
+<span class="kw">export class</span> <span class="cls">AppModule</span> { }</pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Module</th><th>Kya karta hai</th><th>Kab use karein</th></tr></thead>
+        <tbody>
+          <tr><td>BrowserModule</td><td>Browser mein app chalane ke liye</td><td>Hamesha AppModule mein</td></tr>
+          <tr><td>FormsModule</td><td>Template-driven forms ke liye</td><td>Jab form banana ho</td></tr>
+          <tr><td>ReactiveFormsModule</td><td>Reactive forms ke liye</td><td>Complex forms ke liye</td></tr>
+          <tr><td>HttpClientModule</td><td>API calls ke liye</td><td>Server se data lene ke liye</td></tr>
+          <tr><td>RouterModule</td><td>Routing ke liye</td><td>Multiple pages ke liye</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== COMPONENTS ===== -->
+  <section class="section" id="components">
+    <div class="section-title">
+      <div class="icon icon-cyan">🧩</div>
+      Components — UI ke Building Blocks
+    </div>
+    <div class="section-sub">Angular app LEGO jaisi hoti hai — components se banti hai</div>
+
+    <p>Imagine karo ek website — uska header alag component hai, footer alag, sidebar alag, aur main content alag. Jaise LEGO blocks mila kar ek bari cheez banti hai, waise Angular components mila kar puri app banti hai. Har component mein 3 cheezein hoti hain:</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <h3>Template (HTML)</h3>
+        <p>Component ki <strong>shakal</strong> — woh jo user screen par dekhta hai. Angular ke special syntax (.html file) se banana hota hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚙️</div>
+        <h3>Class (TypeScript)</h3>
+        <p>Component ka <strong>dimag</strong> — data aur logic yahan hota hai. Variables, functions sab yahan define hote hain.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎨</div>
+        <h3>Styles (CSS)</h3>
+        <p>Component ki <strong>sajawat</strong> — sirf is component par apply hoti hai, dusri jagah nahi (scoped CSS).</p>
+      </div>
+    </div>
+
+    <h3>Component Life Cycle — Zindagi ke Stages</h3>
+    <p>Har component janm leta hai, barhta hai, aur khatam hota hai. Angular ke lifecycle hooks yeh stages manage karte hain:</p>
+
+    <ul class="step-list">
+      <li><div class="step-num">1</div><div class="step-text"><h4>ngOnInit()</h4><p>Component banne ke baad PEHLI baar chalta hai. API calls yahan karo. Constructor ke baad aata hai.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-text"><h4>ngOnChanges()</h4><p>Jab bhi @Input property change ho, yeh chalta hai. Parent se nayi value aayi? Yahan pata chalega.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-text"><h4>ngDoCheck()</h4><p>Har change detection cycle mein chalta hai. Custom change detection ke liye use hota hai.</p></div></li>
+      <li><div class="step-num">4</div><div class="step-text"><h4>ngOnDestroy()</h4><p>Component hatne se PEHLE chalta hai. Subscriptions unsubscribe karo, memory clean karo yahan.</p></div></li>
+    </ul>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 student.component.ts</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="kw">import</span> { Component, OnInit, Input } <span class="kw">from</span> <span class="str">'@angular/core'</span>;
+
+<span class="fn">@Component</span>({
+  selector: <span class="str">'app-student'</span>,
+  template: <span class="str">`
+    &lt;div class="student-card"&gt;
+      &lt;h2&gt;{{ studentName }}&lt;/h2&gt;
+      &lt;p&gt;Roll No: {{ rollNo }}&lt;/p&gt;
+    &lt;/div&gt;
+  `</span>
+})
+<span class="kw">export class</span> <span class="cls">StudentComponent</span> <span class="kw">implements</span> OnInit {
+  <span class="fn">@Input</span>() studentName: string = <span class="str">''</span>;
+  rollNo: number = <span class="str">101</span>;
+
+  <span class="fn">ngOnInit</span>(): void {
+    console.log(<span class="str">'Component tayyar ho gaya!'</span>);
+    <span class="cm">// Yahan API call karo</span>
+  }
+}</pre>
+    </div>
+  </section>
+
+  <!-- ===== DATA BINDING ===== -->
+  <section class="section" id="databinding">
+    <div class="section-title">
+      <div class="icon icon-green">🔗</div>
+      Data Binding — Data ka Safar
+    </div>
+    <div class="section-sub">TypeScript class aur HTML template ke darmiyan data share karna</div>
+
+    <p>Data Binding matlab hai — TypeScript (class) mein jo data hai woh HTML (template) mein dikhe, aur user jo HTML mein kare woh class mein pohanche. Yeh ek <strong>do-tarfah raasta</strong> hai.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th>Syntax</th><th>Direction</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Interpolation</td><td><code>{{ value }}</code></td><td>Class → Template</td><td><code>{{ title }}</code></td></tr>
+          <tr><td>Property Binding</td><td><code>[property]="value"</code></td><td>Class → Template</td><td><code>[src]="imageUrl"</code></td></tr>
+          <tr><td>Event Binding</td><td><code>(event)="method()"</code></td><td>Template → Class</td><td><code>(click)="save()"</code></td></tr>
+          <tr><td>Two-Way Binding</td><td><code>[(ngModel)]="var"</code></td><td>Dono taraf</td><td><code>[(ngModel)]="name"</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 data-binding.component.html</span><span class="code-lang">HTML + Angular</span></div>
+      <pre><span class="cm">&lt;!-- 1. Interpolation — class ka data HTML mein dikhao --&gt;</span>
+<span class="tag">&lt;h1&gt;</span>{{ pageTitle }}<span class="tag">&lt;/h1&gt;</span>
+<span class="tag">&lt;p&gt;</span>Student ka naam: {{ studentName }}<span class="tag">&lt;/p&gt;</span>
+
+<span class="cm">&lt;!-- 2. Property Binding — HTML property set karo --&gt;</span>
+<span class="tag">&lt;img</span> <span class="attr">[src]</span>=<span class="val">"profilePic"</span> <span class="attr">[alt]</span>=<span class="val">"studentName"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">[disabled]</span>=<span class="val">"isLoading"</span><span class="tag">&gt;</span>Save<span class="tag">&lt;/button&gt;</span>
+
+<span class="cm">&lt;!-- 3. Event Binding — user action pe function call karo --&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">(click)</span>=<span class="val">"onSubmit()"</span><span class="tag">&gt;</span>Submit<span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">(keyup)</span>=<span class="val">"onSearch($event)"</span><span class="tag">&gt;</span>
+
+<span class="cm">&lt;!-- 4. Two-Way Binding — input aur display dono saath --&gt;</span>
+<span class="tag">&lt;input</span> <span class="attr">[(ngModel)]</span>=<span class="val">"searchText"</span> <span class="attr">placeholder</span>=<span class="val">"Search karo..."</span><span class="tag">&gt;</span>
+<span class="tag">&lt;p&gt;</span>Tum likhe: {{ searchText }}<span class="tag">&lt;/p&gt;</span></pre>
+    </div>
+
+    <div class="alert alert-warn">
+      <div class="alert-title">⚠️ Dhyan Do</div>
+      <p>Two-way binding <code>[(ngModel)]</code> use karne ke liye <code>FormsModule</code> ko <strong>AppModule ke imports array</strong> mein zaror add karo, warna error aayega!</p>
+    </div>
+  </section>
+
+  <!-- ===== TEMPLATING ===== -->
+  <section class="section" id="templating">
+    <div class="section-title">
+      <div class="icon icon-blue">📋</div>
+      Templating — Dynamic HTML Banana
+    </div>
+    <div class="section-sub">Angular ka powerful HTML syntax system</div>
+
+    <p>Normal HTML static hoti hai — ek baar likh do, wahi dikhti hai. Angular ka templating system HTML ko <strong>zinda</strong> bana deta hai! Data change ho, HTML bhi change ho jaye. Conditions lagao, loops chalao — sab template mein ho sakta hai.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🔀</div>
+        <h3>*ngIf — Agar/Warna</h3>
+        <p>Kisi cheez ko condition ke basis par <strong>dikhao ya chhupao</strong>. JavaScript ke if/else jaisa kaam karta hai HTML mein.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔁</div>
+        <h3>*ngFor — List Banana</h3>
+        <p>Array ke <strong>har item ke liye</strong> HTML element banana. Shopping list, student list — sab isi se banta hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎛</div>
+        <h3>ngSwitch — Multiple Cases</h3>
+        <p>Ek value ke hisaab se <strong>alag alag</strong> content dikhao. Switch statement jaisa kaam karta hai HTML mein.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 template-examples.html</span><span class="code-lang">Angular Template</span></div>
+      <pre><span class="cm">&lt;!-- ngIf — condition ke basis par dikhao --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">*ngIf</span>=<span class="val">"isLoggedIn"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;p&gt;</span>Welcome! Aap logged in hain.<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">*ngIf</span>=<span class="val">"!isLoggedIn"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;p&gt;</span>Pehle login karein.<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="cm">&lt;!-- ngFor — list ke har item ke liye --&gt;</span>
+<span class="tag">&lt;ul&gt;</span>
+  <span class="tag">&lt;li</span> <span class="attr">*ngFor</span>=<span class="val">"let student of students; let i = index"</span><span class="tag">&gt;</span>
+    {{ i + 1 }}. {{ student.name }} — Roll: {{ student.roll }}
+  <span class="tag">&lt;/li&gt;</span>
+<span class="tag">&lt;/ul&gt;</span>
+
+<span class="cm">&lt;!-- ngSwitch — multiple conditions --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">[ngSwitch]</span>=<span class="val">"userRole"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">*ngSwitchCase</span>=<span class="val">"'admin'"</span><span class="tag">&gt;</span>Admin Panel<span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">*ngSwitchCase</span>=<span class="val">"'student'"</span><span class="tag">&gt;</span>Student Dashboard<span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">*ngSwitchDefault</span><span class="tag">&gt;</span>Guest View<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span></pre>
+    </div>
+  </section>
+
+  <!-- ===== DIRECTIVES ===== -->
+  <section class="section" id="directives">
+    <div class="section-title">
+      <div class="icon icon-purple">🎯</div>
+      Directives — HTML ko Superpowers Dena
+    </div>
+    <div class="section-sub">HTML elements ke behaviour aur appearance ko badalna</div>
+
+    <p>Directives HTML elements ko extra powers deti hain. Jaise ek normal insaan ko superhero suit pehna do — woh insaan to wahi hai lekin ab us mein naye powers aa gaye hain! Angular mein 3 qism ki directives hain:</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🏗️</div>
+        <h3>Structural Directives</h3>
+        <p>DOM structure <strong>badal deti hain</strong> — elements add ya remove karti hain. <code>*ngIf</code>, <code>*ngFor</code>, <code>*ngSwitch</code> examples hain. <code>*</code> se shuru hoti hain.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎨</div>
+        <h3>Attribute Directives</h3>
+        <p>Element ki <strong>appearance ya behaviour</strong> badal deti hain. <code>ngClass</code>, <code>ngStyle</code>, <code>ngModel</code> examples hain.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔧</div>
+        <h3>Custom Directives</h3>
+        <p>Khud ki <strong>apni directive</strong> bana sakte ho. Jaise "highlighted" directive — jo kisi bhi element ko hover par highlight kare.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 directives-example.html + ts</span><span class="code-lang">Angular</span></div>
+      <pre><span class="cm">&lt;!-- ngClass — condition ke basis par CSS class lagao --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">[ngClass]</span>=<span class="val">"{'active': isActive, 'error': hasError}"</span><span class="tag">&gt;</span>
+  Yeh div hai
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="cm">&lt;!-- ngStyle — inline style dynamically lagao --&gt;</span>
+<span class="tag">&lt;p</span> <span class="attr">[ngStyle]</span>=<span class="val">"{'color': textColor, 'font-size': fontSize + 'px'}"</span><span class="tag">&gt;</span>
+  Colored text
+<span class="tag">&lt;/p&gt;</span>
+
+<span class="cm">// Custom Directive banana:</span>
+<span class="kw">import</span> { Directive, ElementRef, HostListener } <span class="kw">from</span> <span class="str">'@angular/core'</span>;
+
+<span class="fn">@Directive</span>({ selector: <span class="str">'[appHighlight]'</span> })
+<span class="kw">export class</span> <span class="cls">HighlightDirective</span> {
+  <span class="kw">constructor</span>(<span class="kw">private</span> el: ElementRef) {}
+
+  <span class="fn">@HostListener</span>(<span class="str">'mouseenter'</span>) onHover() {
+    this.el.nativeElement.style.background = <span class="str">'yellow'</span>;
+  }
+  <span class="fn">@HostListener</span>(<span class="str">'mouseleave'</span>) onLeave() {
+    this.el.nativeElement.style.background = <span class="str">''</span>;
+  }
+}</pre>
+    </div>
+  </section>
+
+  <!-- ===== PIPES ===== -->
+  <section class="section" id="pipes">
+    <div class="section-title">
+      <div class="icon icon-yellow">🔩</div>
+      Pipes — Data ko Format Karna
+    </div>
+    <div class="section-sub">Data display karne se pehle usko khubsoorat banana</div>
+
+    <p>Socho tumhare paas ek rough diamond hai — seedha dukaan mein rakh do to koi nahi kharidega. Pehle use polish karo, cut karo — phir khubsoorat dikhega. Pipe bhi yahi karta hai data ke saath. Data class mein ho sakta hai raw format mein, lekin HTML mein display karte waqt Pipe use karke use <strong>format</strong> kar dete hain.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Pipe</th><th>Kya karta hai</th><th>Example</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td>uppercase</td><td>Sab bade letters</td><td><code>{{ 'hello' | uppercase }}</code></td><td>HELLO</td></tr>
+          <tr><td>lowercase</td><td>Sab chhote letters</td><td><code>{{ 'HELLO' | lowercase }}</code></td><td>hello</td></tr>
+          <tr><td>date</td><td>Date format karo</td><td><code>{{ today | date:'dd/MM/yyyy' }}</code></td><td>08/05/2026</td></tr>
+          <tr><td>currency</td><td>Currency format</td><td><code>{{ 1500 | currency:'PKR' }}</code></td><td>PKR 1,500</td></tr>
+          <tr><td>json</td><td>Object ko JSON string</td><td><code>{{ obj | json }}</code></td><td>{ "a": 1 }</td></tr>
+          <tr><td>slice</td><td>Array/string cut karo</td><td><code>{{ arr | slice:0:3 }}</code></td><td>Pehle 3 items</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 pipes-example.html</span><span class="code-lang">Angular Template</span></div>
+      <pre><span class="tag">&lt;p&gt;</span>{{ studentName | uppercase }}<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;</span>{{ fees | currency:'PKR':'symbol':'1.0-0' }}<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;</span>{{ admissionDate | date:'fullDate' }}<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;</span>{{ description | slice:0:100 }}...<span class="tag">&lt;/p&gt;</span>
+
+<span class="cm">&lt;!-- Pipe chain karna — ek ke baad ek --&gt;</span>
+<span class="tag">&lt;p&gt;</span>{{ studentName | lowercase | titlecase }}<span class="tag">&lt;/p&gt;</span></pre>
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-title">💡 Custom Pipe bhi bana sakte hain</div>
+      <p>Jaise <code>@Pipe({ name: 'rupees' })</code> decorator se apna custom pipe banao aur <code>{{ 5000 | rupees }}</code> use karo. PipeTransform interface implement karna hota hai.</p>
+    </div>
+  </section>
+
+  <!-- ===== DI ===== -->
+  <section class="section" id="di">
+    <div class="section-title">
+      <div class="icon icon-cyan">💉</div>
+      Dependency Injection — Smart Way to Share
+    </div>
+    <div class="section-sub">Objects aur services ko manage karne ka Angular ka system</div>
+
+    <p>Imagine karo ek hospital mein — doctor ko oxygen cylinder chahiye. Doctor khud factory se cylinder nahi laata — hospital us ko <strong>provide</strong> karta hai. Angular mein bhi yahi hota hai. Component ko agar Service chahiye, woh khud nahi banata — Angular ka <strong>Injector</strong> automatically provide karta hai. Isi ko Dependency Injection kehte hain.</p>
+
+    <ul class="step-list">
+      <li><div class="step-num">1</div><div class="step-text"><h4>Service banao</h4><p><code>@Injectable({ providedIn: 'root' })</code> lagao — yeh service puri app mein available ho jaayegi.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-text"><h4>Constructor mein inject karo</h4><p>Component ke constructor mein service type likhdo — Angular automatically object de dega.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-text"><h4>Use karo</h4><p>Ab <code>this.myService.method()</code> se service ke functions use kar sakte ho.</p></div></li>
+    </ul>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 DI Example</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="cm">// Step 1: Service banao</span>
+<span class="fn">@Injectable</span>({ providedIn: <span class="str">'root'</span> })
+<span class="kw">export class</span> <span class="cls">StudentService</span> {
+  getStudents() {
+    <span class="kw">return</span> [{ name: <span class="str">'Ali'</span> }, { name: <span class="str">'Sara'</span> }];
+  }
+}
+
+<span class="cm">// Step 2: Component mein inject karo</span>
+<span class="fn">@Component</span>({ selector: <span class="str">'app-list'</span>, template: <span class="str">'...'</span> })
+<span class="kw">export class</span> <span class="cls">ListComponent</span> <span class="kw">implements</span> OnInit {
+  students = [];
+
+  <span class="cm">// Constructor mein inject karo — Angular dega automatically</span>
+  <span class="kw">constructor</span>(<span class="kw">private</span> studentService: <span class="cls">StudentService</span>) {}
+
+  ngOnInit() {
+    <span class="cm">// Step 3: Use karo</span>
+    this.students = this.studentService.getStudents();
+  }
+}</pre>
+    </div>
+  </section>
+
+  <!-- ===== SERVICES ===== -->
+  <section class="section" id="services">
+    <div class="section-title">
+      <div class="icon icon-green">⚙️</div>
+      Services — Shared Logic ka Ghar
+    </div>
+    <div class="section-sub">Business logic aur data sharing ke liye reusable classes</div>
+
+    <p>Socho ek school mein library hai. Har student apni kitabein ghar nahi rakhta — sab library se lete hain. Angular mein <strong>Service</strong> wahi library hai. Koi bhi component service se data le sakta hai, dono ke darmiyan share ho sakta hai. HTTP calls, business logic — sab services mein hoti hai.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 data.service.ts</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="kw">import</span> { Injectable } <span class="kw">from</span> <span class="str">'@angular/core'</span>;
+<span class="kw">import</span> { HttpClient } <span class="kw">from</span> <span class="str">'@angular/common/http'</span>;
+<span class="kw">import</span> { Observable } <span class="kw">from</span> <span class="str">'rxjs'</span>;
+
+<span class="fn">@Injectable</span>({ providedIn: <span class="str">'root'</span> })
+<span class="kw">export class</span> <span class="cls">DataService</span> {
+  <span class="kw">private</span> apiUrl = <span class="str">'https://api.example.com/students'</span>;
+
+  <span class="kw">constructor</span>(<span class="kw">private</span> http: <span class="cls">HttpClient</span>) {}
+
+  <span class="cm">// Server se students laao</span>
+  getStudents(): Observable&lt;any[]&gt; {
+    <span class="kw">return</span> this.http.get&lt;any[]&gt;(this.apiUrl);
+  }
+
+  <span class="cm">// Naya student add karo</span>
+  addStudent(student: any): Observable&lt;any&gt; {
+    <span class="kw">return</span> this.http.post(this.apiUrl, student);
+  }
+}</pre>
+    </div>
+
+    <div class="alert alert-exam">
+      <div class="alert-title">📝 Exam Tip</div>
+      <p>Service aur Component ka farq: Component sirf UI handle karta hai. Service business logic, API calls, data sharing karta hai. Service ko multiple components share kar sakte hain — yeh code reuse ka best practice hai.</p>
+    </div>
+  </section>
+
+  <!-- ===== ROUTING ===== -->
+  <section class="section" id="routing">
+    <div class="section-title">
+      <div class="icon icon-purple">🛣️</div>
+      Routing — Page Navigation System
+    </div>
+    <div class="section-sub">Multiple pages ke darmiyan navigate karna bina page reload ke</div>
+
+    <p>Normal websites mein page click karo to pura page reload hota hai. Angular mein <strong>Single Page Application (SPA)</strong> hoti hai — page reload nahi hota, sirf content change hota hai. Router yeh kaam karta hai. URL change hoti hai lekin page nahi.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 app-routing.module.ts</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="kw">import</span> { NgModule } <span class="kw">from</span> <span class="str">'@angular/core'</span>;
+<span class="kw">import</span> { RouterModule, Routes } <span class="kw">from</span> <span class="str">'@angular/router'</span>;
+<span class="kw">import</span> { <span class="cls">HomeComponent</span> } <span class="kw">from</span> <span class="str">'./home/home.component'</span>;
+<span class="kw">import</span> { <span class="cls">StudentsComponent</span> } <span class="kw">from</span> <span class="str">'./students/students.component'</span>;
+<span class="kw">import</span> { <span class="cls">AboutComponent</span> } <span class="kw">from</span> <span class="str">'./about/about.component'</span>;
+
+<span class="kw">const</span> routes: Routes = [
+  { path: <span class="str">''</span>, component: <span class="cls">HomeComponent</span> },           <span class="cm">// /</span>
+  { path: <span class="str">'students'</span>, component: <span class="cls">StudentsComponent</span> }, <span class="cm">// /students</span>
+  { path: <span class="str">'student/:id'</span>, component: <span class="cls">DetailComponent</span>},<span class="cm">// /student/5</span>
+  { path: <span class="str">'about'</span>, component: <span class="cls">AboutComponent</span> },       <span class="cm">// /about</span>
+  { path: <span class="str">'**'</span>, component: <span class="cls">NotFoundComponent</span> }        <span class="cm">// 404 page</span>
+];
+
+<span class="fn">@NgModule</span>({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+<span class="kw">export class</span> <span class="cls">AppRoutingModule</span> { }</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 Navigation HTML + TypeScript</span><span class="code-lang">Angular</span></div>
+      <pre><span class="cm">&lt;!-- HTML mein navigation links --&gt;</span>
+<span class="tag">&lt;nav&gt;</span>
+  <span class="tag">&lt;a</span> <span class="attr">routerLink</span>=<span class="val">"/"</span> <span class="attr">routerLinkActive</span>=<span class="val">"active"</span><span class="tag">&gt;</span>Home<span class="tag">&lt;/a&gt;</span>
+  <span class="tag">&lt;a</span> <span class="attr">routerLink</span>=<span class="val">"/students"</span> <span class="attr">routerLinkActive</span>=<span class="val">"active"</span><span class="tag">&gt;</span>Students<span class="tag">&lt;/a&gt;</span>
+<span class="tag">&lt;/nav&gt;</span>
+<span class="tag">&lt;router-outlet&gt;&lt;/router-outlet&gt;</span> <span class="cm">&lt;!-- Yahan component load hoga --&gt;</span>
+
+<span class="cm">// TypeScript mein navigate karo</span>
+<span class="kw">import</span> { Router } <span class="kw">from</span> <span class="str">'@angular/router'</span>;
+
+<span class="kw">constructor</span>(<span class="kw">private</span> router: <span class="cls">Router</span>) {}
+
+goToStudent(id: number) {
+  this.router.navigate([<span class="str">'/student'</span>, id]);
+}</pre>
+    </div>
+  </section>
+
+  <!-- ===== OBSERVABLE ===== -->
+  <section class="section" id="observable">
+    <div class="section-title">
+      <div class="icon icon-cyan">👁️</div>
+      Observable & RxJS — Async Data ka Safar
+    </div>
+    <div class="section-sub">Future mein aane wale data ko handle karna</div>
+
+    <p>Socho tumne pizza order kiya. Pizza abhi nahi aaya lekin tum intezaar kar rahe ho. Jab pizza aayega, tum khaoge. Observable bhi aisa hi hai — yeh ek <strong>"future mein aane wala data"</strong> hai. Jab API se data aayega, Observable usse deliver karega. Tum usse <strong>subscribe</strong> karke wait karte ho.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📡</div>
+        <h3>Observable</h3>
+        <p>Data ka <strong>stream</strong> — ek ya zyada values future mein deliver ho sakti hain. HTTP calls Observable return karte hain.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">👂</div>
+        <h3>Subscribe</h3>
+        <p>Observable ko <strong>"sun'na"</strong> shuru karna. Jab data aaye, kya karna hai — woh yahan define karo.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔀</div>
+        <h3>Operators (RxJS)</h3>
+        <p>Data ko filter, transform, combine karne ke tools. <code>map</code>, <code>filter</code>, <code>switchMap</code> common hain.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span>📄 observable-example.ts</span><span class="code-lang">TypeScript + RxJS</span></div>
+      <pre><span class="kw">import</span> { Component, OnInit, OnDestroy } <span class="kw">from</span> <span class="str">'@angular/core'</span>;
+<span class="kw">import</span> { <span class="cls">DataService</span> } <span class="kw">from</span> <span class="str">'./data.service'</span>;
+<span class="kw">import</span> { Subscription } <span class="kw">from</span> <span class="str">'rxjs'</span>;
+<span class="kw">import</span> { map, filter } <span class="kw">from</span> <span class="str">'rxjs/operators'</span>;
+
+<span class="kw">export class</span> <span class="cls">MyComponent</span> <span class="kw">implements</span> OnInit, OnDestroy {
+  students = [];
+  <span class="kw">private</span> sub: Subscription;
+
+  <span class="kw">constructor</span>(<span class="kw">private</span> dataService: <span class="cls">DataService</span>) {}
+
+  ngOnInit() {
+    <span class="cm">// Subscribe karo — pizza ka intezaar karo!</span>
+    this.sub = this.dataService.getStudents()
+      .pipe(
+        map(data => data.filter(s => s.active)), <span class="cm">// sirf active students</span>
+        map(data => data.slice(0, 10))           <span class="cm">// sirf pehle 10</span>
+      )
+      .subscribe({
+        next: (data) => { this.students = data; },  <span class="cm">// data aaya</span>
+        error: (err) => { console.error(err); },    <span class="cm">// error aai</span>
+        complete: () => { console.log('Done!'); }   <span class="cm">// khatam hua</span>
+      });
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe(); <span class="cm">// Memory leak rokne ke liye</span>
+  }
+}</pre>
+    </div>
+
+    <div class="alert alert-warn">
+      <div class="alert-title">⚠️ Memory Leak — Bari Ghalti</div>
+      <p>Observable subscribe karo to <code>ngOnDestroy()</code> mein <code>unsubscribe()</code> zaroor karo. Warna component khatam hone ke baad bhi Observable chalta rahega — yeh <strong>memory leak</strong> hai aur app slow ho jaayegi!</p>
+    </div>
+  </section>
+
+  <!-- ===== LIVE DEMO ===== -->
+  <section class="section" id="demo">
+    <div class="section-title">
+      <div class="icon icon-green">⚡</div>
+      Live Demo — Khud Try Karo
+    </div>
+    <div class="section-sub">Angular ke concepts ko directly test karo</div>
+
+    <!-- Demo 1: Two-Way Binding -->
+    <div class="demo-box">
+      <h4>🔗 Demo 1: Two-Way Data Binding Simulation</h4>
+      <input class="demo-input" type="text" id="bindInput" placeholder="Apna naam likho..." oninput="updateBinding()">
+      <div class="demo-output" id="bindOutput">Aap ka naam yahan dikhega...</div>
+      <p style="font-size:0.78rem; color:var(--text2); margin-top:0.5rem;">Yeh simulate karta hai: <code>[(ngModel)]="studentName"</code> — aur <code>{{ studentName }}</code></p>
+    </div>
+
+    <!-- Demo 2: Pipe Demo -->
+    <div class="demo-box">
+      <h4>🔩 Demo 2: Angular Pipes Simulator</h4>
+      <div class="pipe-inputs">
+        <input class="demo-input" type="text" id="pipeInput" placeholder="Kuch likho..." oninput="applyPipes()">
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:0.8rem;">
+        <span class="badge badge-blue">uppercase: <span id="pUpper">—</span></span>
+        <span class="badge badge-green">lowercase: <span id="pLower">—</span></span>
+        <span class="badge badge-purple">titlecase: <span id="pTitle">—</span></span>
+        <span class="badge badge-yellow">length: <span id="pLen">—</span></span>
+      </div>
+    </div>
+
+    <!-- Demo 3: *ngFor simulation -->
+    <div class="demo-box">
+      <h4>🔁 Demo 3: *ngFor — Student List Banao</h4>
+      <div style="display:flex; gap:8px; margin-bottom:0.8rem;">
+        <input class="demo-input" type="text" id="stuInput" placeholder="Student naam..." style="flex:1">
+        <button class="demo-btn" onclick="addStudent()">+ Add</button>
+      </div>
+      <ul class="filter-list" id="stuList">
+        <li>Yahan students aayenge...</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== QUIZ ===== -->
+  <section class="section" id="quiz">
+    <div class="section-title">
+      <div class="icon icon-yellow">🧠</div>
+      Quiz — Apna Test Karo
+    </div>
+    <div class="section-sub">10 sawaalon se check karo kita seekha</div>
+
+    <div id="quizContainer"></div>
+    <div class="quiz-score" id="quizScore" style="display:none">
+      <div class="score-num" id="scoreNum">0/10</div>
+      <div class="score-label">🎉 Quiz Khatam! Tumhara Score</div>
+      <button class="demo-btn" onclick="resetQuiz()" style="margin-top:1rem">🔄 Dobara Do</button>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>🅰 <span>Angular Seekho</span> — Roman Urdu mein Complete Guide</p>
+    <p style="margin-top:6px">Har concept step by step, simple aur aasan andaaz mein samjhaya gaya hai ❤️</p>
+  </footer>
+
+</main>
+
+<script>
+// ===== PROGRESS BAR =====
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  updateActiveNav();
+});
+
+// ===== SIDEBAR TOGGLE =====
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+// ===== SCROLL ANIMATIONS =====
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+// ===== ACTIVE NAV LINK =====
+function updateActiveNav() {
+  const secs = ['hero','decorators','modules','components','databinding','templating','directives','pipes','di','services','routing','observable','demo','quiz'];
+  let cur = 'hero';
+  secs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 200) cur = id;
+  });
+  document.querySelectorAll('.nav-link').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+  });
+}
+
+// ===== DEMO 1: Two-Way Binding =====
+function updateBinding() {
+  const v = document.getElementById('bindInput').value;
+  const out = document.getElementById('bindOutput');
+  out.textContent = v ? '👋 Assalam-o-Alaikum, ' + v + '! Angular ne apka naam catch kar liya.' : 'Aap ka naam yahan dikhega...';
+}
+
+// ===== DEMO 2: Pipes =====
+function applyPipes() {
+  const v = document.getElementById('pipeInput').value;
+  document.getElementById('pUpper').textContent = v ? v.toUpperCase() : '—';
+  document.getElementById('pLower').textContent = v ? v.toLowerCase() : '—';
+  document.getElementById('pTitle').textContent = v ? v.replace(/\b\w/g, c => c.toUpperCase()) : '—';
+  document.getElementById('pLen').textContent = v ? v.length : '—';
+}
+
+// ===== DEMO 3: *ngFor =====
+const students = [];
+function addStudent() {
+  const inp = document.getElementById('stuInput');
+  const name = inp.value.trim();
+  if (!name) return;
+  students.push(name);
+  inp.value = '';
+  const ul = document.getElementById('stuList');
+  ul.innerHTML = students.map((s, i) => `<li>📌 Roll ${i+1}: <strong style="color:var(--text)">${s}</strong></li>`).join('');
+}
+
+// ===== QUIZ =====
+const questions = [
+  { q: "Angular mein <code>@Component</code> kya hai?", opts: ["Ek CSS class","Ek Decorator jo class ko component banata hai","Ek HTML tag","Ek variable"], ans: 1, exp: "✅ @Component ek Decorator hai jo TypeScript class ko Angular component banata hai." },
+  { q: "Two-way data binding ke liye kaunsa syntax use hota hai?", opts: ["{{ value }}","[value]","(value)","[(ngModel)]"], ans: 3, exp: "✅ [(ngModel)] banana binds karta hai — class se template aur template se class, dono taraf." },
+  { q: "*ngFor directive kya kaam karta hai?", opts: ["Ek element chhupata hai","Array ke har item ke liye HTML repeat karta hai","CSS lagata hai","Event handle karta hai"], ans: 1, exp: "✅ *ngFor loop hai — har array item ke liye ek HTML element create karta hai." },
+  { q: "Angular mein Service ka main purpose kya hai?", opts: ["Sirf styling ke liye","Business logic aur data sharing ke liye","Routing ke liye","Animation ke liye"], ans: 1, exp: "✅ Service reusable business logic aur data contain karta hai jo multiple components share karte hain." },
+  { q: "Observable mein 'subscribe' kya karta hai?", opts: ["Data delete karta hai","Observable ko sun'na shuru karta hai","HTTP request cancel karta hai","Routing karta hai"], ans: 1, exp: "✅ Subscribe karne se Observable activate hota hai aur aane wale data ko receive karte hain." },
+  { q: "Pipe kab use hoti hai?", opts: ["Routing ke liye","Template mein data ko format karne ke liye","Service inject karne ke liye","Event handle karne ke liye"], ans: 1, exp: "✅ Pipe template mein data display format karne ke liye use hoti hai — jaise uppercase, date, currency." },
+  { q: "Dependency Injection mein 'inject' kahan hoti hai?", opts: ["HTML template mein","Component ke constructor mein","CSS file mein","package.json mein"], ans: 1, exp: "✅ Services component ke constructor mein inject hoti hain — Angular injector automatically provide karta hai." },
+  { q: "AppModule mein 'bootstrap' property mein kya hota hai?", opts: ["Sari CSS files","Pehla load hone wala root component","Sare routing paths","Sari services"], ans: 1, exp: "✅ Bootstrap array mein woh component hota hai jo application start hone par pehle load hota hai." },
+  { q: "Memory leak rokne ke liye Observable mein kya zaroori hai?", opts: ["subscribe() call karna","ngOnDestroy() mein unsubscribe() karna","ngOnInit() use karna","HttpClient import karna"], ans: 1, exp: "✅ Component destroy hone par unsubscribe() zaroori hai warna Observable background mein chalta rahta hai." },
+  { q: "routerLink directive kya kaam karta hai?", opts: ["CSS class laganey ke liye","Page reload kiye bina Angular routing ke liye navigate karna","Form submit karna","API call karna"], ans: 1, exp: "✅ routerLink Angular ka navigation directive hai — href jaisa kaam karta hai lekin page reload nahi karta." }
+];
+
+let answered = 0, correct = 0;
+
+function renderQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = questions.map((q, i) => `
+    <div class="quiz-card" id="qcard${i}">
+      <div class="quiz-q"><span>Q${i+1}.</span> ${q.q}</div>
+      <div class="quiz-options">
+        ${q.opts.map((opt, j) => `<button class="quiz-opt" onclick="checkAnswer(${i},${j})" id="qopt${i}_${j}">${String.fromCharCode(65+j)}. ${opt}</button>`).join('')}
+      </div>
+      <div class="quiz-result" id="qres${i}"></div>
+    </div>
+  `).join('');
+}
+
+function checkAnswer(qi, oi) {
+  const q = questions[qi];
+  const btns = document.querySelectorAll(`#qcard${qi} .quiz-opt`);
+  btns.forEach(b => b.disabled = true);
+  btns[q.ans].classList.add('correct');
+  const res = document.getElementById(`qres${qi}`);
+  res.classList.add('show');
+  if (oi === q.ans) {
+    correct++;
+    res.textContent = q.exp;
+    res.classList.add('res-correct');
+  } else {
+    btns[oi].classList.add('wrong');
+    res.textContent = '❌ Galat! ' + q.exp;
+    res.classList.add('res-wrong');
+  }
+  answered++;
+  if (answered === questions.length) {
+    setTimeout(() => {
+      document.getElementById('quizScore').style.display = 'block';
+      document.getElementById('scoreNum').textContent = correct + '/' + questions.length;
+      const emojis = correct >= 8 ? '🏆 Excellent!' : correct >= 5 ? '👍 Acha!' : '📚 Aur Padho!';
+      document.getElementById('scoreNum').textContent = correct + '/' + questions.length + ' ' + emojis;
+    }, 400);
+  }
+}
+
+function resetQuiz() {
+  answered = 0; correct = 0;
+  document.getElementById('quizScore').style.display = 'none';
+  renderQuiz();
+}
+
+renderQuiz();
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

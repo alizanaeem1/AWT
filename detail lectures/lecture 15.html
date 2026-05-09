@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERN + Testing Seekho — Roman Urdu</title>
+<style>
+:root{
+  --bg:#070d1a;--bg2:#0b1220;--bg3:#0f1a2e;--sidebar:#080e1c;
+  --accent:#38bdf8;--accent2:#818cf8;--accent3:#34d399;
+  --pink:#f472b6;--yellow:#fbbf24;--red:#f87171;
+  --text:#e2e8f0;--text2:#94a3b8;--border:#1a2744;
+  --card:#0d1526;--code:#060c18;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;display:flex;min-height:100vh}
+
+/* Progress */
+#pb{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--pink));z-index:9999;transition:width .1s}
+
+/* Sidebar */
+#sb{width:255px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);position:fixed;top:0;left:0;overflow-y:auto;z-index:100;transition:transform .3s;padding-bottom:2rem}
+.sb-logo{padding:1.4rem 1.1rem 1rem;border-bottom:1px solid var(--border)}
+.sb-logo h2{color:var(--accent);font-size:1.1rem}
+.sb-logo p{color:var(--text2);font-size:.7rem;margin-top:3px}
+.ns{padding:.7rem .7rem .1rem}
+.nt{color:var(--text2);font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:0 .4rem;margin-bottom:.3rem}
+.nl{display:flex;align-items:center;gap:8px;padding:.48rem .75rem;color:var(--text2);text-decoration:none;border-radius:8px;font-size:.81rem;transition:all .2s;margin-bottom:2px}
+.nl:hover{background:rgba(56,189,248,.1);color:var(--accent)}
+.nl.active{background:rgba(56,189,248,.15);color:var(--accent);font-weight:600}
+.nd{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0}
+.nl.active .nd{background:var(--accent)}
+.hb{display:none;position:fixed;top:13px;left:13px;z-index:200;background:var(--accent);border:none;color:#000;padding:7px 11px;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:700}
+
+/* Main */
+#main{margin-left:255px;padding:2rem 2.4rem;max-width:980px}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:90}
+
+/* Sections */
+.sec{margin-bottom:4rem;opacity:0;transform:translateY(28px);transition:opacity .55s,transform .55s}
+.sec.vis{opacity:1;transform:translateY(0)}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#0b1525,#12082a,#071525);border:1px solid var(--border);border-radius:20px;padding:2.8rem 2.3rem;margin-bottom:4rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-60%;right:-5%;width:380px;height:380px;background:radial-gradient(circle,rgba(56,189,248,.07) 0%,transparent 70%);border-radius:50%}
+.hbadge{display:inline-block;background:rgba(56,189,248,.12);color:var(--accent);padding:4px 14px;border-radius:20px;font-size:.76rem;font-weight:700;margin-bottom:.9rem;border:1px solid rgba(56,189,248,.25)}
+.hero h1{font-size:2.2rem;font-weight:800;line-height:1.2;margin-bottom:.9rem}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--text2);font-size:1rem;line-height:1.7;max-width:580px;margin-bottom:1.3rem}
+.htags{display:flex;flex-wrap:wrap;gap:7px}
+.htag{background:var(--bg3);border:1px solid var(--border);padding:4px 13px;border-radius:20px;font-size:.76rem;color:var(--text2)}
+
+/* Section head */
+.st{font-size:1.6rem;font-weight:700;margin-bottom:.35rem;display:flex;align-items:center;gap:10px}
+.ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.ib{background:rgba(56,189,248,.14)}
+.ip{background:rgba(129,140,248,.14)}
+.ig{background:rgba(52,211,153,.14)}
+.iy{background:rgba(251,191,36,.14)}
+.ir{background:rgba(244,114,182,.14)}
+.ss{color:var(--text2);font-size:.87rem;margin-bottom:1.6rem;padding-left:44px}
+
+/* Cards */
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;margin-bottom:1.4rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:1.2rem;transition:all .28s;position:relative;overflow:hidden}
+.card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 24px rgba(56,189,248,.08)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity .28s}
+.card:hover::before{opacity:1}
+.ci{font-size:1.5rem;margin-bottom:.5rem}
+.card h3{font-size:.95rem;font-weight:700;margin-bottom:.4rem}
+.card p{color:var(--text2);font-size:.82rem;line-height:1.6}
+
+/* Code */
+.cb{background:var(--code);border:1px solid #1a3560;border-radius:12px;overflow:hidden;margin:1.1rem 0}
+.ch{background:#0d1628;padding:.55rem 1rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a3560}
+.ch span{color:var(--text2);font-size:.76rem;font-family:monospace}
+.cl{background:rgba(56,189,248,.12);color:var(--accent);padding:2px 9px;border-radius:5px;font-size:.7rem;font-weight:700}
+.cb pre{padding:1.1rem;overflow-x:auto;font-size:.83rem;line-height:1.7;font-family:'Courier New',monospace;color:#cdd9e5}
+.kw{color:#ff7b72}.str{color:#a5d6ff}.cm{color:#8b949e;font-style:italic}
+.fn{color:#d2a8ff}.cls{color:#ffa657}.tg{color:#7ee787}.at{color:#79c0ff}.vl{color:#a5d6ff}
+.num{color:#f2cc60}
+
+/* Alerts */
+.al{padding:.9rem 1.1rem;border-radius:10px;margin:.9rem 0;border-left:4px solid}
+.at2{background:rgba(52,211,153,.07);border-color:var(--accent3)}
+.at2 .ah{color:var(--accent3)}
+.aw{background:rgba(251,191,36,.07);border-color:var(--yellow)}
+.aw .ah{color:var(--yellow)}
+.ae{background:rgba(56,189,248,.07);border-color:var(--accent)}
+.ae .ah{color:var(--accent)}
+.ar{background:rgba(248,113,113,.07);border-color:var(--red)}
+.ar .ah{color:var(--red)}
+.ah{font-weight:700;font-size:.86rem;margin-bottom:.25rem}
+.al p{color:var(--text2);font-size:.84rem;line-height:1.6}
+
+/* Table */
+.tw{overflow-x:auto;margin:1.1rem 0;border-radius:11px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg3);color:var(--accent);padding:.7rem .95rem;text-align:left;font-size:.79rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+td{padding:.7rem .95rem;color:var(--text2);font-size:.83rem;border-top:1px solid var(--border)}
+tr:hover td{background:rgba(56,189,248,.03)}
+td:first-child{color:var(--text);font-weight:600}
+
+/* Explain */
+.eb{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:1.2rem;margin:.9rem 0}
+.eb h4{color:var(--accent3);font-size:.92rem;margin-bottom:.55rem}
+.eb p,.eb li{color:var(--text2);font-size:.84rem;line-height:1.7}
+.eb ul{padding-left:1.1rem}
+.eb li{margin-bottom:.3rem}
+
+/* Steps */
+.sl{list-style:none;margin:.9rem 0}
+.sl li{display:flex;gap:11px;margin-bottom:.9rem;align-items:flex-start}
+.sn{width:26px;height:26px;min-width:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:#000}
+.st2 h4{font-size:.88rem;color:var(--text);margin-bottom:.22rem}
+.st2 p{font-size:.81rem;color:var(--text2);line-height:1.6}
+
+/* Badge */
+.bg{display:inline-block;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700;margin:2px}
+.bb{background:rgba(56,189,248,.13);color:var(--accent)}
+.bg2{background:rgba(52,211,153,.13);color:var(--accent3)}
+.bp{background:rgba(129,140,248,.18);color:#a78bfa}
+.by{background:rgba(251,191,36,.13);color:var(--yellow)}
+.br{background:rgba(244,114,182,.13);color:var(--pink)}
+
+/* Demo */
+.db{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:1.4rem;margin:1.1rem 0}
+.db h4{color:var(--accent);font-size:.92rem;margin-bottom:.9rem}
+.di{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.65rem .95rem;color:var(--text);font-size:.88rem;outline:none;transition:border-color .2s}
+.di:focus{border-color:var(--accent)}
+.do{margin-top:.7rem;background:var(--bg3);border-radius:8px;padding:.65rem .95rem;color:var(--accent3);font-size:.88rem;min-height:40px}
+.dbtn{margin-top:.65rem;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;border:none;padding:.55rem 1.3rem;border-radius:8px;cursor:pointer;font-size:.86rem;font-weight:700;transition:opacity .2s}
+.dbtn:hover{opacity:.82}
+.test-box{background:var(--code);border:1px solid #1a3560;border-radius:10px;padding:1rem;margin-top:.8rem;font-family:'Courier New',monospace;font-size:.82rem}
+.pass{color:#34d399}.fail{color:#f87171}.pending{color:#fbbf24}
+
+/* Quiz */
+.qc{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:1.4rem;margin-bottom:1.1rem}
+.qq{font-size:.92rem;color:var(--text);font-weight:600;margin-bottom:.9rem}
+.qq span{color:var(--accent)}
+.qo-wrap{display:flex;flex-direction:column;gap:.45rem}
+.qo{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.58rem .95rem;cursor:pointer;font-size:.83rem;color:var(--text2);transition:all .2s;text-align:left}
+.qo:hover:not(:disabled){border-color:var(--accent);color:var(--text)}
+.qo.cor{background:rgba(52,211,153,.1);border-color:var(--accent3);color:var(--accent3)}
+.qo.wrn{background:rgba(248,113,113,.09);border-color:var(--red);color:var(--red)}
+.qr{margin-top:.7rem;font-size:.82rem;font-weight:600;padding:.45rem .95rem;border-radius:8px;display:none}
+.qr.show{display:block}
+.rc{background:rgba(52,211,153,.09);color:var(--accent3)}
+.rw{background:rgba(248,113,113,.09);color:var(--red)}
+.qs{background:linear-gradient(135deg,rgba(56,189,248,.09),rgba(129,140,248,.09));border:1px solid rgba(56,189,248,.18);border-radius:13px;padding:1.5rem;text-align:center;margin-top:1rem}
+.sn2{font-size:2.8rem;font-weight:800;color:var(--accent)}
+.sl2{color:var(--text2);font-size:.88rem}
+
+p{line-height:1.7;color:var(--text2);margin-bottom:.75rem}
+h3{color:var(--text);font-size:1.05rem;margin:1.1rem 0 .45rem}
+code{background:rgba(56,189,248,.1);color:var(--accent3);padding:2px 7px;border-radius:5px;font-family:'Courier New',monospace;font-size:.83em}
+footer{background:var(--sidebar);border-top:1px solid var(--border);margin-top:3rem;padding:1.8rem;text-align:center}
+footer p{color:var(--text2);font-size:.83rem}
+footer span{color:var(--accent)}
+.flow{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.8rem 0}
+.farrow{color:var(--text2);font-size:.8rem}
+.fbox{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.4rem .85rem;font-size:.8rem;color:var(--text2);text-align:center}
+.fbox.hi{border-color:var(--accent);color:var(--accent)}
+
+@media(max-width:768px){
+  #sb{transform:translateX(-100%)}
+  #sb.open{transform:translateX(0)}
+  #main{margin-left:0;padding:1rem}
+  .hb{display:block}
+  .ov.show{display:block}
+  .hero h1{font-size:1.6rem}
+}
+</style>
+</head>
+<body>
+<div id="pb"></div>
+<button class="hb" onclick="tog()">☰</button>
+<div class="ov" id="ov" onclick="tog()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sb">
+  <div class="sb-logo">
+    <h2>⚛ MERN + Testing</h2>
+    <p>Roman Urdu Complete Guide</p>
+  </div>
+  <div class="ns">
+    <div class="nt">Shuruaat</div>
+    <a href="#hero" class="nl active"><span class="nd"></span>Parichay</a>
+  </div>
+  <div class="ns">
+    <div class="nt">Unit Testing — React</div>
+    <a href="#testing-intro" class="nl"><span class="nd"></span>Testing Kya Hai?</a>
+    <a href="#jest" class="nl"><span class="nd"></span>Jest Setup</a>
+    <a href="#rtl" class="nl"><span class="nd"></span>React Testing Library</a>
+    <a href="#test-types" class="nl"><span class="nd"></span>Testing Types</a>
+    <a href="#mocking" class="nl"><span class="nd"></span>Mocking</a>
+    <a href="#coverage" class="nl"><span class="nd"></span>Code Coverage</a>
+  </div>
+  <div class="ns">
+    <div class="nt">MERN Stack</div>
+    <a href="#mern-intro" class="nl"><span class="nd"></span>MERN Kya Hai?</a>
+    <a href="#mongodb" class="nl"><span class="nd"></span>MongoDB</a>
+    <a href="#express" class="nl"><span class="nd"></span>Express.js</a>
+    <a href="#react" class="nl"><span class="nd"></span>React (Frontend)</a>
+    <a href="#node" class="nl"><span class="nd"></span>Node.js</a>
+    <a href="#connection" class="nl"><span class="nd"></span>Full App Connect</a>
+  </div>
+  <div class="ns">
+    <div class="nt">Practice</div>
+    <a href="#demo" class="nl"><span class="nd"></span>Live Demo</a>
+    <a href="#quiz" class="nl"><span class="nd"></span>Quiz</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main id="main">
+
+<!-- HERO -->
+<div class="hero sec" id="hero">
+  <div class="hbadge">📖 Lecture 15 &nbsp;|&nbsp; ⚛ React Testing + 🌿 MERN Stack</div>
+  <h1>MERN Stack aur <span>Unit Testing</span> Seekho</h1>
+  <p>Is guide mein React ka Unit Testing aur poora MERN Stack application banana Roman Urdu mein step by step samjhaya gaya hai — bilkul teacher ki tarah, simple aur asaan andaaz mein.</p>
+  <div class="htags">
+    <span class="htag">🧪 Jest</span>
+    <span class="htag">📦 React Testing Library</span>
+    <span class="htag">🌿 MongoDB</span>
+    <span class="htag">⚡ Express.js</span>
+    <span class="htag">⚛ React</span>
+    <span class="htag">🟢 Node.js</span>
+  </div>
+</div>
+
+<!-- ===== TESTING INTRO ===== -->
+<section class="sec" id="testing-intro">
+  <div class="st"><div class="ic ib">🧪</div>Unit Testing — Kya Hai Yeh?</div>
+  <div class="ss">Code likhne ke baad isko verify karna ke sahi kaam kar raha hai</div>
+
+  <p>Socho tumne ek calculator banaya. Ab tum khud se check karte ho — 2+2 = 4 aa raha hai ya nahi, 10/0 pe error aa rahi hai ya nahi. Yeh check karna hi <strong>Testing</strong> hai. Jab yeh check code ke zariye automatically ho, toh usse <strong>Unit Testing</strong> kehte hain.</p>
+
+  <p><strong>Unit</strong> matlab ek choti si cheez — ek function, ek component, ek method. Har unit ko alag alag test karte hain.</p>
+
+  <div class="cg">
+    <div class="card">
+      <div class="ci">🎯</div>
+      <h3>Bugs Pehle Pakdo</h3>
+      <p>Production mein jaane se pehle bugs dhundhte hain. Customer ko kharab experience nahi milta.</p>
+    </div>
+    <div class="card">
+      <div class="ci">♻️</div>
+      <h3>Safe Refactoring</h3>
+      <p>Code change karo — agar test pass hon to confirm hai ke kuch tuta nahi. Bina darr ke improve karo.</p>
+    </div>
+    <div class="card">
+      <div class="ci">📄</div>
+      <h3>Documentation</h3>
+      <p>Tests batate hain ke code kya karta hai. Doosra developer padhke samajh jaata hai.</p>
+    </div>
+    <div class="card">
+      <div class="ci">⚡</div>
+      <h3>Fast Feedback</h3>
+      <p>Seconds mein pata chal jaata hai ke kuch tuta hai. Manual testing mein ghante lagte hain.</p>
+    </div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Type</th><th>Kya test karta hai</th><th>Speed</th><th>Tool</th></tr></thead>
+      <tbody>
+        <tr><td>Unit Test</td><td>Ek function / component</td><td>⚡ Fastest</td><td>Jest + RTL</td></tr>
+        <tr><td>Integration Test</td><td>Multiple components saath</td><td>🚀 Fast</td><td>Jest + RTL</td></tr>
+        <tr><td>End-to-End Test</td><td>Poori app (browser mein)</td><td>🐢 Slow</td><td>Cypress, Playwright</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="al ae"><div class="ah">📝 Exam Tip</div><p>Testing pyramid: Zyada Unit Tests, kam Integration Tests, aur bahut kam E2E Tests. Unit tests fast aur cheap hote hain isliye zyada likhte hain.</p></div>
+</section>
+
+<!-- ===== JEST ===== -->
+<section class="sec" id="jest">
+  <div class="st"><div class="ic iy">🃏</div>Jest — Testing Framework</div>
+  <div class="ss">React ka default testing tool — Facebook ne banaya</div>
+
+  <p>Jest ek <strong>JavaScript Testing Framework</strong> hai. Create React App mein yeh already installed hota hai. Yeh humara test runner hai — yani yeh sare tests chalata hai aur batata hai kaunse pass hue, kaunse fail.</p>
+
+  <div class="eb">
+    <h4>📋 Jest ke main kaam:</h4>
+    <ul>
+      <li><strong>test() / it()</strong> — ek test case define karta hai</li>
+      <li><strong>describe()</strong> — tests ko group karta hai (jaise ek folder)</li>
+      <li><strong>expect()</strong> — kisi value ke baare mein expectation likhta hai</li>
+      <li><strong>Matchers</strong> — toBe, toEqual, toContain, toBeNull wagerah</li>
+      <li><strong>beforeEach / afterEach</strong> — har test se pehle/baad setup/cleanup</li>
+    </ul>
+  </div>
+
+  <div class="cb">
+    <div class="ch"><span>📄 math.js + math.test.js</span><span class="cl">Jest</span></div>
+    <pre><span class="cm">// math.js — yeh function test hoga</span>
+<span class="kw">export function</span> <span class="fn">add</span>(a, b) { <span class="kw">return</span> a + b; }
+<span class="kw">export function</span> <span class="fn">multiply</span>(a, b) { <span class="kw">return</span> a * b; }
+<span class="kw">export function</span> <span class="fn">divide</span>(a, b) {
+  <span class="kw">if</span> (b === <span class="num">0</span>) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">'Zero se divide nahi kar sakte!'</span>);
+  <span class="kw">return</span> a / b;
+}
+
+<span class="cm">// math.test.js — test file (.test.js ya .spec.js)</span>
+<span class="kw">import</span> { add, multiply, divide } <span class="kw">from</span> <span class="str">'./math'</span>;
+
+<span class="fn">describe</span>(<span class="str">'Math Functions'</span>, () => {
+
+  <span class="fn">test</span>(<span class="str">'2 aur 3 ka sum 5 hona chahiye'</span>, () => {
+    <span class="kw">const</span> result = <span class="fn">add</span>(<span class="num">2</span>, <span class="num">3</span>);
+    <span class="fn">expect</span>(result).toBe(<span class="num">5</span>); <span class="cm">// exact match</span>
+  });
+
+  <span class="fn">test</span>(<span class="str">'4 aur 5 ka product 20 hoga'</span>, () => {
+    <span class="fn">expect</span>(<span class="fn">multiply</span>(<span class="num">4</span>, <span class="num">5</span>)).toBe(<span class="num">20</span>);
+  });
+
+  <span class="fn">test</span>(<span class="str">'zero se divide pe error aaye'</span>, () => {
+    <span class="fn">expect</span>(() => <span class="fn">divide</span>(<span class="num">10</span>, <span class="num">0</span>)).toThrow(<span class="str">'Zero se divide nahi kar sakte!'</span>);
+  });
+});
+
+<span class="cm">// Run karo: npm test</span></pre>
+  </div>
+
+  <h3>Common Jest Matchers — Expectations</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Matcher</th><th>Kab use karein</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>toBe()</td><td>Exact value match (primitive)</td><td><code>expect(2+2).toBe(4)</code></td></tr>
+        <tr><td>toEqual()</td><td>Object/Array comparison</td><td><code>expect(obj).toEqual({a:1})</code></td></tr>
+        <tr><td>toBeTruthy()</td><td>Value truthy ho</td><td><code>expect(name).toBeTruthy()</code></td></tr>
+        <tr><td>toBeFalsy()</td><td>Value falsy ho</td><td><code>expect(null).toBeFalsy()</code></td></tr>
+        <tr><td>toContain()</td><td>Array/string mein exist kare</td><td><code>expect(arr).toContain('Ali')</code></td></tr>
+        <tr><td>toThrow()</td><td>Error throw hona chahiye</td><td><code>expect(fn).toThrow()</code></td></tr>
+        <tr><td>toBeNull()</td><td>Null hona chahiye</td><td><code>expect(val).toBeNull()</code></td></tr>
+        <tr><td>toHaveLength()</td><td>Length check</td><td><code>expect(arr).toHaveLength(3)</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===== RTL ===== -->
+<section class="sec" id="rtl">
+  <div class="st"><div class="ic ig">📦</div>React Testing Library (RTL)</div>
+  <div class="ss">React components ko user ki tarah test karo</div>
+
+  <p>Jest sirf JavaScript test karta hai. Lekin React components mein HTML render hoti hai — buttons, text, inputs hote hain. <strong>React Testing Library (RTL)</strong> in components ko browser ki tarah render karke test karta hai. Yeh sochta hai: "User kya dekhta hai aur kya karta hai" — implementation details nahi.</p>
+
+  <div class="eb">
+    <h4>🔑 RTL ke 3 golden rules:</h4>
+    <ul>
+      <li><strong>render()</strong> — component ko virtual DOM mein render karo</li>
+      <li><strong>Query functions</strong> — elements dhundho (getByText, getByRole, etc.)</li>
+      <li><strong>userEvent / fireEvent</strong> — user actions simulate karo (click, type, etc.)</li>
+    </ul>
+  </div>
+
+  <div class="cb">
+    <div class="ch"><span>📄 Counter.js + Counter.test.js</span><span class="cl">RTL + Jest</span></div>
+    <pre><span class="cm">// Counter.js — test hone wala component</span>
+<span class="kw">import</span> React, { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">function</span> <span class="fn">Counter</span>() {
+  <span class="kw">const</span> [count, setCount] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="kw">return</span> (
+    <span class="tg">&lt;div&gt;</span>
+      <span class="tg">&lt;h2&gt;</span>Count: {count}<span class="tg">&lt;/h2&gt;</span>
+      <span class="tg">&lt;button</span> <span class="at">onClick</span>={() => setCount(count + <span class="num">1</span>)}<span class="tg">&gt;</span>Barha<span class="tg">&lt;/button&gt;</span>
+      <span class="tg">&lt;button</span> <span class="at">onClick</span>={() => setCount(count - <span class="num">1</span>)}<span class="tg">&gt;</span>Ghata<span class="tg">&lt;/button&gt;</span>
+    <span class="tg">&lt;/div&gt;</span>
+  );
+}
+<span class="kw">export default</span> Counter;
+
+<span class="cm">// Counter.test.js</span>
+<span class="kw">import</span> { render, screen, fireEvent } <span class="kw">from</span> <span class="str">'@testing-library/react'</span>;
+<span class="kw">import</span> Counter <span class="kw">from</span> <span class="str">'./Counter'</span>;
+
+<span class="fn">describe</span>(<span class="str">'Counter Component'</span>, () => {
+
+  <span class="fn">test</span>(<span class="str">'shuruaat mein 0 dikhna chahiye'</span>, () => {
+    <span class="fn">render</span>(<span class="tg">&lt;Counter /&gt;</span>);
+    <span class="fn">expect</span>(screen.<span class="fn">getByText</span>(<span class="str">'Count: 0'</span>)).toBeInTheDocument();
+  });
+
+  <span class="fn">test</span>(<span class="str">'Barha button click karne par count +1 ho'</span>, () => {
+    <span class="fn">render</span>(<span class="tg">&lt;Counter /&gt;</span>);
+    fireEvent.<span class="fn">click</span>(screen.<span class="fn">getByText</span>(<span class="str">'Barha'</span>));
+    <span class="fn">expect</span>(screen.<span class="fn">getByText</span>(<span class="str">'Count: 1'</span>)).toBeInTheDocument();
+  });
+
+  <span class="fn">test</span>(<span class="str">'Ghata click par count -1 ho'</span>, () => {
+    <span class="fn">render</span>(<span class="tg">&lt;Counter /&gt;</span>);
+    fireEvent.<span class="fn">click</span>(screen.<span class="fn">getByText</span>(<span class="str">'Ghata'</span>));
+    <span class="fn">expect</span>(screen.<span class="fn">getByText</span>(<span class="str">'Count: -1'</span>)).toBeInTheDocument();
+  });
+});</pre>
+  </div>
+
+  <h3>Query Functions — Elements Dhundhne ke Tariqe</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Query</th><th>Kya dhundha</th><th>Not Found pe</th></tr></thead>
+      <tbody>
+        <tr><td>getByText()</td><td>Text content se</td><td>Error throw</td></tr>
+        <tr><td>getByRole()</td><td>ARIA role se (button, heading)</td><td>Error throw</td></tr>
+        <tr><td>getByLabelText()</td><td>Form label se</td><td>Error throw</td></tr>
+        <tr><td>getByPlaceholderText()</td><td>Input placeholder se</td><td>Error throw</td></tr>
+        <tr><td>queryByText()</td><td>Text se (optional)</td><td>null return</td></tr>
+        <tr><td>findByText()</td><td>Async text (await karo)</td><td>Error throw</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="al at2"><div class="ah">💡 Best Practice</div><p><code>getByRole()</code> use karna sab se acha hai — yeh accessibility ke liye bhi check karta hai. <code>getByTestId()</code> sirf last resort par use karo.</p></div>
+</section>
+
+<!-- ===== TEST TYPES ===== -->
+<section class="sec" id="test-types">
+  <div class="st"><div class="ic ip">🔬</div>Testing Types — Kya Kya Test Karein</div>
+  <div class="ss">Rendering, user interaction, async aur form testing</div>
+
+  <div class="cg">
+    <div class="card">
+      <div class="ci">🖥️</div>
+      <h3>Rendering Test</h3>
+      <p>Component theek se render ho raha hai? Text, images, buttons sab screen par aa rahe hain?</p>
+    </div>
+    <div class="card">
+      <div class="ci">👆</div>
+      <h3>Interaction Test</h3>
+      <p>Button click, form fill, hover — user ke actions pe component sahi react karta hai?</p>
+    </div>
+    <div class="card">
+      <div class="ci">⏳</div>
+      <h3>Async Test</h3>
+      <p>API call ke baad data dikhna — <code>waitFor()</code> ya <code>findBy*()</code> se async test karo.</p>
+    </div>
+    <div class="card">
+      <div class="ci">📋</div>
+      <h3>Snapshot Test</h3>
+      <p>Component ka UI change to nahi hua? Ek baar snapshot save karo aur compare karte raho.</p>
+    </div>
+  </div>
+
+  <div class="cb">
+    <div class="ch"><span>📄 Async + Form Testing</span><span class="cl">RTL + Jest</span></div>
+    <pre><span class="cm">// Async API test — data aane ka intezaar karo</span>
+<span class="fn">test</span>(<span class="str">'API se students load hon'</span>, <span class="kw">async</span> () => {
+  <span class="fn">render</span>(<span class="tg">&lt;StudentList /&gt;</span>);
+
+  <span class="cm">// Loading dikhna chahiye pehle</span>
+  <span class="fn">expect</span>(screen.<span class="fn">getByText</span>(<span class="str">'Loading...'</span>)).toBeInTheDocument();
+
+  <span class="cm">// Students aane ka wait karo</span>
+  <span class="kw">const</span> student = <span class="kw">await</span> screen.<span class="fn">findByText</span>(<span class="str">'Ali Ahmed'</span>);
+  <span class="fn">expect</span>(student).toBeInTheDocument();
+});
+
+<span class="cm">// Form submit test</span>
+<span class="fn">test</span>(<span class="str">'login form sahi kaam kare'</span>, <span class="kw">async</span> () => {
+  <span class="fn">render</span>(<span class="tg">&lt;LoginForm /&gt;</span>);
+
+  <span class="cm">// Input fields mein type karo</span>
+  fireEvent.<span class="fn">change</span>(screen.<span class="fn">getByLabelText</span>(<span class="str">'Email'</span>), {
+    target: { value: <span class="str">'ali@test.com'</span> }
+  });
+  fireEvent.<span class="fn">change</span>(screen.<span class="fn">getByLabelText</span>(<span class="str">'Password'</span>), {
+    target: { value: <span class="str">'secret123'</span> }
+  });
+
+  <span class="cm">// Submit karo</span>
+  fireEvent.<span class="fn">click</span>(screen.<span class="fn">getByRole</span>(<span class="str">'button'</span>, { name: <span class="str">'Login'</span> }));
+
+  <span class="cm">// Success message expect karo</span>
+  <span class="kw">await</span> screen.<span class="fn">findByText</span>(<span class="str">'Login successful!'</span>);
+});
+
+<span class="cm">// Snapshot test</span>
+<span class="fn">test</span>(<span class="str">'Header UI match kare snapshot se'</span>, () => {
+  <span class="kw">const</span> { asFragment } = <span class="fn">render</span>(<span class="tg">&lt;Header title=</span><span class="str">"Home"</span> <span class="tg">/&gt;</span>);
+  <span class="fn">expect</span>(<span class="fn">asFragment</span>()).toMatchSnapshot();
+});</pre>
+  </div>
+</section>
+
+<!-- ===== MOCKING ===== -->
+<section class="sec" id="mocking">
+  <div class="st"><div class="ic ir">🎭</div>Mocking — Duplicate Banana</div>
+  <div class="ss">Real API calls ki jagah fake responses use karna tests mein</div>
+
+  <p>Socho tum ek restaurant ka test kar rahe ho. Real chef ko bulana expensive hai — isliye ek <strong>fake chef (mock)</strong> banate ho jo same kaam kare. Testing mein bhi real API call karne ki zaroorat nahi — fake response de do. Iski wajah: API slow hai, cost money karti hai, ya abhi bani hi nahi.</p>
+
+  <div class="cb">
+    <div class="ch"><span>📄 Mocking Examples</span><span class="cl">Jest Mock</span></div>
+    <pre><span class="cm">// 1. Function mock karna</span>
+<span class="kw">const</span> mockFn = jest.<span class="fn">fn</span>();
+mockFn(<span class="str">'Ali'</span>);
+<span class="fn">expect</span>(mockFn).<span class="fn">toHaveBeenCalledWith</span>(<span class="str">'Ali'</span>);
+<span class="fn">expect</span>(mockFn).<span class="fn">toHaveBeenCalledTimes</span>(<span class="num">1</span>);
+
+<span class="cm">// 2. Module mock — axios ko mock karo</span>
+jest.<span class="fn">mock</span>(<span class="str">'axios'</span>);
+<span class="kw">import</span> axios <span class="kw">from</span> <span class="str">'axios'</span>;
+
+<span class="fn">test</span>(<span class="str">'API se students fetch ho'</span>, <span class="kw">async</span> () => {
+  <span class="cm">// Fake response set karo</span>
+  axios.get.<span class="fn">mockResolvedValue</span>({
+    data: [{ id: <span class="num">1</span>, name: <span class="str">'Ali'</span> }, { id: <span class="num">2</span>, name: <span class="str">'Sara'</span> }]
+  });
+
+  <span class="fn">render</span>(<span class="tg">&lt;StudentList /&gt;</span>);
+
+  <span class="fn">expect</span>(<span class="kw">await</span> screen.<span class="fn">findByText</span>(<span class="str">'Ali'</span>)).toBeInTheDocument();
+  <span class="fn">expect</span>(screen.<span class="fn">getByText</span>(<span class="str">'Sara'</span>)).toBeInTheDocument();
+  <span class="fn">expect</span>(axios.get).<span class="fn">toHaveBeenCalledWith</span>(<span class="str">'/api/students'</span>);
+});
+
+<span class="cm">// 3. Error case mock karna</span>
+<span class="fn">test</span>(<span class="str">'API error pe error message dikhaye'</span>, <span class="kw">async</span> () => {
+  axios.get.<span class="fn">mockRejectedValue</span>(<span class="kw">new</span> <span class="cls">Error</span>(<span class="str">'Network Error'</span>));
+  <span class="fn">render</span>(<span class="tg">&lt;StudentList /&gt;</span>);
+  <span class="kw">const</span> err = <span class="kw">await</span> screen.<span class="fn">findByText</span>(<span class="str">/kuch galat hua/i</span>);
+  <span class="fn">expect</span>(err).toBeInTheDocument();
+});</pre>
+  </div>
+
+  <div class="al aw"><div class="ah">⚠️ Dhyan Do</div><p>Mock ke baad cleanup zaroori hai. <code>afterEach(() => jest.clearAllMocks())</code> ya <code>jest.resetAllMocks()</code> use karo warna ek test ka mock dusre test ko affect karega.</p></div>
+</section>
+
+<!-- ===== COVERAGE ===== -->
+<section class="sec" id="coverage">
+  <div class="st"><div class="ic ig">📊</div>Code Coverage — Kitna Test Kiya?</div>
+  <div class="ss">Measure karo ke tumhara code kitna tested hai</div>
+
+  <p>Coverage ek report hai jo batati hai — tumhare code ka kitna percent tests se cover hai. Jaise exam mein poore syllabus mein se kitna tumne padha.</p>
+
+  <div class="cg">
+    <div class="card"><div class="ci">📄</div><h3>Statement Coverage</h3><p>Kitni code lines chalein? Har statement execute hua?</p></div>
+    <div class="card"><div class="ci">🌿</div><h3>Branch Coverage</h3><p>if/else dono branches test ki gayin? Har condition check ki?</p></div>
+    <div class="card"><div class="ci">🔧</div><h3>Function Coverage</h3><p>Kitne functions call hue? Koi function test mein bhool toh nahi gaya?</p></div>
+    <div class="card"><div class="ci">📏</div><h3>Line Coverage</h3><p>Kitni lines execute huin? Uncovered lines red mein dikhti hain.</p></div>
+  </div>
+
+  <div class="cb">
+    <div class="ch"><span>📄 Coverage Commands</span><span class="cl">Terminal</span></div>
+    <pre><span class="cm"># Coverage report generate karo</span>
+npm test -- --coverage
+
+<span class="cm"># Output kuch aisa dikhega:</span>
+<span class="cm">---------------------|---------|----------|---------|---------|</span>
+<span class="cm">File                 | % Stmts | % Branch | % Funcs | % Lines |</span>
+<span class="cm">---------------------|---------|----------|---------|---------|</span>
+<span class="cm">Counter.js           |   100   |   100    |   100   |   100   |</span>
+<span class="cm">StudentList.js       |   85.7  |   75     |   80    |   85.7  |</span>
+<span class="cm">---------------------|---------|----------|---------|---------|</span>
+
+<span class="cm"># package.json mein minimum coverage set karo:</span>
+<span class="str">"jest"</span>: {
+  <span class="str">"coverageThreshold"</span>: {
+    <span class="str">"global"</span>: {
+      <span class="str">"branches"</span>: <span class="num">80</span>,
+      <span class="str">"functions"</span>: <span class="num">80</span>,
+      <span class="str">"lines"</span>: <span class="num">80</span>,
+      <span class="str">"statements"</span>: <span class="num">80</span>
+    }
+  }
+}</pre>
+  </div>
+
+  <div class="al at2"><div class="ah">💡 Tip</div><p>100% coverage ka target mat rakho — yeh unrealistic hai. Industry standard <strong>70-80%</strong> coverage achi maani jaati hai. Quality of tests, quantity se zyada important hai.</p></div>
+</section>
+
+<!-- ===== MERN INTRO ===== -->
+<section class="sec" id="mern-intro">
+  <div class="st"><div class="ic ib">🌿</div>MERN Stack — Poori Application</div>
+  <div class="ss">MongoDB + Express + React + Node — ek complete web app</div>
+
+  <p>MERN ek <strong>full-stack technology combination</strong> hai. Jaise ek complete pizza mein dough, sauce, cheese, aur toppings hote hain — waise MERN mein 4 technologies milke ek puri app banati hain.</p>
+
+  <div class="flow">
+    <div class="fbox hi">⚛ React<br><small>Frontend</small></div>
+    <div class="farrow">→ HTTP Request →</div>
+    <div class="fbox hi">⚡ Express<br><small>API/Routes</small></div>
+    <div class="farrow">→</div>
+    <div class="fbox hi">🟢 Node.js<br><small>Server</small></div>
+    <div class="farrow">→</div>
+    <div class="fbox hi">🌿 MongoDB<br><small>Database</small></div>
+  </div>
+
+  <div class="cg">
+    <div class="card"><div class="ci">⚛</div><h3>React — Frontend</h3><p>User jo dekhta hai — UI, buttons, forms, pages. Browser mein chalta hai.</p></div>
+    <div class="card"><div class="ci">⚡</div><h3>Express.js — Backend API</h3><p>React ke requests receive karta hai, logic chalata hai, database se baat karta hai.</p></div>
+    <div class="card"><div class="ci">🟢</div><h3>Node.js — Server</h3><p>JavaScript ko server par chalata hai. Express ki foundation hai.</p></div>
+    <div class="card"><div class="ci">🌿</div><h3>MongoDB — Database</h3><p>Data store karta hai JSON jaise documents mein. NoSQL database hai.</p></div>
+  </div>
+</section>
+
+<!-- ===== MONGODB ===== -->
+<section class="sec" id="mongodb">
+  <div class="st"><div class="ic ig">🌿</div>MongoDB — Data ka Ghar</div>
+  <div class="ss">JSON jaisi documents mein data store karna</div>
+
+  <p>MongoDB ek <strong>NoSQL database</strong> hai. Normal SQL databases mein tables aur rows hote hain — MongoDB mein <strong>Collections</strong> aur <strong>Documents</strong> hain. Document bilkul JavaScript object jaisa lagta hai (JSON format).</p>
+
+  <div class="eb">
+    <h4>📋 MongoDB vs SQL:</h4>
+    <ul>
+      <li>SQL: <strong>Table</strong> = MongoDB: <strong>Collection</strong></li>
+      <li>SQL: <strong>Row</strong> = MongoDB: <strong>Document</strong></li>
+      <li>SQL: <strong>Column</strong> = MongoDB: <strong>Field</strong></li>
+      <li>SQL: <strong>JOIN</strong> = MongoDB: <strong>$lookup / Populate</strong></li>
+    </ul>
+  </div>
+
+  <div class="cb">
+    <div class="ch"><span>📄 Mongoose Model + Connection</span><span class="cl">Node.js</span></div>
+    <pre><span class="cm">// db.js — MongoDB se connect karo</span>
+<span class="kw">const</span> mongoose = <span class="fn">require</span>(<span class="str">'mongoose'</span>);
+
+mongoose.<span class="fn">connect</span>(<span class="str">'mongodb://localhost:27017/myapp'</span>, {
+  useNewUrlParser: <span class="kw">true</span>,
+  useUnifiedTopology: <span class="kw">true</span>
+}).<span class="fn">then</span>(() => console.<span class="fn">log</span>(<span class="str">'MongoDB connect ho gaya!'</span>))
+  .<span class="fn">catch</span>(err => console.<span class="fn">log</span>(<span class="str">'Error:'</span>, err));
+
+<span class="cm">// models/Student.js — Schema aur Model</span>
+<span class="kw">const</span> mongoose = <span class="fn">require</span>(<span class="str">'mongoose'</span>);
+
+<span class="kw">const</span> studentSchema = <span class="kw">new</span> mongoose.<span class="cls">Schema</span>({
+  name:  { type: <span class="cls">String</span>,  required: <span class="kw">true</span> },
+  email: { type: <span class="cls">String</span>,  required: <span class="kw">true</span>, unique: <span class="kw">true</span> },
+  roll:  { type: <span class="cls">Number</span>,  required: <span class="kw">true</span> },
+  grade: { type: <span class="cls">String</span>,  default: <span class="str">'A'</span> },
+  active:{ type: <span class="cls">Boolean</span>, default: <span class="kw">true</span> },
+  createdAt: { type: <span class="cls">Date</span>, default: Date.now }
+});
+
+<span class="kw">const</span> Student = mongoose.<span class="fn">model</span>(<span class="str">'Student'</span>, studentSchema);
+module.exports = Student;</pre>
+  </div>
+</section>
+
+<!-- ===== EXPRESS ===== -->
+<section class="sec" id="express">
+  <div class="st"><div class="ic iy">⚡</div>Express.js — REST API Banana</div>
+  <div class="ss">Frontend ke liye API endpoints banana</div>
+
+  <p>Express ek <strong>web framework for Node.js</strong> hai. Yeh HTTP requests (GET, POST, PUT, DELETE) handle karta hai. React jab data maangta hai, Express usse serve karta hai — jaise waiter restaurant mein order leta hai aur khana deta hai.</p>
+
+  <div class="cb">
+    <div class="ch"><span>📄 server.js + routes/students.js</span><span class="cl">Express.js</span></div>
+    <pre><span class="cm">// server.js — main entry point</span>
+<span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> cors = <span class="fn">require</span>(<span class="str">'cors'</span>);
+<span class="fn">require</span>(<span class="str">'./db'</span>); <span class="cm">// MongoDB connect</span>
+
+<span class="kw">const</span> app = <span class="fn">express</span>();
+app.<span class="fn">use</span>(cors());           <span class="cm">// React se request aane dena</span>
+app.<span class="fn">use</span>(express.<span class="fn">json</span>()); <span class="cm">// JSON body parse karna</span>
+
+app.<span class="fn">use</span>(<span class="str">'/api/students'</span>, <span class="fn">require</span>(<span class="str">'./routes/students'</span>));
+
+app.<span class="fn">listen</span>(<span class="num">5000</span>, () => console.<span class="fn">log</span>(<span class="str">'Server port 5000 par chal raha hai'</span>));
+
+<span class="cm">// routes/students.js — CRUD routes</span>
+<span class="kw">const</span> router = require(<span class="str">'express'</span>).Router();
+<span class="kw">const</span> Student = <span class="fn">require</span>(<span class="str">'../models/Student'</span>);
+
+<span class="cm">// GET — sare students lao</span>
+router.<span class="fn">get</span>(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> students = <span class="kw">await</span> Student.<span class="fn">find</span>();
+    res.<span class="fn">json</span>(students);
+  } <span class="kw">catch</span> (err) { res.<span class="fn">status</span>(<span class="num">500</span>).<span class="fn">json</span>({ message: err.message }); }
+});
+
+<span class="cm">// POST — naya student add karo</span>
+router.<span class="fn">post</span>(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> student = <span class="kw">new</span> <span class="cls">Student</span>(req.body);
+  <span class="kw">try</span> {
+    <span class="kw">const</span> saved = <span class="kw">await</span> student.<span class="fn">save</span>();
+    res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(saved);
+  } <span class="kw">catch</span> (err) { res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ message: err.message }); }
+});
+
+<span class="cm">// PUT — student update karo</span>
+router.<span class="fn">put</span>(<span class="str">'/:id'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> updated = <span class="kw">await</span> Student.<span class="fn">findByIdAndUpdate</span>(req.params.id, req.body, { <span class="kw">new</span>: <span class="kw">true</span> });
+  res.<span class="fn">json</span>(updated);
+});
+
+<span class="cm">// DELETE — student hatao</span>
+router.<span class="fn">delete</span>(<span class="str">'/:id'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">await</span> Student.<span class="fn">findByIdAndDelete</span>(req.params.id);
+  res.<span class="fn">json</span>({ message: <span class="str">'Student delete ho gaya'</span> });
+});
+
+module.exports = router;</pre>
+  </div>
+
+  <h3>HTTP Methods — REST API ke Tarike</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Method</th><th>Kaam</th><th>URL Example</th><th>Response</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td>Data lao</td><td>/api/students</td><td>200 OK</td></tr>
+        <tr><td>POST</td><td>Naya data add karo</td><td>/api/students</td><td>201 Created</td></tr>
+        <tr><td>PUT</td><td>Poora update karo</td><td>/api/students/:id</td><td>200 OK</td></tr>
+        <tr><td>PATCH</td><td>Partial update karo</td><td>/api/students/:id</td><td>200 OK</td></tr>
+        <tr><td>DELETE</td><td>Delete karo</td><td>/api/students/:id</td><td>200 OK</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===== REACT ===== -->
+<section class="sec" id="react">
+  <div class="st"><div class="ic ib">⚛</div>React — Frontend ka Kaam</div>
+  <div class="ss">Backend API se connect karke UI banana</div>
+
+  <p>React ka frontend Express ke API se <code>fetch</code> ya <code>axios</code> se baat karta hai. User kuch kare — form fill kare, button dabaaye — React API call kare, data aaye, UI update ho.</p>
+
+  <div class="cb">
+    <div class="ch"><span>📄 StudentList.jsx — Full Component</span><span class="cl">React</span></div>
+    <pre><span class="kw">import</span> React, { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> axios <span class="kw">from</span> <span class="str">'axios'</span>;
+
+<span class="kw">const</span> API = <span class="str">'http://localhost:5000/api/students'</span>;
+
+<span class="kw">function</span> <span class="fn">StudentList</span>() {
+  <span class="kw">const</span> [students, setStudents] = <span class="fn">useState</span>([]);
+  <span class="kw">const</span> [loading, setLoading]   = <span class="fn">useState</span>(<span class="kw">true</span>);
+  <span class="kw">const</span> [name, setName]         = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [email, setEmail]       = <span class="fn">useState</span>(<span class="str">''</span>);
+
+  <span class="cm">// Mount hone par students fetch karo</span>
+  <span class="fn">useEffect</span>(() => { <span class="fn">fetchStudents</span>(); }, []);
+
+  <span class="kw">const</span> <span class="fn">fetchStudents</span> = <span class="kw">async</span> () => {
+    <span class="kw">const</span> res = <span class="kw">await</span> axios.<span class="fn">get</span>(API);
+    <span class="fn">setStudents</span>(res.data);
+    <span class="fn">setLoading</span>(<span class="kw">false</span>);
+  };
+
+  <span class="kw">const</span> <span class="fn">addStudent</span> = <span class="kw">async</span> (e) => {
+    e.<span class="fn">preventDefault</span>();
+    <span class="kw">await</span> axios.<span class="fn">post</span>(API, { name, email, roll: Date.now() });
+    <span class="fn">setName</span>(<span class="str">''</span>); <span class="fn">setEmail</span>(<span class="str">''</span>);
+    <span class="fn">fetchStudents</span>(); <span class="cm">// Refresh list</span>
+  };
+
+  <span class="kw">const</span> <span class="fn">deleteStudent</span> = <span class="kw">async</span> (id) => {
+    <span class="kw">await</span> axios.<span class="fn">delete</span>(`${API}/${id}`);
+    <span class="fn">fetchStudents</span>();
+  };
+
+  <span class="kw">if</span> (loading) <span class="kw">return</span> <span class="tg">&lt;p&gt;</span>Loading...<span class="tg">&lt;/p&gt;</span>;
+
+  <span class="kw">return</span> (
+    <span class="tg">&lt;div&gt;</span>
+      <span class="tg">&lt;form</span> <span class="at">onSubmit</span>={addStudent}<span class="tg">&gt;</span>
+        <span class="tg">&lt;input</span> <span class="at">value</span>={name} <span class="at">onChange</span>=<span class="tg">{</span>e => <span class="fn">setName</span>(e.target.value)<span class="tg">}</span> <span class="at">placeholder</span>=<span class="str">"Naam"</span> <span class="tg">/&gt;</span>
+        <span class="tg">&lt;input</span> <span class="at">value</span>={email} <span class="at">onChange</span>=<span class="tg">{</span>e => <span class="fn">setEmail</span>(e.target.value)<span class="tg">}</span> <span class="at">placeholder</span>=<span class="str">"Email"</span> <span class="tg">/&gt;</span>
+        <span class="tg">&lt;button</span> <span class="at">type</span>=<span class="str">"submit"</span><span class="tg">&gt;</span>Add Student<span class="tg">&lt;/button&gt;</span>
+      <span class="tg">&lt;/form&gt;</span>
+      {students.<span class="fn">map</span>(s => (
+        <span class="tg">&lt;div</span> <span class="at">key</span>={s._id}<span class="tg">&gt;</span>
+          <span class="tg">&lt;span&gt;</span>{s.name} — {s.email}<span class="tg">&lt;/span&gt;</span>
+          <span class="tg">&lt;button</span> <span class="at">onClick</span>=<span class="tg">{</span>() => <span class="fn">deleteStudent</span>(s._id)<span class="tg">}</span><span class="tg">&gt;</span>Delete<span class="tg">&lt;/button&gt;</span>
+        <span class="tg">&lt;/div&gt;</span>
+      ))}
+    <span class="tg">&lt;/div&gt;</span>
+  );
+}
+<span class="kw">export default</span> StudentList;</pre>
+  </div>
+</section>
+
+<!-- ===== NODE ===== -->
+<section class="sec" id="node">
+  <div class="st"><div class="ic ig">🟢</div>Node.js — Server ka Dil</div>
+  <div class="ss">JavaScript ko server par chalane ki technology</div>
+
+  <p>Pehle JavaScript sirf browser mein chalta tha. Node.js ne JavaScript ko <strong>server par bhi chalana</strong> mumkin bana diya — 2009 mein Ryan Dahl ne banaya. Express, npm packages — sab Node.js par hi chalte hain.</p>
+
+  <div class="cg">
+    <div class="card"><div class="ci">📦</div><h3>npm</h3><p>Node Package Manager — packages install karo. <code>npm install express mongoose cors</code></p></div>
+    <div class="card"><div class="ci">🔄</div><h3>Event Loop</h3><p>Node.js non-blocking hai — ek request ka wait kiye bina doosri handle karta hai.</p></div>
+    <div class="card"><div class="ci">🌐</div><h3>HTTP Module</h3><p>Built-in module se server bana sakte ho. Express is par hi bana hai.</p></div>
+    <div class="card"><div class="ci">🔧</div><h3>nodemon</h3><p>File change hone par server auto-restart karta hai. Dev mein bahut useful hai.</p></div>
+  </div>
+
+  <div class="cb">
+    <div class="ch"><span>📄 MERN Project Structure</span><span class="cl">Folder</span></div>
+    <pre><span class="cm"># MERN Project ki folder structure</span>
+mern-app/
+├── backend/                 <span class="cm"># Node + Express</span>
+│   ├── models/
+│   │   └── Student.js       <span class="cm"># Mongoose Model</span>
+│   ├── routes/
+│   │   └── students.js      <span class="cm"># API Routes</span>
+│   ├── db.js                <span class="cm"># MongoDB connection</span>
+│   └── server.js            <span class="cm"># Main server file</span>
+│
+├── frontend/                <span class="cm"># React App</span>
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── StudentList.jsx
+│   │   │   └── StudentList.test.jsx   <span class="cm"># Tests</span>
+│   │   ├── App.jsx
+│   │   └── index.js
+│   └── package.json
+│
+└── README.md</pre>
+  </div>
+</section>
+
+<!-- ===== CONNECTION ===== -->
+<section class="sec" id="connection">
+  <div class="st"><div class="ic ip">🔗</div>Full App Connect — Sab Jodo</div>
+  <div class="ss">MERN ka poora data flow ek jagah dekhein</div>
+
+  <p>Ab sab milate hain — React frontend se API call hoti hai, Express handle karta hai, Mongoose MongoDB se baat karta hai, data wapas aata hai, React dikhata hai. Yeh poora cycle hai ek MERN application ka.</p>
+
+  <div class="flow">
+    <div class="fbox hi">User clicks</div>
+    <div class="farrow">→</div>
+    <div class="fbox hi">React<br>axios.get()</div>
+    <div class="farrow">→ HTTP →</div>
+    <div class="fbox hi">Express<br>router.get()</div>
+    <div class="farrow">→</div>
+    <div class="fbox hi">Mongoose<br>.find()</div>
+    <div class="farrow">→</div>
+    <div class="fbox hi">MongoDB<br>returns data</div>
+  </div>
+  <div class="flow" style="justify-content:flex-end">
+    <div class="fbox" style="border-color:var(--accent3);color:var(--accent3)">UI Update ✓</div>
+    <div class="farrow">←</div>
+    <div class="fbox" style="border-color:var(--accent3);color:var(--accent3)">setStudents()</div>
+    <div class="farrow">← JSON ←</div>
+    <div class="fbox" style="border-color:var(--accent3);color:var(--accent3)">res.json()</div>
+    <div class="farrow">←</div>
+    <div class="fbox" style="border-color:var(--accent3);color:var(--accent3)">docs returned</div>
+  </div>
+
+  <div class="al ae"><div class="ah">📝 Exam Tip — MERN Flow</div><p>Yaad rakho: <strong>React → axios → Express Route → Mongoose Model → MongoDB → res.json() → React setState → UI update</strong>. Yeh ek complete cycle hai. Dono taraf ka flow exam mein poochha jaata hai.</p></div>
+
+  <h3>Environment Variables — Secret Setup</h3>
+  <div class="cb">
+    <div class="ch"><span>📄 .env file</span><span class="cl">Config</span></div>
+    <pre><span class="cm"># backend/.env — yeh file .gitignore mein daalo!</span>
+PORT=5000
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/myapp
+JWT_SECRET=meri_secret_key_koi_nahi_janata
+
+<span class="cm"># server.js mein use karo:</span>
+<span class="fn">require</span>(<span class="str">'dotenv'</span>).<span class="fn">config</span>();
+mongoose.<span class="fn">connect</span>(process.env.MONGO_URI);</pre>
+  </div>
+  <div class="al ar"><div class="ah">🔴 Warning — Security!</div><p><code>.env</code> file kabhi bhi GitHub par push mat karo! Usme database password aur secret keys hoti hain. Hamesha <code>.gitignore</code> mein <code>.env</code> add karo.</p></div>
+</section>
+
+<!-- ===== LIVE DEMO ===== -->
+<section class="sec" id="demo">
+  <div class="st"><div class="ic ig">⚡</div>Live Demo — Practice Karo</div>
+  <div class="ss">Testing aur MERN concepts ko interactive tarike se samjho</div>
+
+  <!-- Demo 1: Test Simulator -->
+  <div class="db">
+    <h4>🧪 Demo 1: Jest Test Simulator</h4>
+    <p style="font-size:.8rem;color:var(--text2);margin-bottom:.7rem">Apna expected aur actual value likho — test pass ya fail check karo</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.7rem">
+      <input class="di" type="text" id="expVal" placeholder="Expected value (e.g. 5)">
+      <input class="di" type="text" id="actVal" placeholder="Actual value (e.g. 5)">
+    </div>
+    <button class="dbtn" onclick="runTest()">▶ Test Chalao</button>
+    <div class="test-box" id="testOut">
+      <span class="pending">// Upar values likho aur test chalao...</span>
+    </div>
+  </div>
+
+  <!-- Demo 2: API Simulator -->
+  <div class="db">
+    <h4>🌐 Demo 2: MERN API Response Simulator</h4>
+    <p style="font-size:.8rem;color:var(--text2);margin-bottom:.7rem">Student naam likho — simulate karo ke MERN app kya return karega</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem">
+      <input class="di" type="text" id="stuName" placeholder="Student naam..." style="flex:1;min-width:140px">
+      <input class="di" type="text" id="stuEmail" placeholder="Email..." style="flex:1;min-width:140px">
+      <select class="di" id="stuGrade" style="flex:.5;min-width:80px">
+        <option>A</option><option>B</option><option>C</option>
+      </select>
+    </div>
+    <button class="dbtn" onclick="addToMern()">POST /api/students</button>
+    <div id="mernList" style="margin-top:.8rem"></div>
+  </div>
+
+  <!-- Demo 3: Coverage Meter -->
+  <div class="db">
+    <h4>📊 Demo 3: Code Coverage Calculator</h4>
+    <p style="font-size:.8rem;color:var(--text2);margin-bottom:.7rem">Total aur tested functions ki sanakh likho</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.7rem">
+      <input class="di" type="number" id="totalFn" placeholder="Total functions (e.g. 10)" min="1">
+      <input class="di" type="number" id="testedFn" placeholder="Tested functions (e.g. 8)" min="0">
+    </div>
+    <button class="dbtn" onclick="calcCov()">📊 Coverage Calculate Karo</button>
+    <div class="do" id="covOut">Coverage result yahan aayega...</div>
+  </div>
+</section>
+
+<!-- ===== QUIZ ===== -->
+<section class="sec" id="quiz">
+  <div class="st"><div class="ic iy">🧠</div>Quiz — Apna Test Karo</div>
+  <div class="ss">12 sawaalon se check karo React Testing aur MERN ka knowledge</div>
+  <div id="qContainer"></div>
+  <div class="qs" id="qScore" style="display:none">
+    <div class="sn2" id="sNum">0/12</div>
+    <div class="sl2">🎯 Quiz Complete! Tumhara Final Score</div>
+    <button class="dbtn" onclick="resetQ()" style="margin-top:1rem">🔄 Dobara Do</button>
+  </div>
+</section>
+
+<footer>
+  <p>⚛ <span>MERN + Unit Testing</span> — Roman Urdu Complete Guide</p>
+  <p style="margin-top:5px">Students ke liye, simple aur asaan — step by step ❤️</p>
+</footer>
+
+</main>
+
+<script>
+// Progress Bar
+window.addEventListener('scroll',()=>{
+  const e=document.documentElement;
+  document.getElementById('pb').style.width=(e.scrollTop/(e.scrollHeight-e.clientHeight)*100)+'%';
+  updateNav();
+});
+
+// Sidebar toggle
+function tog(){
+  document.getElementById('sb').classList.toggle('open');
+  document.getElementById('ov').classList.toggle('show');
+}
+
+// Animations
+const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis')}),{threshold:.07});
+document.querySelectorAll('.sec').forEach(s=>obs.observe(s));
+
+// Active nav
+const secs=['hero','testing-intro','jest','rtl','test-types','mocking','coverage','mern-intro','mongodb','express','react','node','connection','demo','quiz'];
+function updateNav(){
+  let cur='hero';
+  secs.forEach(id=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<180)cur=id;});
+  document.querySelectorAll('.nl').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+}
+
+// Demo 1: Test runner
+function runTest(){
+  const exp=document.getElementById('expVal').value.trim();
+  const act=document.getElementById('actVal').value.trim();
+  if(!exp||!act){document.getElementById('testOut').innerHTML='<span class="pending">// Dono fields bharni zaroori hain!</span>';return;}
+  const pass=exp===act;
+  const icon=pass?'✓':'✕';
+  const cls=pass?'pass':'fail';
+  document.getElementById('testOut').innerHTML=
+    `<span class="${cls}"> ${icon} Test: expect("${act}").toBe("${exp}")</span>\n`+
+    `<span class="${cls}"> ${icon} ${pass?'PASS — Test successful! Values match karti hain.':'FAIL — Expected: "'+exp+'" | Received: "'+act+'"'}</span>`;
+}
+
+// Demo 2: MERN simulator
+const mernData=[];
+function addToMern(){
+  const n=document.getElementById('stuName').value.trim();
+  const e=document.getElementById('stuEmail').value.trim();
+  const g=document.getElementById('stuGrade').value;
+  if(!n){return;}
+  const doc={_id:'507f'+Math.random().toString(16).slice(2,8),name:n,email:e||n.toLowerCase().replace(/\s/,'')+'@school.pk',grade:g,active:true,createdAt:new Date().toISOString()};
+  mernData.push(doc);
+  document.getElementById('stuName').value='';
+  document.getElementById('stuEmail').value='';
+  document.getElementById('mernList').innerHTML=
+    '<div style="background:var(--code);border:1px solid #1a3560;border-radius:10px;padding:1rem;font-family:monospace;font-size:.8rem;margin-top:.5rem">'+
+    '<div style="color:var(--accent3);margin-bottom:.5rem">// POST /api/students → 201 Created | Total: '+mernData.length+'</div>'+
+    mernData.map((d,i)=>`<div style="color:#cdd9e5;border-bottom:1px solid #1a3560;padding:4px 0">{ _id: "<span style='color:var(--yellow)'>${d._id}</span>", name: "<span style='color:var(--accent3)'>${d.name}</span>", email: "<span style='color:#a5d6ff'>${d.email}</span>", grade: "<span style='color:var(--pink)'>${d.grade}</span>" }</div>`).join('')+
+    '</div>';
+}
+
+// Demo 3: Coverage
+function calcCov(){
+  const t=parseInt(document.getElementById('totalFn').value)||0;
+  const s=parseInt(document.getElementById('testedFn').value)||0;
+  if(!t){document.getElementById('covOut').textContent='Total functions zaroori hai!';return;}
+  const pct=Math.min(100,Math.round((s/t)*100));
+  const emoji=pct>=80?'🟢 Excellent!':pct>=60?'🟡 Theek Hai':' 🔴 Aur Tests Likho!';
+  document.getElementById('covOut').textContent=`Coverage: ${pct}% (${s}/${t} functions) — ${emoji}`;
+}
+
+// Quiz
+const qs=[
+  {q:"Jest mein <code>toBe()</code> matcher kab use karte hain?",o:["Object comparison mein","Exact primitive value match ke liye","Array check ke liye","Async test ke liye"],a:1,e:"✅ toBe() strict equality (===) check karta hai — numbers, strings, booleans ke liye."},
+  {q:"React Testing Library mein component render karne ke liye kya use karte hain?",o:["mount()","shallow()","render()","create()"],a:2,e:"✅ RTL mein render() function component ko virtual DOM mein render karta hai."},
+  {q:"Mocking ka main purpose kya hai testing mein?",o:["CSS test karna","Real API ki jagah fake response dena","Database create karna","Server chalana"],a:1,e:"✅ Mock real dependencies (API, modules) ko replace karta hai taake tests isolated aur fast hon."},
+  {q:"MERN mein 'M' kiska short form hai?",o:["MySQL","MongoDB","Microsoft","Maven"],a:1,e:"✅ M = MongoDB — NoSQL document database jo JSON jaisi documents mein data store karta hai."},
+  {q:"Express.js mein naya student add karne ke liye kaunsa HTTP method use hoga?",o:["GET","DELETE","PUT","POST"],a:3,e:"✅ POST method nayi resource create karne ke liye use hoti hai — POST /api/students."},
+  {q:"Mongoose mein Schema kya define karta hai?",o:["Server port","Database ki collection ka structure/shape","React component","Route path"],a:1,e:"✅ Schema MongoDB collection ke documents ka structure define karta hai — fields, types, validation."},
+  {q:"Code Coverage 80% ka matlab kya hai?",o:["80% tests pass hue","Code ka 80% tests se execute hua","80 lines likh di","80 functions bane"],a:1,e:"✅ Coverage batata hai kitna code test cases ke through execute hua — 80% good maana jaata hai."},
+  {q:"RTL mein <code>findByText()</code> aur <code>getByText()</code> mein farq kya hai?",o:["Koi farq nahi","findBy() async hai — await karta hai","getBy() async hai","findBy() strict hai"],a:1,e:"✅ findByText() Promise return karta hai — async operations ke liye. getByText() synchronous hai."},
+  {q:"Node.js kya hai?",o:["Browser extension","JavaScript ka frontend framework","JavaScript ko server par chalane ki runtime","Database system"],a:2,e:"✅ Node.js ek JavaScript runtime hai jo server side par JavaScript execute karta hai."},
+  {q:"MERN app mein CORS error kyon aata hai?",o:["MongoDB nahi chala","React aur Express alag ports par hain","JavaScript syntax error","CSS loading fail"],a:1,e:"✅ CORS error tab aata hai jab React (port 3000) Express (port 5000) se baat kare bina permission ke — cors() middleware se theek hota hai."},
+  {q:"<code>afterEach(() => jest.clearAllMocks())</code> kyon use karte hain?",o:["Tests fast chalane ke liye","Ek test ka mock doosre ko affect na kare","Database clean karne ke liye","CSS reset ke liye"],a:1,e:"✅ clearAllMocks() ensure karta hai ke har test fresh start kare — mock calls, instances reset ho jayen."},
+  {q:"Mongoose mein <code>.find()</code> kya return karta hai?",o:["Sirf ek document","Sare matching documents ki array","String","Number"],a:1,e:"✅ .find() collection ke sare matching documents return karta hai — ek array of documents milti hai."}
+];
+
+let answered=0,correct=0;
+function renderQ(){
+  document.getElementById('qContainer').innerHTML=qs.map((q,i)=>`
+    <div class="qc" id="qc${i}">
+      <div class="qq"><span>Q${i+1}.</span> ${q.q}</div>
+      <div class="qo-wrap">${q.o.map((o,j)=>`<button class="qo" onclick="checkQ(${i},${j})" id="qo${i}_${j}">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}</div>
+      <div class="qr" id="qr${i}"></div>
+    </div>`).join('');
+}
+function checkQ(qi,oi){
+  const q=qs[qi];
+  document.querySelectorAll(`#qc${qi} .qo`).forEach(b=>b.disabled=true);
+  document.getElementById(`qo${qi}_${q.a}`).classList.add('cor');
+  const r=document.getElementById(`qr${qi}`);r.classList.add('show');
+  if(oi===q.a){correct++;r.textContent=q.e;r.classList.add('rc');}
+  else{document.getElementById(`qo${qi}_${oi}`).classList.add('wrn');r.textContent='❌ Galat! '+q.e;r.classList.add('rw');}
+  answered++;
+  if(answered===qs.length){
+    setTimeout(()=>{
+      const sc=document.getElementById('qScore');sc.style.display='block';
+      const lbl=correct>=10?'🏆 Shaandaar!':correct>=7?'👍 Achi Performance':correct>=5?'📚 Aur Practice Karo':'📖 Dobara Parho!';
+      document.getElementById('sNum').textContent=correct+'/'+qs.length+' '+lbl;
+    },400);
+  }
+}
+function resetQ(){answered=0;correct=0;document.getElementById('qScore').style.display='none';renderQ();}
+renderQ();
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

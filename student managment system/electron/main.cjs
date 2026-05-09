@@ -1,5 +1,31 @@
 const { app, BrowserWindow, ipcMain, Notification, dialog } = require("electron");
+const fs = require("fs");
 const path = require("path");
+
+/** Load `.env` from project root so API keys work without exporting them in the shell. */
+function loadEnvFile() {
+  try {
+    const envPath = path.join(__dirname, "..", ".env");
+    if (!fs.existsSync(envPath)) return;
+    const lines = fs.readFileSync(envPath, { encoding: "utf8" }).split(/\r?\n/);
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t || t.startsWith("#")) continue;
+      const eq = t.indexOf("=");
+      if (eq < 1) continue;
+      const key = t.slice(0, eq).trim();
+      let val = t.slice(eq + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      if (process.env[key] === undefined) process.env[key] = val;
+    }
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+loadEnvFile();
 const { registerIpcHandlers } = require("../src/backend/controllers/ipcHandlers");
 const db = require(path.join(__dirname, "../src/backend/db"));
 const { writeSemesterExportZip } = require(path.join(__dirname, "../src/backend/services/semesterExportService"));

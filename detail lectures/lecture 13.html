@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React Course | CSC337 Advanced Web Technologies</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ===== CSS VARIABLES ===== */
+  :root {
+    --bg-primary: #050a14;
+    --bg-secondary: #0a1628;
+    --bg-card: #0d1f3c;
+    --bg-card-hover: #112244;
+    --sidebar-bg: #060d1c;
+    --accent: #00d4ff;
+    --accent2: #7b61ff;
+    --accent3: #ff6b6b;
+    --accent4: #00ff9d;
+    --text-primary: #e8f0fe;
+    --text-secondary: #8899bb;
+    --text-muted: #4a5a7a;
+    --border: #1a2d4f;
+    --border-bright: #2a4a7f;
+    --code-bg: #020814;
+    --sidebar-width: 270px;
+    --font-display: 'Outfit', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --glow-accent: 0 0 20px rgba(0, 212, 255, 0.3);
+    --glow-purple: 0 0 20px rgba(123, 97, 255, 0.3);
+  }
+
+  /* ===== RESET ===== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-display);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 3px; }
+
+  /* ===== PROGRESS BAR ===== */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent4));
+    z-index: 9999;
+    transition: width 0.1s ease;
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  /* ===== SIDEBAR ===== */
+  #sidebar {
+    position: fixed;
+    left: 0; top: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+  .sidebar-logo h2 {
+    font-size: 18px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+  }
+  .sidebar-logo p {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: var(--font-mono);
+  }
+
+  .sidebar-nav { padding: 16px 0; flex: 1; }
+  .nav-section-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 24px 6px;
+  }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: all 0.2s;
+    position: relative;
+    border-left: 3px solid transparent;
+  }
+  .nav-link .nav-icon { font-size: 16px; flex-shrink: 0; }
+  .nav-link:hover, .nav-link.active {
+    color: var(--accent);
+    background: rgba(0, 212, 255, 0.06);
+    border-left-color: var(--accent);
+  }
+  .nav-link.active { font-weight: 600; }
+
+  /* ===== MOBILE TOGGLE ===== */
+  #menu-toggle {
+    display: none;
+    position: fixed;
+    top: 16px; right: 16px;
+    z-index: 200;
+    background: var(--accent2);
+    border: none;
+    color: white;
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: var(--glow-purple);
+  }
+  #sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 99;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  #main-content {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* ===== HERO SECTION ===== */
+  #hero {
+    padding: 100px 60px 80px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(0,212,255,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 80% 20%, rgba(123,97,255,0.08) 0%, transparent 70%),
+      var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+  }
+  .hero-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 40px; height: 2px;
+    background: var(--accent);
+    box-shadow: var(--glow-accent);
+  }
+  #hero h1 {
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .hero-title-main {
+    background: linear-gradient(135deg, #ffffff 0%, var(--accent) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  #hero .subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin-bottom: 40px;
+    line-height: 1.8;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+  }
+  .stat-number {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    padding: 70px 60px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .section.visible { opacity: 1; transform: translateY(0); }
+
+  .section-header {
+    margin-bottom: 48px;
+  }
+  .section-number {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent2);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section h2 {
+    font-size: clamp(26px, 3vw, 40px);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 14px;
+  }
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 16px;
+    max-width: 700px;
+  }
+  .accent-line {
+    width: 60px; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    margin-top: 16px;
+    box-shadow: var(--glow-accent);
+  }
+
+  /* ===== CARDS GRID ===== */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .card:hover {
+    border-color: var(--border-bright);
+    background: var(--bg-card-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4), var(--glow-accent);
+  }
+  .card:hover::before { opacity: 1; }
+  .card-icon {
+    font-size: 36px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+  .card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+  .card .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,212,255,0.2);
+  }
+  .card .tag.purple {
+    background: rgba(123,97,255,0.1);
+    color: var(--accent2);
+    border-color: rgba(123,97,255,0.2);
+  }
+  .card .tag.green {
+    background: rgba(0,255,157,0.1);
+    color: var(--accent4);
+    border-color: rgba(0,255,157,0.2);
+  }
+  .card .tag.red {
+    background: rgba(255,107,107,0.1);
+    color: var(--accent3);
+    border-color: rgba(255,107,107,0.2);
+  }
+
+  /* ===== CODE BLOCKS ===== */
+  .code-container {
+    position: relative;
+    margin: 24px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .code-header {
+    background: #0a0f1e;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-header .dots {
+    display: flex; gap: 6px;
+  }
+  .code-header .dots span {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green { background: #28c840; }
+  .code-lang {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 24px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: #cdd6f4;
+  }
+  .kw { color: #cba6f7; }   /* keywords */
+  .fn { color: #89b4fa; }   /* functions */
+  .str { color: #a6e3a1; }  /* strings */
+  .cm { color: #585b70; }   /* comments */
+  .num { color: #fab387; }  /* numbers */
+  .tag-c { color: #f38ba8; } /* jsx tags */
+  .at { color: #89dceb; }   /* attributes */
+
+  /* ===== ALERTS ===== */
+  .alert {
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin: 20px 0;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    font-size: 14.5px;
+    line-height: 1.7;
+  }
+  .alert-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+  .alert-content strong { display: block; margin-bottom: 4px; font-size: 15px; }
+  .alert.tip {
+    background: rgba(0,255,157,0.06);
+    border: 1px solid rgba(0,255,157,0.2);
+    border-left: 4px solid var(--accent4);
+  }
+  .alert.tip strong { color: var(--accent4); }
+  .alert.warning {
+    background: rgba(255,107,107,0.06);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-left: 4px solid var(--accent3);
+  }
+  .alert.warning strong { color: var(--accent3); }
+  .alert.exam {
+    background: rgba(123,97,255,0.06);
+    border: 1px solid rgba(123,97,255,0.2);
+    border-left: 4px solid var(--accent2);
+  }
+  .alert.exam strong { color: var(--accent2); }
+  .alert.info {
+    background: rgba(0,212,255,0.06);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-left: 4px solid var(--accent);
+  }
+  .alert.info strong { color: var(--accent); }
+
+  /* ===== TABLES ===== */
+  .table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: rgba(0,212,255,0.05); }
+  th {
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,212,255,0.03); color: var(--text-primary); }
+  td code, th code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent4);
+    background: rgba(0,255,157,0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* ===== STEP LIST ===== */
+  .steps { display: flex; flex-direction: column; gap: 16px; margin: 24px 0; }
+  .step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    transition: border-color 0.2s;
+  }
+  .step:hover { border-color: var(--border-bright); }
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-content h4 { font-size: 16px; margin-bottom: 6px; color: var(--text-primary); }
+  .step-content p { font-size: 14px; color: var(--text-secondary); }
+
+  /* ===== HIGHLIGHT BOX ===== */
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(0,212,255,0.05) 0%, rgba(123,97,255,0.05) 100%);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+  }
+  .highlight-box h3 { font-size: 20px; margin-bottom: 16px; color: var(--text-primary); }
+  .highlight-box ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .highlight-box ul li {
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 14.5px; color: var(--text-secondary);
+  }
+  .highlight-box ul li::before {
+    content: '▸';
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ===== LIVE DEMO ===== */
+  .demo-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 24px 0;
+  }
+  .demo-header {
+    background: rgba(0,212,255,0.05);
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+  }
+  .demo-header::before { content: '⚡'; }
+  .demo-body { padding: 28px; }
+  .demo-input-group { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .demo-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .demo-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+  }
+  .demo-btn {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .demo-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(123,97,255,0.4); }
+  .demo-output {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    min-height: 50px;
+    color: var(--accent4);
+    white-space: pre-wrap;
+    transition: all 0.3s;
+  }
+
+  /* ===== QUIZ SECTION ===== */
+  #quiz { background: var(--bg-secondary); }
+  .quiz-intro {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .quiz-grid { display: flex; flex-direction: column; gap: 24px; max-width: 760px; margin: 0 auto; }
+  .quiz-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: border-color 0.3s;
+  }
+  .quiz-q {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    display: flex;
+    gap: 12px;
+  }
+  .q-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent2);
+    background: rgba(123,97,255,0.1);
+    border: 1px solid rgba(123,97,255,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    height: fit-content;
+    margin-top: 2px;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    user-select: none;
+  }
+  .quiz-option:hover { border-color: var(--border-bright); color: var(--text-primary); }
+  .quiz-option.correct { background: rgba(0,255,157,0.08); border-color: var(--accent4); color: var(--accent4); }
+  .quiz-option.wrong { background: rgba(255,107,107,0.08); border-color: var(--accent3); color: var(--accent3); }
+  .quiz-option.disabled { cursor: default; }
+  .option-letter {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: rgba(123,97,255,0.1);
+    border: 1px solid rgba(123,97,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    flex-shrink: 0;
+  }
+  .quiz-feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    display: none;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb {
+    background: rgba(0,255,157,0.08);
+    border: 1px solid rgba(0,255,157,0.2);
+    color: var(--accent4);
+  }
+  .quiz-feedback.wrong-fb {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.2);
+    color: var(--accent3);
+  }
+
+  /* ===== SCORE BOX ===== */
+  #quiz-result {
+    text-align: center;
+    margin-top: 32px;
+    padding: 28px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.05), rgba(123,97,255,0.05));
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 16px;
+    display: none;
+  }
+  #quiz-result .score-num {
+    font-family: var(--font-mono);
+    font-size: 56px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  #quiz-result p { color: var(--text-secondary); margin-top: 8px; }
+  .quiz-submit-btn {
+    display: block;
+    margin: 32px auto 0;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 48px;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .quiz-submit-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(123,97,255,0.4); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    padding: 60px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    background: var(--sidebar-bg);
+  }
+  footer .footer-logo {
+    font-size: 24px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  footer p { color: var(--text-muted); font-size: 14px; line-height: 1.8; }
+  footer .footer-tags {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  footer .footer-tags span {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider { width: 100%; height: 1px; background: var(--border); margin: 32px 0; }
+
+  /* ===== TWO COL ===== */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #sidebar-overlay.show { display: block; }
+    #menu-toggle { display: flex; align-items: center; justify-content: center; }
+    #main-content { margin-left: 0; }
+    .section, #hero { padding: 50px 24px; }
+    footer { padding: 40px 24px; }
+    .two-col { grid-template-columns: 1fr; }
+    .hero-stats { gap: 24px; }
+  }
+  @media (max-width: 600px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    #hero h1 { font-size: 28px; }
+  }
+
+  /* ===== INLINE CODE ===== */
+  code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: rgba(0,212,255,0.08);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 5px;
+    border: 1px solid rgba(0,212,255,0.15);
+  }
+
+  /* ===== HOOK CARD ===== */
+  .hook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin: 24px 0; }
+  .hook-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    transition: all 0.3s;
+  }
+  .hook-card:hover { border-color: var(--border-bright); transform: translateY(-3px); }
+  .hook-name {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+  .hook-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; }
+  .hook-use {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--accent4);
+    font-family: var(--font-mono);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Mobile Menu Toggle -->
+<button id="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+
+<!-- Sidebar Overlay -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <span class="badge">CSC337</span>
+    <h2>React Lecture Guide</h2>
+    <p>Advanced Web Technologies</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Shuru Karen</div>
+    <a href="#hero" class="nav-link active" onclick="closeSidebar()">
+      <span class="nav-icon">🏠</span> Home
+    </a>
+    <a href="#why-react" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">💡</span> React Kyun?
+    </a>
+
+    <div class="nav-section-label">Core Topics</div>
+    <a href="#jsx" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">✍️</span> JSX Language
+    </a>
+    <a href="#setup" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">⚙️</span> App Setup
+    </a>
+    <a href="#components" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">🧩</span> Components
+    </a>
+    <a href="#routing" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">🗺️</span> Routing
+    </a>
+    <a href="#forms" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">📝</span> Forms
+    </a>
+    <a href="#hooks" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">🪝</span> Hooks
+    </a>
+
+    <div class="nav-section-label">Test Karein</div>
+    <a href="#demo" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">⚡</span> Live Demo
+    </a>
+    <a href="#quiz" class="nav-link" onclick="closeSidebar()">
+      <span class="nav-icon">🎯</span> Quiz
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main id="main-content">
+
+  <!-- ===== HERO ===== -->
+  <section id="hero">
+    <div class="hero-grid-lines"></div>
+    <div class="hero-tag">Advanced Web Technologies · Lecture 13</div>
+    <h1>
+      <span class="hero-title-main">React Complete</span><br>
+      <span class="hero-title-main">Guide in Roman Urdu</span>
+    </h1>
+    <p class="subtitle">
+      JSX se lekar Hooks tak — sab kuch simple Urdu mein step by step samjhaya gaya hai. 
+      Bilkul waisa jaise teacher class mein samjhata hai! 🚀
+    </p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">7</span>
+        <span class="stat-label">Topics</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">2hrs</span>
+        <span class="stat-label">Lecture</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">5</span>
+        <span class="stat-label">MCQs</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">4</span>
+        <span class="stat-label">Hooks</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== REACT KYU? ===== -->
+  <section id="why-react" class="section">
+    <div class="section-header">
+      <div class="section-number">Part A · 0–10 min</div>
+      <h2>React Kyun Seekhen? 🤔</h2>
+      <p class="section-desc">Pehle yeh samjho ke React hai kya aur hum ise use kyun karte hain.</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="highlight-box">
+      <h3>💬 Simple Explanation</h3>
+      <ul>
+        <li>React ek <strong>JavaScript library</strong> hai jo hume UI (User Interface) banana mein help karta hai.</li>
+        <li>React mein pura app chote chote <strong>components</strong> se banta hai — bilkul Lego blocks ki tarah!</li>
+        <li>Data <strong>upar se neeche</strong> jaata hai (props), aur events <strong>neeche se upar</strong> (callbacks).</li>
+        <li>Jab <strong>state change</strong> hoti hai, React sirf woh hissa update karta hai jo badla — pura page reload nahi hota!</li>
+      </ul>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="tag">Real World</span>
+        <span class="card-icon">📱</span>
+        <h3>Instagram Feed</h3>
+        <p>Instagram ka feed dekho — har post ek component hai. Like button click karo toh sirf woh component update hota hai, pura page reload nahi hota. Yahi React ki power hai!</p>
+      </div>
+      <div class="card">
+        <span class="tag purple">Core Idea</span>
+        <span class="card-icon">🌳</span>
+        <h3>Component Tree</h3>
+        <p>React app ek tree ki tarah hota hai. App component sab ka parent hai, phir uske andar chhote chhote components hote hain jaise Navbar, Feed, Sidebar wagera.</p>
+      </div>
+      <div class="card">
+        <span class="tag green">Key Concept</span>
+        <span class="card-icon">⚡</span>
+        <h3>Virtual DOM</h3>
+        <p>React pehle ek imaginary DOM banata hai memory mein. Phir compare karta hai real DOM se. Sirf jo different hai, woh update karta hai. Isliye bahut fast hai!</p>
+      </div>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div class="alert-content">
+        <strong>Teacher Tip:</strong>
+        Class mein pooch: "Kahan kahan repeated UI patterns dekhte ho?" (cards, product tiles, posts, notifications). Students ko khud React ki zaroorat feel hogi!
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== JSX ===== -->
+  <section id="jsx" class="section">
+    <div class="section-header">
+      <div class="section-number">Part B · 10–30 min</div>
+      <h2>JSX — React Ki Zubaan ✍️</h2>
+      <p class="section-desc">JSX ek aisi syntax hai jo HTML aur JavaScript ko milati hai. Lekin HTML nahi hai — JS rules follow karta hai!</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">🎯</span>
+      <div class="alert-content">
+        <strong>Simple Samajhna:</strong>
+        JSX bilkul HTML jaisa dikhta hai, lekin yeh asal mein JavaScript hai. Browser isko samajhne ke liye React.createElement() mein badal deta hai.
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="tag">Rule 1</span>
+        <span class="card-icon">☝️</span>
+        <h3>Ek Parent Element</h3>
+        <p>JSX mein hamesha <strong>sirf ek parent</strong> element hona chahiye. Do sibling elements directly return nahi kar sakte. <code>&lt;&gt;...&lt;/&gt;</code> Fragment use karo agar extra div nahi chahiye.</p>
+      </div>
+      <div class="card">
+        <span class="tag purple">Rule 2</span>
+        <span class="card-icon">🎨</span>
+        <h3>className, class nahi!</h3>
+        <p>HTML mein <code>class</code> likhte hain CSS ke liye, lekin JSX mein <code>className</code> likhna hai. Yeh isliye ke <code>class</code> JavaScript ka reserved word hai!</p>
+      </div>
+      <div class="card">
+        <span class="tag green">Rule 3</span>
+        <span class="card-icon">{ }</span>
+        <h3>JS Expressions — { }</h3>
+        <p>JavaScript ka koi bhi expression curly braces <code>{ }</code> mein likho. Jaise variables, functions, ternary operators wagera. Seedha <code>if</code> nahi chal sakta!</p>
+      </div>
+      <div class="card">
+        <span class="tag red">Rule 4</span>
+        <span class="card-icon">🖌️</span>
+        <h3>Inline Style Object</h3>
+        <p>HTML mein string dete hain: <code>style="color:red"</code> lekin JSX mein object dena hota hai: <code>style={{ color: 'red' }}</code> — double curly braces!</p>
+      </div>
+    </div>
+
+    <!-- HTML vs JSX Table -->
+    <h3 style="font-size:20px; margin: 32px 0 16px; color: var(--text-primary);">📊 HTML vs JSX Farq</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>HTML</th>
+            <th>JSX</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>CSS Class</td>
+            <td><code>class="box"</code></td>
+            <td><code>className="box"</code></td>
+          </tr>
+          <tr>
+            <td>Click Event</td>
+            <td><code>onclick="f()"</code></td>
+            <td><code>onClick={f}</code></td>
+          </tr>
+          <tr>
+            <td>Text + Variable</td>
+            <td>"hello " + name</td>
+            <td><code>{"hello " + name}</code></td>
+          </tr>
+          <tr>
+            <td>Inline Style</td>
+            <td><code>style="color:red"</code></td>
+            <td><code>style={{ color: 'red' }}</code></td>
+          </tr>
+          <tr>
+            <td>List Rendering</td>
+            <td>Manually</td>
+            <td><code>.map() + key</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- JSX Code Example -->
+    <h3 style="font-size:20px; margin: 32px 0 16px; color: var(--text-primary);">💻 JSX ka Sahih Tarika</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">JSX · Greeting.jsx</span>
+      </div>
+      <pre><span class="cm">// Yeh ek simple JSX component hai</span>
+<span class="kw">function</span> <span class="fn">Greeting</span>() {
+  <span class="kw">const</span> name = <span class="str">"Ali"</span>;
+  <span class="kw">const</span> isLoggedIn = <span class="kw">true</span>;
+
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;div</span> <span class="at">className</span>=<span class="str">"card"</span><span class="tag-c">&gt;</span>
+      <span class="cm">{/* JavaScript expression curly braces mein */}</span>
+      <span class="tag-c">&lt;h1&gt;</span>Hello, {name}!<span class="tag-c">&lt;/h1&gt;</span>
+      
+      <span class="cm">{/* Ternary use karo — seedha if nahi chalta */}</span>
+      <span class="tag-c">&lt;p&gt;</span>{isLoggedIn ? <span class="str">"Welcome back!"</span> : <span class="str">"Please login"</span>}<span class="tag-c">&lt;/p&gt;</span>
+      
+      <span class="cm">{/* Inline style = object mein */}</span>
+      <span class="tag-c">&lt;button</span> 
+        <span class="at">style</span>={{ backgroundColor: <span class="str">"navy"</span>, color: <span class="str">"white"</span> }}
+        <span class="at">onClick</span>={() => alert(<span class="str">"Clicked!"</span>)}
+      <span class="tag-c">&gt;</span>
+        Click Karo
+      <span class="tag-c">&lt;/button&gt;</span>
+    <span class="tag-c">&lt;/div&gt;</span>
+  );
+}</pre>
+    </div>
+
+    <!-- List rendering example -->
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">JSX · List Rendering (key zaroor do!)</span>
+      </div>
+      <pre><span class="kw">const</span> fruits = [<span class="str">"Apple"</span>, <span class="str">"Mango"</span>, <span class="str">"Banana"</span>];
+
+<span class="kw">function</span> <span class="fn">FruitList</span>() {
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;ul&gt;</span>
+      {fruits.<span class="fn">map</span>((fruit, index) => (
+        <span class="cm">{/* KEY dena ZAROOR hai — React track karta hai */}</span>
+        <span class="tag-c">&lt;li</span> <span class="at">key</span>={index}<span class="tag-c">&gt;</span>{fruit}<span class="tag-c">&lt;/li&gt;</span>
+      ))}
+    <span class="tag-c">&lt;/ul&gt;</span>
+  );
+}</pre>
+    </div>
+
+    <div class="alert warning">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <strong>Common Galtiyan:</strong>
+        ❌ Do elements seedha return karna (wrapper ke baghair)<br>
+        ❌ JSX ke andar seedha <code>if</code> use karna (ternary ya && use karo)<br>
+        ❌ .map() mein <code>key</code> bhool jaana
+      </div>
+    </div>
+
+    <div class="alert exam">
+      <span class="alert-icon">📚</span>
+      <div class="alert-content">
+        <strong>Exam Tip:</strong>
+        Agar puchha jaye "JSX kyun use karte hain?" toh sirf "React ko chahiye" mat kaho. Bolо: JSX readability improve karta hai aur component composition asaan banata hai.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== APP SETUP ===== -->
+  <section id="setup" class="section">
+    <div class="section-header">
+      <div class="section-number">Part C · 30–50 min</div>
+      <h2>React App Banana — Setup ⚙️</h2>
+      <p class="section-desc">Pehla React app kaise banate hain? Kaunsi files hoti hain? Sab yahan samjhaya gaya hai.</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h4>Vite se Project Banao</h4>
+          <p>Yeh command chalao terminal mein: <code>npm create vite@latest my-app -- --template react</code> — Vite bahut fast hai, CRA se behtar hai!</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h4>Dependencies Install Karo</h4>
+          <p><code>cd my-app</code> phir <code>npm install</code> — yeh sari zaruri files download karta hai node_modules mein.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h4>Development Server Chalao</h4>
+          <p><code>npm run dev</code> — browser mein <code>localhost:5173</code> khulega. App wahan live hoga!</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h4>Folder Structure Samjho</h4>
+          <p><code>src/App.jsx</code> = root component · <code>src/main.jsx</code> = entry point · <code>src/components/</code> = tumhare components yahan raho.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">Folder Structure</span>
+      </div>
+      <pre><span class="cm">my-app/
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── components/     <span class="str">← Yahan apne components banao</span>
+│   │   ├── Navbar.jsx
+│   │   └── UserCard.jsx
+│   ├── App.jsx         <span class="str">← Root component (sab yahan milta hai)</span>
+│   ├── main.jsx        <span class="str">← App ko DOM se attach karta hai</span>
+│   └── index.css
+├── index.html
+└── package.json</span></pre>
+    </div>
+  </section>
+
+  <!-- ===== COMPONENTS ===== -->
+  <section id="components" class="section">
+    <div class="section-header">
+      <div class="section-number">Part D · 50–70 min</div>
+      <h2>Components, Props & State 🧩</h2>
+      <p class="section-desc">Components reusable UI blocks hain. Props = input. State = component ka apna data.</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <span class="tag">Props</span>
+        <span class="card-icon">📨</span>
+        <h3>Props — Parent se Data</h3>
+        <p>Props parent component se child mein pass hota hai. Props <strong>read-only</strong> hote hain — child inhe change nahi kar sakta. Bilkul function ke arguments ki tarah.</p>
+      </div>
+      <div class="card">
+        <span class="tag purple">State</span>
+        <span class="card-icon">🔄</span>
+        <h3>State — Component Ka Data</h3>
+        <p>State component ka apna data hai jo change ho sakta hai. Jab state change hoti hai, React us component ko dobara render karta hai — UI update ho jaata hai!</p>
+      </div>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">JSX · Props + State Example</span>
+      </div>
+      <pre><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="cm">// Product Card — Props se data leta hai</span>
+<span class="kw">function</span> <span class="fn">ProductCard</span>({ name, price }) {
+  <span class="cm">// State — cart mein add hua ya nahi</span>
+  <span class="kw">const</span> [inCart, setInCart] = <span class="fn">useState</span>(<span class="kw">false</span>);
+
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;div</span> <span class="at">className</span>=<span class="str">"product-card"</span><span class="tag-c">&gt;</span>
+      <span class="tag-c">&lt;h3&gt;</span>{name}<span class="tag-c">&lt;/h3&gt;</span>
+      <span class="tag-c">&lt;p&gt;</span>Rs. {price}<span class="tag-c">&lt;/p&gt;</span>
+      
+      <span class="tag-c">&lt;button</span> <span class="at">onClick</span>={() => <span class="fn">setInCart</span>(!inCart)}<span class="tag-c">&gt;</span>
+        {inCart ? <span class="str">"✅ Cart Mein Hai"</span> : <span class="str">"🛒 Cart Mein Dalo"</span>}
+      <span class="tag-c">&lt;/button&gt;</span>
+    <span class="tag-c">&lt;/div&gt;</span>
+  );
+}
+
+<span class="cm">// Parent component props pass karta hai</span>
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;ProductCard</span> <span class="at">name</span>=<span class="str">"Laptop"</span> <span class="at">price</span>={<span class="num">85000</span>} <span class="tag-c">/&gt;</span>
+  );
+}</pre>
+    </div>
+
+    <div class="alert warning">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <strong>Common Galtiyan:</strong>
+        ❌ State ko seedha mutate karna — <code>arr.push(item)</code> mat karo! Hamesha new array banao: <code>setArr([...arr, item])</code><br>
+        ❌ Props pass karna bhool jaana, phir undefined use karna
+      </div>
+    </div>
+
+    <div class="alert exam">
+      <span class="alert-icon">📚</span>
+      <div class="alert-content">
+        <strong>Exam Tip — Classic Question:</strong>
+        "Props aur State mein farq kya hai?" — Props parent se aata hai aur read-only hai. State component ke andar hoti hai aur change ho sakti hai. Yeh do lines yaad kar lo!
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ROUTING ===== -->
+  <section id="routing" class="section">
+    <div class="section-header">
+      <div class="section-number">Part E · 70–85 min</div>
+      <h2>React Router — Pages Banana 🗺️</h2>
+      <p class="section-desc">React Router se hum SPA (Single Page Application) mein multiple pages ka effect dete hain bina page reload ke!</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">🌐</span>
+      <div class="alert-content">
+        <strong>Simple Samajhna:</strong>
+        Normal website mein link click karo toh pura page reload hota hai — server se naya HTML aata hai. React Router mein sirf component change hota hai — page reload bilkul nahi!
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h4>Install Karo</h4>
+          <p><code>npm install react-router-dom</code> — yeh package install karo.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h4>BrowserRouter Wrap Karo</h4>
+          <p><code>main.jsx</code> mein puri App ko <code>&lt;BrowserRouter&gt;</code> mein wrap karo — yahi routing enable karta hai.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h4>Routes Define Karo</h4>
+          <p><code>App.jsx</code> mein <code>&lt;Routes&gt;</code> aur <code>&lt;Route path="/" element={&lt;Home/&gt;} /&gt;</code> likho.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h4>Link Se Navigate Karo</h4>
+          <p>HTML ke <code>&lt;a&gt;</code> tag ki jagah <code>&lt;Link to="/about"&gt;</code> use karo — yeh reload nahi karta!</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">JSX · React Router Setup — App.jsx</span>
+      </div>
+      <pre><span class="kw">import</span> { Routes, Route, Link } <span class="kw">from</span> <span class="str">'react-router-dom'</span>;
+<span class="kw">import</span> Home <span class="kw">from</span> <span class="str">'./pages/Home'</span>;
+<span class="kw">import</span> About <span class="kw">from</span> <span class="str">'./pages/About'</span>;
+<span class="kw">import</span> NotFound <span class="kw">from</span> <span class="str">'./pages/NotFound'</span>;
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;&gt;</span>
+      <span class="cm">{/* Navigation links — page reload nahi karte */}</span>
+      <span class="tag-c">&lt;nav&gt;</span>
+        <span class="tag-c">&lt;Link</span> <span class="at">to</span>=<span class="str">"/"</span><span class="tag-c">&gt;</span>Home<span class="tag-c">&lt;/Link&gt;</span>
+        <span class="tag-c">&lt;Link</span> <span class="at">to</span>=<span class="str">"/about"</span><span class="tag-c">&gt;</span>About<span class="tag-c">&lt;/Link&gt;</span>
+      <span class="tag-c">&lt;/nav&gt;</span>
+
+      <span class="cm">{/* Yahan matching component render hoga */}</span>
+      <span class="tag-c">&lt;Routes&gt;</span>
+        <span class="tag-c">&lt;Route</span> <span class="at">path</span>=<span class="str">"/"</span>        <span class="at">element</span>={<span class="tag-c">&lt;Home /&gt;</span>} <span class="tag-c">/&gt;</span>
+        <span class="tag-c">&lt;Route</span> <span class="at">path</span>=<span class="str">"/about"</span>    <span class="at">element</span>={<span class="tag-c">&lt;About /&gt;</span>} <span class="tag-c">/&gt;</span>
+        <span class="tag-c">&lt;Route</span> <span class="at">path</span>=<span class="str">"*"</span>         <span class="at">element</span>={<span class="tag-c">&lt;NotFound /&gt;</span>} <span class="tag-c">/&gt;</span>
+        <span class="cm">{/* path="*" = koi bhi aur route match na ho toh */}</span>
+      <span class="tag-c">&lt;/Routes&gt;</span>
+    <span class="tag-c">&lt;/&gt;</span>
+  );
+}</pre>
+    </div>
+
+    <div class="alert exam">
+      <span class="alert-icon">📚</span>
+      <div class="alert-content">
+        <strong>Exam Tip:</strong>
+        "No page reload" + "fast navigation" = Client-side routing (React Router). Yeh answer yaad rakh!
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FORMS ===== -->
+  <section id="forms" class="section">
+    <div class="section-header">
+      <div class="section-number">Part F · 85–105 min</div>
+      <h2>Forms — Controlled vs Uncontrolled 📝</h2>
+      <p class="section-desc">React mein forms do tareekon se handle hote hain. Dono ka comparison yahan karo.</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <span class="tag">Controlled Form</span>
+        <span class="card-icon">🎛️</span>
+        <h3>React State se Control</h3>
+        <p>React state hi data ka source hai. Har keystroke pe <code>onChange</code> fire hota hai aur state update hoti hai. React hamesha jaanta hai input mein kya hai.</p>
+        <br>
+        <p><strong style="color:var(--accent4)">✅ Pros:</strong> Easy validation, instant UI updates, predictable</p>
+        <p><strong style="color:var(--accent3)">❌ Cons:</strong> Bahut saare fields ho toh zyada code</p>
+      </div>
+      <div class="card">
+        <span class="tag purple">Uncontrolled Form</span>
+        <span class="card-icon">🔗</span>
+        <h3>DOM se Direct Read</h3>
+        <p>Input DOM mein khud store hota hai. Submit pe <code>useRef()</code> se value read karte hain. React ko pata nahi hota input mein kya chal raha hai.</p>
+        <br>
+        <p><strong style="color:var(--accent4)">✅ Pros:</strong> Less re-renders, simple forms ke liye quick</p>
+        <p><strong style="color:var(--accent3)">❌ Cons:</strong> Validation mushkil, kam React-ish</p>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Controlled</th><th>Uncontrolled</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Data Source</td><td>React State</td><td>DOM</td></tr>
+          <tr><td>Validation</td><td>Asaan</td><td>Manual (mushkil)</td></tr>
+          <tr><td>Re-render per keystroke</td><td>Haan ✅</td><td>Nahi ❌</td></tr>
+          <tr><td>Best For</td><td>Complex forms</td><td>Simple/quick forms</td></tr>
+          <tr><td>Value Access</td><td><code>state value</code></td><td><code>ref.current.value</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">JSX · Controlled Form — Login</span>
+      </div>
+      <pre><span class="kw">function</span> <span class="fn">LoginForm</span>() {
+  <span class="kw">const</span> [email, setEmail]       = <span class="fn">useState</span>(<span class="str">""</span>);
+  <span class="kw">const</span> [password, setPassword] = <span class="fn">useState</span>(<span class="str">""</span>);
+  <span class="kw">const</span> [error, setError]       = <span class="fn">useState</span>(<span class="str">""</span>);
+
+  <span class="kw">function</span> <span class="fn">handleSubmit</span>(e) {
+    e.<span class="fn">preventDefault</span>(); <span class="cm">// page reload rokna</span>
+    <span class="kw">if</span> (!email || !password) {
+      <span class="fn">setError</span>(<span class="str">"Email aur password dono zaroori hain!"</span>);
+      <span class="kw">return</span>;
+    }
+    <span class="fn">setError</span>(<span class="str">""</span>);
+    console.<span class="fn">log</span>(<span class="str">"Login:"</span>, email, password);
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;form</span> <span class="at">onSubmit</span>={handleSubmit}<span class="tag-c">&gt;</span>
+      <span class="tag-c">&lt;input</span> 
+        <span class="at">value</span>={email}
+        <span class="at">onChange</span>={e => <span class="fn">setEmail</span>(e.target.value)} 
+        <span class="at">placeholder</span>=<span class="str">"Email"</span>
+      <span class="tag-c">/&gt;</span>
+      {error && <span class="tag-c">&lt;p</span> <span class="at">style</span>={{ color: <span class="str">'red'</span> }}<span class="tag-c">&gt;</span>{error}<span class="tag-c">&lt;/p&gt;</span>}
+      <span class="tag-c">&lt;button&gt;</span>Login<span class="tag-c">&lt;/button&gt;</span>
+    <span class="tag-c">&lt;/form&gt;</span>
+  );
+}</pre>
+    </div>
+
+    <div class="alert tip">
+      <span class="alert-icon">💡</span>
+      <div class="alert-content">
+        <strong>Default Choice:</strong>
+        Hamesha Controlled form use karo. Uncontrolled sirf special cases mein use karo — jaise kisi legacy system ke saath ya bahut simple single input ke liye.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOOKS ===== -->
+  <section id="hooks" class="section">
+    <div class="section-header">
+      <div class="section-number">Part G · 105–115 min</div>
+      <h2>Hooks — React Ki Superpowers 🪝</h2>
+      <p class="section-desc">Hooks functional components mein state, side effects, refs aur context add karte hain.</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="hook-grid">
+      <div class="hook-card">
+        <div class="hook-name">useState</div>
+        <div class="hook-desc">Component ka memory. Jab value change ho aur UI update chahiye toh useState use karo.</div>
+        <div class="hook-use">🔸 Counter, toggle, form input</div>
+      </div>
+      <div class="hook-card">
+        <div class="hook-name">useEffect</div>
+        <div class="hook-desc">Side effects ke liye — API call karna, subscriptions, localStorage — render ke baad chalta hai.</div>
+        <div class="hook-use">🔸 Data fetch, timer, event listeners</div>
+      </div>
+      <div class="hook-card">
+        <div class="hook-name">useRef</div>
+        <div class="hook-desc">DOM element access karo ya koi value yaad rakho bina re-render kiye. Input focus karna.</div>
+        <div class="hook-use">🔸 Input focus, interval ID store</div>
+      </div>
+      <div class="hook-card">
+        <div class="hook-name">useContext</div>
+        <div class="hook-desc">Global data share karo bina props drilling ke. Theme, user info wagera poori app mein.</div>
+        <div class="hook-use">🔸 Dark/light theme, user auth</div>
+      </div>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">JSX · useEffect + useRef Example</span>
+      </div>
+      <pre><span class="kw">import</span> { useState, useEffect, useRef } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">function</span> <span class="fn">Notes</span>() {
+  <span class="kw">const</span> [notes, setNotes] = <span class="fn">useState</span>([]);
+  <span class="kw">const</span> [text, setText]   = <span class="fn">useState</span>(<span class="str">""</span>);
+  <span class="kw">const</span> inputRef          = <span class="fn">useRef</span>(<span class="kw">null</span>);
+
+  <span class="cm">// useEffect — sirf pehli baar chalta hai (mount pe)</span>
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">const</span> saved = localStorage.<span class="fn">getItem</span>(<span class="str">"notes"</span>);
+    <span class="kw">if</span> (saved) <span class="fn">setNotes</span>(JSON.<span class="fn">parse</span>(saved));
+  }, []); <span class="cm">// [] = sirf ek baar chalao</span>
+
+  <span class="cm">// notes change hone pe localStorage update karo</span>
+  <span class="fn">useEffect</span>(() => {
+    localStorage.<span class="fn">setItem</span>(<span class="str">"notes"</span>, JSON.<span class="fn">stringify</span>(notes));
+  }, [notes]); <span class="cm">// [notes] = jab notes badle tab chalao</span>
+
+  <span class="kw">function</span> <span class="fn">addNote</span>() {
+    <span class="kw">if</span> (!text) <span class="kw">return</span>;
+    <span class="fn">setNotes</span>([...notes, text]);
+    <span class="fn">setText</span>(<span class="str">""</span>);
+    inputRef.current.<span class="fn">focus</span>(); <span class="cm">// useRef — input pe focus</span>
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;div&gt;</span>
+      <span class="tag-c">&lt;input</span> <span class="at">ref</span>={inputRef} <span class="at">value</span>={text} 
+             <span class="at">onChange</span>={e => <span class="fn">setText</span>(e.target.value)} <span class="tag-c">/&gt;</span>
+      <span class="tag-c">&lt;button</span> <span class="at">onClick</span>={addNote}<span class="tag-c">&gt;</span>Add Note<span class="tag-c">&lt;/button&gt;</span>
+    <span class="tag-c">&lt;/div&gt;</span>
+  );
+}</pre>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">⚡</span>
+      <div class="alert-content">
+        <strong>Important Note — useEffect:</strong>
+        <code>useEffect(() => {'{...}'}, [])</code> — empty array = sirf ek baar mount pe chale<br>
+        <code>useEffect(() => {'{...}'}, [value])</code> — value change hone pe chale<br>
+        <code>useEffect(() => {'{...}'})</code> — har render ke baad chale (usually avoid karo!)
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LIVE DEMO ===== -->
+  <section id="demo" class="section">
+    <div class="section-header">
+      <div class="section-number">Live Demo ⚡</div>
+      <h2>JSX Props Simulator</h2>
+      <p class="section-desc">Yahan props ka concept live try karo — naam aur city dalo aur component render dekho!</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="demo-container">
+      <div class="demo-header">Live React Component Demo</div>
+      <div class="demo-body">
+        <div class="demo-input-group">
+          <input class="demo-input" id="demo-name" type="text" placeholder="Apna naam likho (e.g. Ahmed)">
+          <input class="demo-input" id="demo-city" type="text" placeholder="Sheher (e.g. Karachi)">
+          <input class="demo-input" id="demo-role" type="text" placeholder="Role (e.g. Student)">
+          <button class="demo-btn" onclick="runDemo()">▶ Render Karo</button>
+        </div>
+        <div style="margin-bottom: 12px; font-size: 13px; color: var(--text-muted); font-family: var(--font-mono);">// Output:</div>
+        <div class="demo-output" id="demo-output">Upar fields bharo aur "Render Karo" click karo...</div>
+      </div>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <span class="code-lang">JSX · Yeh component upar demo kar raha hai</span>
+      </div>
+      <pre><span class="kw">function</span> <span class="fn">UserCard</span>({ name, city, role }) {
+  <span class="kw">return</span> (
+    <span class="tag-c">&lt;div</span> <span class="at">className</span>=<span class="str">"user-card"</span><span class="tag-c">&gt;</span>
+      <span class="tag-c">&lt;h2&gt;</span>👋 Assalam o Alaikum, {name}!<span class="tag-c">&lt;/h2&gt;</span>
+      <span class="tag-c">&lt;p&gt;</span>📍 {city} se hain<span class="tag-c">&lt;/p&gt;</span>
+      <span class="tag-c">&lt;p&gt;</span>💼 {role} hain<span class="tag-c">&lt;/p&gt;</span>
+    <span class="tag-c">&lt;/div&gt;</span>
+  );
+}
+
+<span class="cm">// Usage:</span>
+<span class="tag-c">&lt;UserCard</span> <span class="at">name</span>=<span class="str">"Ahmed"</span> <span class="at">city</span>=<span class="str">"Karachi"</span> <span class="at">role</span>=<span class="str">"Student"</span> <span class="tag-c">/&gt;</span></pre>
+    </div>
+  </section>
+
+  <!-- ===== QUIZ ===== -->
+  <section id="quiz" class="section">
+    <div class="section-header">
+      <div class="section-number">Quiz Time 🎯</div>
+      <h2>Test Karo Apna Knowledge</h2>
+      <p class="section-desc">5 MCQs — select karo aur dekho sahi jawab kaunsa tha. Sab answer karo phir score dekho!</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="quiz-grid" id="quiz-container">
+      <!-- Q1 -->
+      <div class="quiz-card" id="q1">
+        <div class="quiz-q">
+          <span class="q-num">Q1</span>
+          JSX mein return karte waqt kitne root elements ho sakte hain?
+        </div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="answer(this,'q1','wrong')"><span class="option-letter">A</span>Jitne chahiye utne</div>
+          <div class="quiz-option" onclick="answer(this,'q1','correct')"><span class="option-letter">B</span>Sirf ek root element (ya Fragment)</div>
+          <div class="quiz-option" onclick="answer(this,'q1','wrong')"><span class="option-letter">C</span>Sirf div allowed hai</div>
+          <div class="quiz-option" onclick="answer(this,'q1','wrong')"><span class="option-letter">D</span>Do elements hamesha</div>
+        </div>
+        <div class="quiz-feedback" id="q1-fb"></div>
+      </div>
+      <!-- Q2 -->
+      <div class="quiz-card" id="q2">
+        <div class="quiz-q">
+          <span class="q-num">Q2</span>
+          JSX mein CSS class likhne ka sahi tarika kaunsa hai?
+        </div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="answer(this,'q2','wrong')"><span class="option-letter">A</span>class="box"</div>
+          <div class="quiz-option" onclick="answer(this,'q2','wrong')"><span class="option-letter">B</span>classname="box"</div>
+          <div class="quiz-option" onclick="answer(this,'q2','correct')"><span class="option-letter">C</span>className="box"</div>
+          <div class="quiz-option" onclick="answer(this,'q2','wrong')"><span class="option-letter">D</span>cssClass="box"</div>
+        </div>
+        <div class="quiz-feedback" id="q2-fb"></div>
+      </div>
+      <!-- Q3 -->
+      <div class="quiz-card" id="q3">
+        <div class="quiz-q">
+          <span class="q-num">Q3</span>
+          Controlled input ke liye kya zaroori hai?
+        </div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="answer(this,'q3','wrong')"><span class="option-letter">A</span>Sirf ref</div>
+          <div class="quiz-option" onclick="answer(this,'q3','correct')"><span class="option-letter">B</span>value + onChange dono</div>
+          <div class="quiz-option" onclick="answer(this,'q3','wrong')"><span class="option-letter">C</span>Sirf placeholder</div>
+          <div class="quiz-option" onclick="answer(this,'q3','wrong')"><span class="option-letter">D</span>onClick</div>
+        </div>
+        <div class="quiz-feedback" id="q3-fb"></div>
+      </div>
+      <!-- Q4 -->
+      <div class="quiz-card" id="q4">
+        <div class="quiz-q">
+          <span class="q-num">Q4</span>
+          React Router ka main kaam kya hai?
+        </div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="answer(this,'q4','wrong')"><span class="option-letter">A</span>Server-side routing</div>
+          <div class="quiz-option" onclick="answer(this,'q4','correct')"><span class="option-letter">B</span>Page reload ke baghair client-side navigation</div>
+          <div class="quiz-option" onclick="answer(this,'q4','wrong')"><span class="option-letter">C</span>Database connect karna</div>
+          <div class="quiz-option" onclick="answer(this,'q4','wrong')"><span class="option-letter">D</span>Components style karna</div>
+        </div>
+        <div class="quiz-feedback" id="q4-fb"></div>
+      </div>
+      <!-- Q5 -->
+      <div class="quiz-card" id="q5">
+        <div class="quiz-q">
+          <span class="q-num">Q5</span>
+          Input field ko automatically focus karne ke liye kaunsa hook use karein?
+        </div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="answer(this,'q5','wrong')"><span class="option-letter">A</span>useEffect</div>
+          <div class="quiz-option" onclick="answer(this,'q5','wrong')"><span class="option-letter">B</span>useMemo</div>
+          <div class="quiz-option" onclick="answer(this,'q5','correct')"><span class="option-letter">C</span>useRef</div>
+          <div class="quiz-option" onclick="answer(this,'q5','wrong')"><span class="option-letter">D</span>useReducer</div>
+        </div>
+        <div class="quiz-feedback" id="q5-fb"></div>
+      </div>
+    </div>
+
+    <button class="quiz-submit-btn" onclick="showScore()">🏆 Score Dekho</button>
+
+    <div id="quiz-result">
+      <div class="score-num" id="score-display">0/5</div>
+      <p id="score-msg">Quiz attempt karo pehle!</p>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-logo">⚛ React Lecture Guide</div>
+    <p>
+      Advanced Web Technologies · CSC337<br>
+      Lecture 13 — JSX, Components, Routing, Forms & Hooks<br>
+      Roman Urdu mein tayyar kiya gaya — Students ke liye
+    </p>
+    <div class="footer-tags">
+      <span>React</span>
+      <span>JSX</span>
+      <span>useState</span>
+      <span>useEffect</span>
+      <span>useRef</span>
+      <span>React Router</span>
+      <span>Controlled Forms</span>
+      <span>MERN Stack</span>
+    </div>
+  </footer>
+
+</main>
+
+<script>
+  /* ===== PROGRESS BAR ===== */
+  window.addEventListener('scroll', () => {
+    const el = document.documentElement;
+    const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+  });
+
+  /* ===== SIDEBAR TOGGLE (Mobile) ===== */
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('show');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  }
+
+  /* ===== SCROLL ANIMATION ===== */
+  const sections = document.querySelectorAll('.section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.08 });
+  sections.forEach(s => observer.observe(s));
+
+  /* ===== ACTIVE NAV LINK ===== */
+  const navLinks = document.querySelectorAll('.nav-link');
+  const allSections = document.querySelectorAll('section[id]');
+  
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+  allSections.forEach(s => navObserver.observe(s));
+
+  /* ===== LIVE DEMO ===== */
+  function runDemo() {
+    const name = document.getElementById('demo-name').value.trim() || 'Dost';
+    const city = document.getElementById('demo-city').value.trim() || 'Pakistan';
+    const role = document.getElementById('demo-role').value.trim() || 'Student';
+    
+    const out = document.getElementById('demo-output');
+    out.style.opacity = '0';
+    setTimeout(() => {
+      out.textContent =
+        `<UserCard\n  name="${name}"\n  city="${city}"\n  role="${role}"\n/>\n\n` +
+        `// Renders as:\n👋 Assalam o Alaikum, ${name}!\n📍 ${city} se hain\n💼 ${role} hain`;
+      out.style.opacity = '1';
+      out.style.transition = 'opacity 0.3s';
+    }, 150);
+  }
+
+  /* ===== QUIZ ===== */
+  const answers = {};
+  const correctAnswers = {
+    q1: 'B (Sirf ek root element) — Yeh JSX ka pehla aur sab se aham rule hai!',
+    q2: 'C (className) — class JavaScript ka reserved word hai, isliye className use karte hain.',
+    q3: 'B (value + onChange) — value state se aata hai, onChange state update karta hai.',
+    q4: 'B (Client-side navigation) — Bina page reload ke navigation React Router karta hai.',
+    q5: 'C (useRef) — useRef DOM elements access karne ka sahi tarika hai.'
+  };
+
+  function answer(el, qId, result) {
+    const card = document.getElementById(qId);
+    if (card.dataset.answered) return; // Already answered
+    card.dataset.answered = 'true';
+    
+    // Mark options
+    el.classList.add(result);
+    card.querySelectorAll('.quiz-option').forEach(o => {
+      o.classList.add('disabled');
+      if (o !== el && result === 'wrong') {
+        // Find correct one to highlight
+      }
+    });
+    
+    // If wrong, highlight correct (it'll be the one with 'correct' in onclick)
+    if (result === 'wrong') {
+      card.querySelectorAll('.quiz-option').forEach(o => {
+        if (o.onclick && o.getAttribute('onclick') && o.getAttribute('onclick').includes("'correct'")) {
+          o.classList.add('correct');
+        }
+      });
+    }
+    
+    answers[qId] = result;
+    
+    // Show feedback
+    const fb = document.getElementById(qId + '-fb');
+    if (result === 'correct') {
+      fb.className = 'quiz-feedback correct-fb show';
+      fb.innerHTML = '✅ Sahi Jawab! ' + correctAnswers[qId];
+    } else {
+      fb.className = 'quiz-feedback wrong-fb show';
+      fb.innerHTML = '❌ Galat! Sahi jawab: ' + correctAnswers[qId];
+    }
+  }
+
+  function showScore() {
+    const total = Object.keys(answers).length;
+    const correct = Object.values(answers).filter(a => a === 'correct').length;
+    
+    const result = document.getElementById('quiz-result');
+    result.style.display = 'block';
+    document.getElementById('score-display').textContent = correct + '/5';
+    
+    let msg;
+    if (correct === 5) msg = '🏆 Zabardast! Perfect score! Tum React expert ban gaye!';
+    else if (correct >= 3) msg = '👍 Acha kiya! Thodi aur practice karo — tum kar sakte ho!';
+    else msg = '📚 Ek baar phir lecture padho — concepts aur clear ho jayenge!';
+    
+    if (total < 5) msg = '⚠️ Pehle sab sawaalon ka jawab do phir score dekho!';
+    document.getElementById('score-msg').textContent = msg;
+    
+    result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

@@ -182,12 +182,15 @@ export default function FilesPage({ externalSearch = "", filterSubjectId = null,
       if (filterSubjectId == null) return true;
       return file.subjectId != null && Number(file.subjectId) === Number(filterSubjectId);
     })
-    .filter(
-      (file) =>
+    .filter((file) => {
+      const at = String(file.assignmentTitle || "").toLowerCase();
+      return (
         file.fileName.toLowerCase().includes(effectiveSearch) ||
         file.filePath.toLowerCase().includes(effectiveSearch) ||
-        (file.subjectName || "").toLowerCase().includes(effectiveSearch)
-    );
+        (file.subjectName || "").toLowerCase().includes(effectiveSearch) ||
+        at.includes(effectiveSearch)
+      );
+    });
 
   if (!activeSemester) {
     return (
@@ -215,8 +218,8 @@ export default function FilesPage({ externalSearch = "", filterSubjectId = null,
           <div>
             <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-slate-900"}`}>File Management System</h2>
             <p className={`mt-2 max-w-2xl text-sm leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-              Upload, store, and link course materials in one place. Every file is tied to a course so you can find
-              material quickly. Drag files here or use Upload; pick a course when prompted.
+              Upload, store, and link course materials in one place — including files attached from assignments /
+              quizzes. Drag files here or use Upload; pick a course when prompted.
             </p>
 
             {filterSubjectId != null && nameForFilterCourse ? (
@@ -297,15 +300,13 @@ export default function FilesPage({ externalSearch = "", filterSubjectId = null,
                 >
                   Name
                 </th>
-                <th className={`w-[10%] border-b px-3 py-2.5 ${isDark ? "border-white/10" : "border-slate-200"}`}>
-                  Course
+                <th className={`w-[14%] border-b px-3 py-2.5 ${isDark ? "border-white/10" : "border-slate-200"}`}>
+                  Course / link
                 </th>
                 <th className={`w-[8%] border-b px-3 py-2.5 ${isDark ? "border-white/10" : "border-slate-200"}`}>
                   Size
                 </th>
-                <th
-                  className={`w-[32%] border-b px-3 py-2.5 ${isDark ? "border-white/10" : "border-slate-200"}`}
-                >
+                <th className={`w-[28%] border-b px-3 py-2.5 ${isDark ? "border-white/10" : "border-slate-200"}`}>
                   Saved path
                 </th>
                 <th className={`w-[12%] border-b px-3 py-2.5 ${isDark ? "border-white/10" : "border-slate-200"}`}>
@@ -351,7 +352,25 @@ export default function FilesPage({ externalSearch = "", filterSubjectId = null,
                         </div>
                       </td>
                       <td className={`px-3 py-2.5 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-                        {file.subjectName || "—"}
+                        <div className="min-w-0">
+                          <span className="block truncate">{file.subjectName || "—"}</span>
+                          {file.assignmentId && file.assignmentTitle ? (
+                            <span
+                              className={`mt-1 inline-flex max-w-full items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ${
+                                file.assignmentType === "quiz"
+                                  ? isDark
+                                    ? "bg-cyan-500/15 text-cyan-200 ring-cyan-500/25"
+                                    : "bg-cyan-50 text-cyan-900 ring-cyan-200"
+                                  : isDark
+                                    ? "bg-violet-500/15 text-violet-200 ring-violet-500/25"
+                                    : "bg-violet-50 text-violet-900 ring-violet-200"
+                              }`}
+                              title={`${file.assignmentType === "quiz" ? "Quiz" : "Assignment"}: ${file.assignmentTitle}`}
+                            >
+                              📎 {file.assignmentType === "quiz" ? "Quiz" : "Assign"} · {file.assignmentTitle}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className={`px-3 py-2.5 whitespace-nowrap ${isDark ? "text-slate-300" : "text-slate-600"}`}>
                         {formatBytes(file.fileSize)}

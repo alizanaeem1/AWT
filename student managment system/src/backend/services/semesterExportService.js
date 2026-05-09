@@ -31,6 +31,51 @@ function formatSemesterForExport(row) {
   };
 }
 
+function buildFileSnapshot(fileRow, fallbackPath) {
+  return {
+    id: fileRow.id,
+    fileName: fileRow.fileName,
+    subjectName: fileRow.subjectName || null,
+    subjectId: fileRow.subjectId ?? null,
+    assignmentId: fileRow.assignmentId ?? null,
+    assignmentTitle: fileRow.assignmentTitle || null,
+    assignmentType: fileRow.assignmentType || null,
+    pathInZip: fallbackPath ?? null,
+    size: fileRow.fileSize ?? null
+  };
+}
+
+/** Folder inside the ZIP per course (survives duplicate subject names thanks to ID prefix). */
+function subjectFolderInZip(subjectId, subjectDisplayName) {
+  const sid = Number(subjectId);
+  const safe = safeFilePart(subjectDisplayName || "Course");
+  return `subject-files/${sid}-${safe}`;
+}
+
+/** Path for one uploaded row: nested by subject → course material vs assignment/quiz. */
+function zipPathForUploadedFile(f, subjectsById) {
+  const safe = safeFilePart(f.fileName);
+  const fileLeaf = `${f.id}-${safe}`;
+  const sid = Number(f.subjectId);
+  const displayName =
+    (Number.isFinite(sid) && sid > 0 && subjectsById.has(sid) ? subjectsById.get(sid).name : null) ||
+    f.subjectName ||
+    "Course";
+
+  if (Number.isFinite(sid) && sid > 0) {
+    const root = subjectFolderInZip(sid, displayName);
+    const aid = Number(f.assignmentId);
+    if (Number.isFinite(aid) && aid > 0) {
+      const typeTag = String(f.assignmentType || "").toLowerCase() === "quiz" ? "quiz" : "assignment";
+      const titlePart = safeFilePart(f.assignmentTitle || "item").slice(0, 120);
+      return `${root}/${typeTag}-${aid}-${titlePart}/${fileLeaf}`;
+    }
+    return `${root}/course-material/${fileLeaf}`;
+  }
+
+  return `other-files/${fileLeaf}`;
+}
+
 /**
  * Build a .zip for one semester: manifest.json, uploaded files, subject images, full rows for courses / assignments (assignments + quizzes).
  * @param {number} semesterId
@@ -50,10 +95,12 @@ async function writeSemesterExportZip(semesterId, userId, outPath) {
   }
 
   const subjects = subjectService.list(id);
+  const subjectsById = new Map(subjects.map((s) => [Number(s.id), s]));
   const assignments = assignmentService.listBySemester(id);
-  const fileRows = fileService.list(id);
+  const fileRows = fileService.listAllForSemester(id);
 
   const fileIndex = [];
+  const zippedByFileId = new Map();
   let filesIncluded = 0;
   let filesMissing = 0;
   let subjectImages = 0;
@@ -69,8 +116,7 @@ async function writeSemesterExportZip(semesterId, userId, outPath) {
   archive.pipe(output);
 
   for (const f of fileRows) {
-    const safe = safeFilePart(f.fileName);
-    const zipName = `files/${f.id}-${safe}`;
+    const zipName = zipPathForUploadedFile(f, subjectsById);
     if (f.filePath && fs.existsSync(f.filePath)) {
       try {
         archive.file(f.filePath, { name: zipName });
@@ -79,9 +125,13 @@ async function writeSemesterExportZip(semesterId, userId, outPath) {
           fileName: f.fileName,
           subjectName: f.subjectName,
           subjectId: f.subjectId,
+          assignmentId: f.assignmentId ?? null,
+          assignmentTitle: f.assignmentTitle || null,
+          assignmentType: f.assignmentType || null,
           pathInZip: zipName,
           size: f.fileSize
         });
+        zippedByFileId.set(Number(f.id), zipName);
         filesIncluded += 1;
       } catch (e) {
         fileIndex.push({ id: f.id, fileName: f.fileName, error: e.message || "read failed" });
@@ -93,11 +143,45 @@ async function writeSemesterExportZip(semesterId, userId, outPath) {
     }
   }
 
+  const fileRowsBySubject = new Map();
+  const fileRowsByAssignment = new Map();
+  for (const f of fileRows) {
+    const sid = Number(f.subjectId);
+    if (Number.isFinite(sid) && sid > 0) {
+      if (!fileRowsBySubject.has(sid)) fileRowsBySubject.set(sid, []);
+      fileRowsBySubject.get(sid).push(f);
+    }
+    const aid = Number(f.assignmentId);
+    if (Number.isFinite(aid) && aid > 0) {
+      if (!fileRowsByAssignment.has(aid)) fileRowsByAssignment.set(aid, []);
+      fileRowsByAssignment.get(aid).push(f);
+    }
+  }
+
+  const assignmentManifest = assignments.map((a) => {
+    const assignmentFiles = (fileRowsByAssignment.get(Number(a.id)) || []).map((f) =>
+      buildFileSnapshot(f, zippedByFileId.get(Number(f.id)))
+    );
+    return {
+      ...a,
+      attachedFiles: assignmentFiles
+    };
+  });
+
+  const assignmentsBySubject = new Map();
+  for (const a of assignmentManifest) {
+    const sid = Number(a.subjectId);
+    if (!Number.isFinite(sid) || sid <= 0) continue;
+    if (!assignmentsBySubject.has(sid)) assignmentsBySubject.set(sid, []);
+    assignmentsBySubject.get(sid).push(a);
+  }
+
   const subjectManifest = subjects.map((s) => {
     let imageInZip = null;
     if (s.imagePath && fs.existsSync(s.imagePath)) {
       const base = safeFilePart(path.basename(s.imagePath));
-      imageInZip = `subject-images/subject-${s.id}-${base}`;
+      const subjectRoot = subjectFolderInZip(s.id, s.name);
+      imageInZip = `${subjectRoot}/_subject-image-${base}`;
       try {
         archive.file(s.imagePath, { name: imageInZip });
         subjectImages += 1;
@@ -105,25 +189,29 @@ async function writeSemesterExportZip(semesterId, userId, outPath) {
         imageInZip = null;
       }
     }
+    const sid = Number(s.id);
+    const subjectFiles = (fileRowsBySubject.get(sid) || []).map((f) => buildFileSnapshot(f, zippedByFileId.get(Number(f.id))));
     return {
       id: s.id,
       name: s.name,
       professorName: s.professorName,
       creditHours: s.creditHours,
       gradePoint: s.gradePoint,
-      imageInZip: imageInZip
+      imageInZip: imageInZip,
+      files: subjectFiles,
+      assignmentsAndQuizzes: assignmentsBySubject.get(sid) || []
     };
   });
 
   const manifest = {
-    exportVersion: 1,
+    exportVersion: 3,
     exportedAt: new Date().toISOString(),
     app: "student-management-desktop",
     description:
-      "Semester backup: includes manifest (JSON), all uploaded files, subject images, and all courses with assignments and quizzes (type field).",
+      "Semester backup: manifest + uploads under subject-files/{subjectId}-{name}/ (course-material vs assignment/quiz folders), nested assignments in manifest.",
     semester: formatSemesterForExport(semRow),
     subjects: subjectManifest,
-    assignments,
+    assignments: assignmentManifest,
     files: fileIndex
   };
 

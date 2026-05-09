@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "./context/AppContext";
 import { useDueTodayNotifications } from "./hooks/useDueTodayNotifications";
+import { useTimetableNotifications } from "./hooks/useTimetableNotifications";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import ToastStack from "./components/ToastStack";
@@ -15,10 +16,18 @@ import SettingsPage from "./pages/SettingsPage";
 import CourseDetailsPage from "./pages/CourseDetailsPage";
 import SemestersPage from "./pages/SemestersPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import DailyProgressPage from "./pages/DailyProgressPage";
 
 export default function App() {
   const { user, loading, theme, activeSemester, dataVersion, pushNotification, pushToast } = useApp();
   useDueTodayNotifications({
+    activeSemester,
+    dataVersion,
+    pushNotification,
+    pushToast
+  });
+  useTimetableNotifications({
+    user,
     activeSemester,
     dataVersion,
     pushNotification,
@@ -88,6 +97,7 @@ export default function App() {
       />
     ),
     Analytics: <AnalyticsPage />,
+    "Daily Progress": <DailyProgressPage />,
     Notifications: <NotificationsPage />,
     Settings: <SettingsPage />
   };

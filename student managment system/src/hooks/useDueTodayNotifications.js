@@ -87,7 +87,12 @@ export function useDueTodayNotifications({ activeSemester, dataVersion, pushNoti
             )}. Reminder: ${lead.text} before.`;
             try {
               if (typeof desktopAPI?.notify === "function") {
-                desktopAPI.notify({ title: "Assignment Reminder", body: message });
+                desktopAPI.notify({
+                  title: "Assignment Reminder",
+                  body: message,
+                  dedupeKey: key,
+                  kind: "reminder"
+                });
               }
             } catch {
               /* browser / no bridge */
@@ -134,7 +139,7 @@ export function useDueTodayNotifications({ activeSemester, dataVersion, pushNoti
 
           try {
             if (typeof desktopAPI?.notify === "function") {
-              desktopAPI.notify({ title: "Due today", body: message });
+              desktopAPI.notify({ title: "Due today", body: message, dedupeKey: key, kind: "general" });
             }
           } catch {
             /* browser / no bridge */

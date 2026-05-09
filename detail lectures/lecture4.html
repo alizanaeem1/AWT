@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC337 — Express.js Fundamentals</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============================================
+     CSS VARIABLES & RESET
+  ============================================ */
+  :root {
+    --bg-primary: #060d1a;
+    --bg-secondary: #0a1628;
+    --bg-card: #0f1f38;
+    --bg-card-hover: #152844;
+    --accent-cyan: #00d4ff;
+    --accent-blue: #3b82f6;
+    --accent-purple: #a855f7;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --text-primary: #e2eaf8;
+    --text-secondary: #8ea8cc;
+    --text-muted: #4d6a8a;
+    --border: rgba(0, 212, 255, 0.12);
+    --border-hover: rgba(0, 212, 255, 0.35);
+    --sidebar-width: 270px;
+    --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.25);
+    --glow-blue: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; font-size: 16px; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ============================================
+     SCROLLBAR
+  ============================================ */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 3px; }
+
+  /* ============================================
+     PROGRESS BAR
+  ============================================ */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+    z-index: 9999;
+    transition: width 0.1s linear;
+    box-shadow: var(--glow-cyan);
+  }
+
+  /* ============================================
+     LAYOUT
+  ============================================ */
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ============================================
+     SIDEBAR
+  ============================================ */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    box-shadow: var(--glow-cyan);
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-nav {
+    padding: 16px 12px;
+    flex: 1;
+  }
+
+  .nav-group-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 8px 6px;
+    font-weight: 600;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+
+  .nav-link:hover {
+    background: rgba(0, 212, 255, 0.08);
+    color: var(--accent-cyan);
+    border-color: var(--border);
+  }
+
+  .nav-link.active {
+    background: rgba(0, 212, 255, 0.12);
+    color: var(--accent-cyan);
+    border-color: rgba(0, 212, 255, 0.25);
+    box-shadow: inset 3px 0 0 var(--accent-cyan);
+  }
+
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+
+  .hamburger {
+    display: none;
+    position: fixed;
+    top: 16px; left: 16px;
+    z-index: 200;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--accent-cyan);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+
+  /* ============================================
+     MAIN CONTENT
+  ============================================ */
+  .main {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 0 40px 80px;
+    max-width: calc(100% - var(--sidebar-width));
+  }
+
+  /* ============================================
+     HERO SECTION
+  ============================================ */
+  .hero {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 80px 0 60px;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 70% 50%, rgba(0, 212, 255, 0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 20% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .hero-content { position: relative; z-index: 1; max-width: 750px; }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--accent-cyan);
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+    animation: fadeInDown 0.6s ease forwards;
+  }
+
+  .hero-title {
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    animation: fadeInUp 0.7s ease 0.1s both;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 50%, var(--accent-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 36px;
+    max-width: 600px;
+    animation: fadeInUp 0.7s ease 0.2s both;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    animation: fadeInUp 0.7s ease 0.3s both;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: left;
+  }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    font-family: 'Space Mono', monospace;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ============================================
+     SECTIONS
+  ============================================ */
+  section {
+    padding: 70px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .section-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-cyan);
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    margin-top: 6px;
+  }
+
+  .section-title-wrap {}
+  .section-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .section-sub {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  /* ============================================
+     CARDS
+  ============================================ */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 24px 0;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
+    transform: translateY(-4px);
+    box-shadow: var(--glow-cyan);
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+
+  .card-body {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  /* ============================================
+     CODE BLOCKS
+  ============================================ */
+  .code-block {
+    background: #050d1a;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-cyan);
+    border-radius: 12px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: rgba(0,212,255,0.05);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent-cyan);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .code-dots {
+    display: flex; gap: 6px;
+  }
+
+  .code-dots span {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .code-dots span:nth-child(1) { background: #ef4444; }
+  .code-dots span:nth-child(2) { background: var(--accent-orange); }
+  .code-dots span:nth-child(3) { background: var(--accent-green); }
+
+  .code-body {
+    padding: 20px;
+    overflow-x: auto;
+  }
+
+  pre {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.75;
+    color: #a8d8ff;
+    white-space: pre;
+  }
+
+  .kw { color: #c792ea; }   /* keyword */
+  .fn { color: #82aaff; }   /* function */
+  .str { color: #c3e88d; }  /* string */
+  .cm { color: #546e7a; }   /* comment */
+  .num { color: #f78c6c; }  /* number */
+  .var { color: #eeffff; }  /* variable */
+  .op { color: #89ddff; }   /* operator */
+
+  /* ============================================
+     ALERTS
+  ============================================ */
+  .alert {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    border: 1px solid;
+    font-size: 0.875rem;
+    line-height: 1.65;
+  }
+
+  .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .alert-content {}
+  .alert-title { font-weight: 700; margin-bottom: 4px; font-size: 0.85rem; letter-spacing: 0.5px; }
+
+  .alert-tip {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+  }
+  .alert-tip .alert-title { color: var(--accent-green); }
+
+  .alert-warning {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fcd34d;
+  }
+  .alert-warning .alert-title { color: var(--accent-orange); }
+
+  .alert-exam {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.3);
+    color: #d8b4fe;
+  }
+  .alert-exam .alert-title { color: var(--accent-purple); }
+
+  .alert-info {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+  }
+  .alert-info .alert-title { color: var(--accent-blue); }
+
+  /* ============================================
+     TABLES
+  ============================================ */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 24px 0;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  thead {
+    background: rgba(0, 212, 255, 0.08);
+  }
+
+  th {
+    padding: 14px 18px;
+    text-align: left;
+    color: var(--accent-cyan);
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 13px 18px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(0,212,255,0.05);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,212,255,0.03); }
+
+  td:first-child { color: var(--text-primary); font-weight: 500; }
+
+  /* ============================================
+     STEP LIST
+  ============================================ */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 24px 0;
+    position: relative;
+  }
+
+  .steps::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 40px;
+    bottom: 40px;
+    width: 1px;
+    background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
+    opacity: 0.3;
+  }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    position: relative;
+  }
+
+  .step-num {
+    width: 36px; height: 36px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .step-content {}
+  .step-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; }
+  .step-body { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.65; }
+
+  /* ============================================
+     INLINE CODE
+  ============================================ */
+  code {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8em;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    color: var(--accent-cyan);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  /* ============================================
+     DEMO SECTION
+  ============================================ */
+  .demo-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin: 24px 0;
+  }
+
+  .demo-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .demo-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .demo-input {
+    flex: 1;
+    min-width: 180px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .demo-input:focus { border-color: var(--accent-cyan); }
+
+  .demo-select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    color: #000;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Sora', sans-serif;
+  }
+
+  .btn:hover { transform: translateY(-2px); box-shadow: var(--glow-cyan); }
+
+  .demo-result {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent-green);
+    min-height: 60px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  /* ============================================
+     QUIZ SECTION
+  ============================================ */
+  .quiz-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin: 20px 0;
+    transition: border-color 0.3s;
+  }
+
+  .quiz-q {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .quiz-q span {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-purple);
+    background: rgba(168,85,247,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .quiz-opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    background: var(--bg-secondary);
+  }
+
+  .quiz-opt:hover { border-color: var(--accent-blue); background: rgba(59,130,246,0.06); }
+
+  .quiz-opt.correct {
+    border-color: var(--accent-green) !important;
+    background: rgba(16,185,129,0.12) !important;
+    color: #6ee7b7 !important;
+  }
+
+  .quiz-opt.wrong {
+    border-color: var(--accent-red) !important;
+    background: rgba(239,68,68,0.1) !important;
+    color: #fca5a5 !important;
+  }
+
+  .quiz-opt .opt-letter {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+  }
+
+  .quiz-feedback {
+    display: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  .quiz-score-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    margin-top: 24px;
+  }
+
+  .score-display {
+    font-size: 3rem;
+    font-weight: 800;
+    font-family: 'Space Mono', monospace;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ============================================
+     FOOTER
+  ============================================ */
+  footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    text-align: center;
+    margin-left: 0;
+  }
+
+  .footer-logo {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    margin-bottom: 8px;
+  }
+
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ============================================
+     ANIMATIONS
+  ============================================ */
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  /* ============================================
+     OVERLAY
+  ============================================ */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 90;
+    backdrop-filter: blur(4px);
+  }
+
+  /* ============================================
+     RESPONSIVE
+  ============================================ */
+  @media (max-width: 900px) {
+    :root { --sidebar-width: 270px; }
+
+    .sidebar {
+      transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+      box-shadow: 20px 0 60px rgba(0,0,0,0.5);
+    }
+
+    .hamburger { display: block; }
+
+    .main {
+      margin-left: 0;
+      max-width: 100%;
+      padding: 60px 20px 60px;
+    }
+
+    .overlay { display: none; }
+    .overlay.show { display: block; }
+
+    .hero { min-height: 60vh; }
+    .hero-stats { gap: 20px; }
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .main { padding: 60px 16px 60px; }
+    .section-title { font-size: 1.4rem; }
+    pre { font-size: 0.72rem; }
+  }
+
+  /* ============================================
+     PROSE
+  ============================================ */
+  .prose {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin: 14px 0;
+  }
+
+  .prose strong { color: var(--text-primary); font-weight: 600; }
+
+  h3.sub-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 30px 0 14px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h3.sub-heading::before {
+    content: '';
+    display: inline-block;
+    width: 4px; height: 18px;
+    background: var(--accent-cyan);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin: 3px;
+  }
+
+  .tag-cyan { background: rgba(0,212,255,0.12); color: var(--accent-cyan); border: 1px solid rgba(0,212,255,0.25); }
+  .tag-purple { background: rgba(168,85,247,0.12); color: var(--accent-purple); border: 1px solid rgba(168,85,247,0.25); }
+  .tag-green { background: rgba(16,185,129,0.12); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.25); }
+  .tag-orange { background: rgba(245,158,11,0.12); color: var(--accent-orange); border: 1px solid rgba(245,158,11,0.25); }
+
+  /* request flow */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 20px 0;
+  }
+
+  .flow-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+
+  .flow-arrow {
+    text-align: center;
+    color: var(--accent-cyan);
+    font-size: 14px;
+    opacity: 0.5;
+    padding: 2px 0;
+  }
+
+  .flow-num {
+    width: 22px; height: 22px;
+    background: rgba(0,212,255,0.12);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Hamburger (mobile) -->
+<button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">CSC337</div>
+      </div>
+      <div class="sidebar-subtitle">Express.js Fundamentals</div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-group-label">Intro</div>
+      <a class="nav-link active" href="#hero">
+        <span class="nav-icon">🏠</span> Home
+      </a>
+      <a class="nav-link" href="#intro">
+        <span class="nav-icon">📖</span> Express kya hai?
+      </a>
+
+      <div class="nav-group-label">Core Concepts</div>
+      <a class="nav-link" href="#middleware">
+        <span class="nav-icon">🔄</span> Middleware
+      </a>
+      <a class="nav-link" href="#routing">
+        <span class="nav-icon">🗺️</span> Routing
+      </a>
+      <a class="nav-link" href="#router">
+        <span class="nav-icon">📁</span> express.Router()
+      </a>
+
+      <div class="nav-group-label">Advanced</div>
+      <a class="nav-link" href="#architecture">
+        <span class="nav-icon">🏗️</span> App Architecture
+      </a>
+      <a class="nav-link" href="#requestflow">
+        <span class="nav-icon">🔀</span> Request Flow
+      </a>
+      <a class="nav-link" href="#demo">
+        <span class="nav-icon">🧪</span> Live Demo
+      </a>
+
+      <div class="nav-group-label">Test Yourself</div>
+      <a class="nav-link" href="#quiz">
+        <span class="nav-icon">❓</span> Quiz
+      </a>
+    </div>
+  </nav>
+
+  <!-- ==================== MAIN ==================== -->
+  <main class="main">
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-content">
+        <div class="hero-badge">
+          ⚡ CSC337 — Advanced Web Technologies
+        </div>
+        <h1 class="hero-title">
+          Express.js<br>
+          <span class="gradient-text">Fundamentals</span>
+        </h1>
+        <p class="hero-desc">
+          Is lecture mein hum Express.js seekhenge — Node.js ka sabse popular web framework. Middleware kya hai, routing kaise kaam karta hai, aur apni application ko modular kaise banayein — sab kuch Roman Urdu mein, simple aur step-by-step.
+        </p>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="stat-num">4</div>
+            <div class="stat-label">Main Topics</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">10+</div>
+            <div class="stat-label">Code Examples</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">10</div>
+            <div class="stat-label">Quiz Questions</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 1: INTRO ==================== -->
+    <section id="intro">
+      <div class="section-header reveal">
+        <div class="section-number">01</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">Express.js kya hai? <span class="gradient-text">Kyun use karein?</span></h2>
+          <p class="section-sub">Framework ki zaroorat — beginner-friendly explanation</p>
+        </div>
+      </div>
+
+      <p class="prose reveal">
+        Socho aap ek bada ghar bana rahe ho. <strong>Node.js</strong> aapko sirf bricks deta hai (raw materials). Lekin <strong>Express.js</strong> ek complete toolkit hai — hammer, nails, plans sab kuch. Isse kaam kaafi aasaan ho jaata hai!
+      </p>
+
+      <div class="cards-grid">
+        <div class="card reveal reveal-delay-1">
+          <span class="card-icon">⚡</span>
+          <div class="card-title">Minimalist hai</div>
+          <div class="card-body">Express bahut chhota aur light hai. Woh sirf zaroori cheezein deta hai, Node.js ki power ko chhupaata nahi. Aap khud decide karte ho baaki kya add karna hai.</div>
+        </div>
+        <div class="card reveal reveal-delay-2">
+          <span class="card-icon">🔓</span>
+          <div class="card-title">Unopinionated hai</div>
+          <div class="card-body">Express aap pe koi rule nahi thopata — koi specific database use karo, koi specific pattern follow karo. Poori azadi hai developer ko!</div>
+        </div>
+        <div class="card reveal reveal-delay-3">
+          <span class="card-icon">🚀</span>
+          <div class="card-title">Fast & Extensible</div>
+          <div class="card-body">V8 JavaScript engine pe build hai, toh speed excellent hai. Aur thousands of middleware packages NPM pe available hain — har kaam ke liye kuch na kuch milta hai.</div>
+        </div>
+      </div>
+
+      <h3 class="sub-heading reveal">Node.js vs Express — Fark kya hai?</h3>
+      <div class="table-wrap reveal">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Node.js (raw)</th>
+              <th>Express.js</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>HTTP Server banana</td><td>Manually sab likhna padta hai</td><td>app.listen() se ho jaata hai</td></tr>
+            <tr><td>Routing</td><td>URL manually parse karo</td><td>app.get(), app.post() simple hai</td></tr>
+            <tr><td>Body Parsing</td><td>Khud handle karo</td><td>express.json() built-in hai</td></tr>
+            <tr><td>Middleware</td><td>Koi system nahi</td><td>Powerful middleware pipeline</td></tr>
+            <tr><td>Code length</td><td>Zyada lines</td><td>Kam aur clean code</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-tip reveal">
+        <span class="alert-icon">💡</span>
+        <div class="alert-content">
+          <div class="alert-title">TIP</div>
+          Express ko "wrapper" samjho Node.js ka. Wohi kaam karta hai, lekin kaafi asaan aur organized tarike se!
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 2: MIDDLEWARE ==================== -->
+    <section id="middleware">
+      <div class="section-header reveal">
+        <div class="section-number">02</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">Middleware — <span class="gradient-text">Request ka Safar</span></h2>
+          <p class="section-sub">Har request ek pipeline se guzarti hai — woh pipeline middleware hai</p>
+        </div>
+      </div>
+
+      <p class="prose reveal">
+        <strong>Middleware</strong> ko ek security guard ki tarah samjho jo office building ke bahar khada hai. Har aane wala banda (request) pehle usi ke paas se guzarta hai. Guard check karta hai — ID hai? Authorized hai? Phir andhar jaane deta hai. Agar nahi? Wapas bhej deta hai. Express ka middleware bilkul aise kaam karta hai!
+      </p>
+
+      <h3 class="sub-heading reveal">Basic Structure</h3>
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">JavaScript</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="cm">// Middleware function ka basic structure</span>
+<span class="var">app</span>.<span class="fn">use</span>((<span class="var">req</span>, <span class="var">res</span>, <span class="var">next</span>) <span class="op">=></span> {
+  <span class="cm">// req  = client ki request ka object</span>
+  <span class="cm">// res  = server ki response ka object</span>
+  <span class="cm">// next = agla middleware call karne ka function</span>
+
+  <span class="var">console</span>.<span class="fn">log</span>(<span class="str">'Waqt hai:'</span>, <span class="var">Date</span>.<span class="fn">now</span>());
+  <span class="fn">next</span>(); <span class="cm">// ZAROOR likho, warna request ruk jaayegi!</span>
+});</pre>
+        </div>
+      </div>
+
+      <div class="alert alert-warning reveal">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content">
+          <div class="alert-title">WARNING — IMPORTANT!</div>
+          Agar middleware mein <code>next()</code> nahi likha, toh request wahan ruk jaayegi aur client ko koi response nahi milega. Browser hang ho jaayega!
+        </div>
+      </div>
+
+      <h3 class="sub-heading reveal">Types of Middleware</h3>
+      <div class="cards-grid">
+        <div class="card reveal reveal-delay-1">
+          <span class="card-icon">🌐</span>
+          <div class="card-title">Application-level</div>
+          <div class="card-body"><code>app.use()</code> se define hota hai. Sab routes pe apply hota hai, ya specific path pe. Global settings ke liye best.</div>
+        </div>
+        <div class="card reveal reveal-delay-2">
+          <span class="card-icon">📁</span>
+          <div class="card-title">Router-level</div>
+          <div class="card-body"><code>router.use()</code> se define hota hai. Sirf us specific router ke routes pe apply hota hai. Modular apps ke liye best.</div>
+        </div>
+        <div class="card reveal reveal-delay-3">
+          <span class="card-icon">🚨</span>
+          <div class="card-title">Error-handling</div>
+          <div class="card-body">4 parameters hote hain: <code>(err, req, res, next)</code>. Sab ke baad define karo. Jab koi error aaye to yeh pakadta hai.</div>
+        </div>
+        <div class="card reveal reveal-delay-1">
+          <span class="card-icon">📦</span>
+          <div class="card-title">Built-in</div>
+          <div class="card-body">Express ke saath already included. <code>express.json()</code>, <code>express.static()</code>, <code>express.urlencoded()</code> — extra install nahi chahiye.</div>
+        </div>
+        <div class="card reveal reveal-delay-2">
+          <span class="card-icon">🛒</span>
+          <div class="card-title">Third-party</div>
+          <div class="card-body">NPM se install karo. Jaise <code>morgan</code> (logging ke liye), <code>cors</code> (cross-origin ke liye). Community ka bana hua.</div>
+        </div>
+      </div>
+
+      <h3 class="sub-heading reveal">Real Code Examples</h3>
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">JavaScript — Middleware Examples</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="cm">// 1. Built-in: JSON parsing enable karo</span>
+<span class="var">app</span>.<span class="fn">use</span>(<span class="var">express</span>.<span class="fn">json</span>());
+
+<span class="cm">// 2. Custom: Har request ka log raho</span>
+<span class="var">app</span>.<span class="fn">use</span>((<span class="var">req</span>, <span class="var">res</span>, <span class="var">next</span>) <span class="op">=></span> {
+  <span class="var">console</span>.<span class="fn">log</span>(<span class="str">`[${new Date().toISOString()}] ${req.method} ${req.url}`</span>);
+  <span class="fn">next</span>();
+});
+
+<span class="cm">// 3. Third-party: morgan logger</span>
+<span class="kw">const</span> <span class="var">morgan</span> <span class="op">=</span> <span class="fn">require</span>(<span class="str">'morgan'</span>);
+<span class="var">app</span>.<span class="fn">use</span>(<span class="var">morgan</span>(<span class="str">'combined'</span>));
+
+<span class="cm">// 4. Error-handling middleware (hamesha last mein)</span>
+<span class="var">app</span>.<span class="fn">use</span>((<span class="var">err</span>, <span class="var">req</span>, <span class="var">res</span>, <span class="var">next</span>) <span class="op">=></span> {
+  <span class="var">console</span>.<span class="fn">error</span>(<span class="var">err</span>.<span class="var">stack</span>);
+  <span class="var">res</span>.<span class="fn">status</span>(<span class="num">500</span>).<span class="fn">send</span>(<span class="str">'Kuch toot gaya! 😅'</span>);
+});</pre>
+        </div>
+      </div>
+
+      <div class="alert alert-exam reveal">
+        <span class="alert-icon">🎓</span>
+        <div class="alert-content">
+          <div class="alert-title">EXAM TIP</div>
+          Middleware ka <strong>order bahut important</strong> hai! Jo pehle <code>app.use()</code> se define kiya, woh pehle execute hoga. Error-handling middleware <strong>hamesha sab ke baad</strong> likhna chahiye.
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 3: ROUTING ==================== -->
+    <section id="routing">
+      <div class="section-header reveal">
+        <div class="section-number">03</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">Routing — <span class="gradient-text">Sahi Raasta Dikhao</span></h2>
+          <p class="section-sub">URL + HTTP Method = Sahi Handler tak pahuncho</p>
+        </div>
+      </div>
+
+      <p class="prose reveal">
+        <strong>Routing</strong> ek traffic policeman ki tarah hai. Jab koi request aata hai, Express dekhta hai — "Yeh kaunse raaste pe aaya hai? Kya karna chahta hai?" Uske mutabiq sahi handler pe bhej deta hai.
+      </p>
+
+      <h3 class="sub-heading reveal">Basic Syntax</h3>
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">JavaScript — Routing Syntax</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="cm">// app.METHOD(PATH, HANDLER)</span>
+
+<span class="cm">// GET — Data lena (Read)</span>
+<span class="var">app</span>.<span class="fn">get</span>(<span class="str">'/'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">send</span>(<span class="str">'Hello World!'</span>);
+});
+
+<span class="cm">// POST — Data bhejna (Create)</span>
+<span class="var">app</span>.<span class="fn">post</span>(<span class="str">'/users'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>({ <span class="var">message</span>: <span class="str">'User ban gaya!'</span> });
+});
+
+<span class="cm">// PUT — Data update karna (Update)</span>
+<span class="var">app</span>.<span class="fn">put</span>(<span class="str">'/users/:id'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">send</span>(<span class="str">`User ${req.params.id} update ho gaya!`</span>);
+});
+
+<span class="cm">// DELETE — Data hatana (Delete)</span>
+<span class="var">app</span>.<span class="fn">delete</span>(<span class="str">'/users/:id'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">send</span>(<span class="str">`User ${req.params.id} delete ho gaya!`</span>);
+});</pre>
+        </div>
+      </div>
+
+      <h3 class="sub-heading reveal">HTTP Methods — Simple Explanation</h3>
+      <div class="table-wrap reveal">
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Kaam kya hai</th><th>Real life example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>GET</td><td>Data parhna / lena</td><td>News website kholna</td></tr>
+            <tr><td>POST</td><td>Naya data bhejna</td><td>Form submit karna</td></tr>
+            <tr><td>PUT</td><td>Poora data replace karna</td><td>Profile completely update karna</td></tr>
+            <tr><td>PATCH</td><td>Thodi si update karna</td><td>Sirf name change karna</td></tr>
+            <tr><td>DELETE</td><td>Data hatana</td><td>Account delete karna</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading reveal">Route Parameters — Dynamic URLs</h3>
+      <p class="prose reveal">
+        Kabhi kabhi URL mein koi number ya ID hoti hai jo <strong>change hoti rehti hai</strong>. Jaise <code>/users/123</code> ya <code>/products/456</code>. In dynamic values ko pakadne ke liye <strong>route parameters</strong> use hote hain — colon (<code>:</code>) se define karte hain.
+      </p>
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">JavaScript — Route Parameters</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="cm">// :userId aur :bookId dynamic hain</span>
+<span class="var">app</span>.<span class="fn">get</span>(<span class="str">'/users/:userId/books/:bookId'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="kw">const</span> { <span class="var">userId</span>, <span class="var">bookId</span> } <span class="op">=</span> <span class="var">req</span>.<span class="var">params</span>;
+
+  <span class="cm">// /users/123/books/456 request aaya toh:</span>
+  <span class="cm">// userId = "123", bookId = "456"</span>
+
+  <span class="var">res</span>.<span class="fn">send</span>(<span class="str">`User: ${userId}, Book: ${bookId}`</span>);
+});
+
+<span class="cm">// Multiple handlers chain kar sakte ho</span>
+<span class="kw">const</span> <span class="fn">checkAuth</span> <span class="op">=</span> (<span class="var">req</span>, <span class="var">res</span>, <span class="var">next</span>) <span class="op">=></span> {
+  <span class="cm">/* authentication check */</span>
+  <span class="fn">next</span>();
+};
+
+<span class="var">app</span>.<span class="fn">get</span>(<span class="str">'/profile'</span>, <span class="var">checkAuth</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">send</span>(<span class="str">'User ka profile data'</span>);
+});</pre>
+        </div>
+      </div>
+
+      <div class="alert alert-info reveal">
+        <span class="alert-icon">ℹ️</span>
+        <div class="alert-content">
+          <div class="alert-title">YAAD RAKHO</div>
+          Route parameters <code>req.params</code> mein milte hain. Query strings jaise <code>?name=Ali</code> <code>req.query</code> mein milte hain. POST body ka data <code>req.body</code> mein milta hai (express.json() ke baad).
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 4: ROUTER ==================== -->
+    <section id="router">
+      <div class="section-header reveal">
+        <div class="section-number">04</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">express.Router() — <span class="gradient-text">Modular Banao</span></h2>
+          <p class="section-sub">Badi app ko chhotay chhotay hisson mein todna</p>
+        </div>
+      </div>
+
+      <p class="prose reveal">
+        Socho ek hospital hai. Sab doctors ek hi kamre mein baith jayein toh kya hoga? Chaos! Isliye alag alag departments hote hain — cardiology, orthopedics, etc. <strong>express.Router()</strong> bhi aise hi kaam karta hai — related routes ko alag file mein rakhta hai.
+      </p>
+
+      <h3 class="sub-heading reveal">Problem: App cluttered ho jaati hai</h3>
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">JavaScript — Bura tarika (sab ek jagah)</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="cm">// app.js — sab routes ek jagah... messy!</span>
+<span class="var">app</span>.<span class="fn">get</span>(<span class="str">'/users'</span>, ...);
+<span class="var">app</span>.<span class="fn">post</span>(<span class="str">'/users'</span>, ...);
+<span class="var">app</span>.<span class="fn">get</span>(<span class="str">'/products'</span>, ...);
+<span class="var">app</span>.<span class="fn">post</span>(<span class="str">'/products'</span>, ...);
+<span class="var">app</span>.<span class="fn">get</span>(<span class="str">'/orders'</span>, ...);
+<span class="cm">// ... saikdon lines... mushkil hai manage karna!</span></pre>
+        </div>
+      </div>
+
+      <h3 class="sub-heading reveal">Solution: Router se alag files banao</h3>
+      <div class="steps reveal">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Router file banao (routes/users.js)</div>
+            <div class="step-body">Users ke saare routes alag file mein likho</div>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">module.exports karo</div>
+            <div class="step-body">Router ko export karo taake dusri file use kar sake</div>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">app.js mein mount karo</div>
+            <div class="step-body">app.use('/api/users', usersRouter) se connect karo</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">JavaScript — routes/users.js</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="cm">// routes/users.js</span>
+<span class="kw">const</span> <span class="var">express</span> <span class="op">=</span> <span class="fn">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> <span class="var">router</span> <span class="op">=</span> <span class="var">express</span>.<span class="fn">Router</span>(); <span class="cm">// nayi Router instance</span>
+
+<span class="cm">// GET /api/users</span>
+<span class="var">router</span>.<span class="fn">get</span>(<span class="str">'/'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">send</span>(<span class="str">'Saare users ki list'</span>);
+});
+
+<span class="cm">// GET /api/users/123</span>
+<span class="var">router</span>.<span class="fn">get</span>(<span class="str">'/:id'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">send</span>(<span class="str">`User ID: ${req.params.id}`</span>);
+});
+
+<span class="cm">// POST /api/users</span>
+<span class="var">router</span>.<span class="fn">post</span>(<span class="str">'/'</span>, (<span class="var">req</span>, <span class="var">res</span>) <span class="op">=></span> {
+  <span class="var">res</span>.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">send</span>(<span class="str">'Naya user ban gaya!'</span>);
+});
+
+<span class="var">module</span>.<span class="var">exports</span> <span class="op">=</span> <span class="var">router</span>; <span class="cm">// export karo</span></pre>
+        </div>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">JavaScript — app.js (main file)</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="cm">// app.js</span>
+<span class="kw">const</span> <span class="var">express</span> <span class="op">=</span> <span class="fn">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> <span class="var">app</span> <span class="op">=</span> <span class="fn">express</span>();
+
+<span class="kw">const</span> <span class="var">usersRouter</span> <span class="op">=</span> <span class="fn">require</span>(<span class="str">'./routes/users'</span>);
+
+<span class="var">app</span>.<span class="fn">use</span>(<span class="var">express</span>.<span class="fn">json</span>()); <span class="cm">// JSON parsing</span>
+
+<span class="cm">// /api/users pe saare users routes mount ho jayenge</span>
+<span class="var">app</span>.<span class="fn">use</span>(<span class="str">'/api/users'</span>, <span class="var">usersRouter</span>);
+
+<span class="var">app</span>.<span class="fn">listen</span>(<span class="num">3000</span>, () <span class="op">=></span> {
+  <span class="var">console</span>.<span class="fn">log</span>(<span class="str">'Server chal raha hai port 3000 pe!'</span>);
+});</pre>
+        </div>
+      </div>
+
+      <div class="alert alert-tip reveal">
+        <span class="alert-icon">💡</span>
+        <div class="alert-content">
+          <div class="alert-title">SAMJHO AISE</div>
+          Jab <code>app.use('/api/users', usersRouter)</code> likhte ho, toh usersRouter ke andar jo <code>/</code> hai, woh actually <code>/api/users</code> ban jaata hai. Aur <code>/:id</code> ban jaata hai <code>/api/users/:id</code>.
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 5: ARCHITECTURE ==================== -->
+    <section id="architecture">
+      <div class="section-header reveal">
+        <div class="section-number">05</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">App Architecture — <span class="gradient-text">Sahi Structure</span></h2>
+          <p class="section-sub">Professional apps aise organize hoti hain</p>
+        </div>
+      </div>
+
+      <p class="prose reveal">
+        Jaise ghar mein alag alag kamre hote hain (bedroom, kitchen, bathroom) — Express app mein bhi alag alag folders hote hain har kaam ke liye. Isse <strong>Separation of Concerns</strong> kehte hain.
+      </p>
+
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">Directory Structure</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="code-body">
+<pre><span class="var">my-app/</span>
+├── <span class="fn">app.js</span>          <span class="cm"># Main file — sab yahan shuru hota hai</span>
+├── <span class="fn">package.json</span>
+├── <span class="var">routes/</span>         <span class="cm"># Sirf routes define karo</span>
+│   ├── <span class="fn">users.js</span>
+│   └── <span class="fn">products.js</span>
+├── <span class="var">controllers/</span>    <span class="cm"># Business logic yahan</span>
+│   ├── <span class="fn">usersController.js</span>
+│   └── <span class="fn">productsController.js</span>
+├── <span class="var">models/</span>         <span class="cm"># Database structure</span>
+│   ├── <span class="fn">User.js</span>
+│   └── <span class="fn">Product.js</span>
+├── <span class="var">middleware/</span>     <span class="cm"># Custom middleware</span>
+│   ├── <span class="fn">auth.js</span>
+│   └── <span class="fn">logger.js</span>
+├── <span class="var">config/</span>         <span class="cm"># Settings aur environment variables</span>
+│   └── <span class="fn">index.js</span>
+└── <span class="var">public/</span>         <span class="cm"># Static files (HTML, CSS, images)</span>
+    └── <span class="fn">index.html</span></pre>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card reveal reveal-delay-1">
+          <span class="card-icon">🚪</span>
+          <div class="card-title">app.js</div>
+          <div class="card-body">Entry point hai. Express setup, database connect, global middleware, aur routers mount karna — sab yahan hota hai.</div>
+        </div>
+        <div class="card reveal reveal-delay-2">
+          <span class="card-icon">🗺️</span>
+          <div class="card-title">routes/</div>
+          <div class="card-body">Sirf URLs define karo. Controller functions ko call karo. Business logic yahan nahi aati. Clean aur simple.</div>
+        </div>
+        <div class="card reveal reveal-delay-3">
+          <span class="card-icon">🧠</span>
+          <div class="card-title">controllers/</div>
+          <div class="card-body">Asli kaam yahan hota hai. Data process karo, model se baat karo, response tayyar karo.</div>
+        </div>
+        <div class="card reveal reveal-delay-1">
+          <span class="card-icon">🗃️</span>
+          <div class="card-title">models/</div>
+          <div class="card-body">Database ka structure yahan define hota hai. Mongoose schemas, queries — sab data-related kaam.</div>
+        </div>
+        <div class="card reveal reveal-delay-2">
+          <span class="card-icon">🔧</span>
+          <div class="card-title">middleware/</div>
+          <div class="card-body">Reusable middleware functions. Auth check, logging, validation — baar baar use hone waale functions.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 6: REQUEST FLOW ==================== -->
+    <section id="requestflow">
+      <div class="section-header reveal">
+        <div class="section-number">06</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">Request ka Safar — <span class="gradient-text">Step by Step</span></h2>
+          <p class="section-sub">Client se server aur wapas — complete journey</p>
+        </div>
+      </div>
+
+      <p class="prose reveal">
+        Chalein dekhte hain — jab koi browser <code>GET /api/users/123</code> request bhejta hai, toh kya hota hai? Har step carefully samjho.
+      </p>
+
+      <div class="flow reveal">
+        <div class="flow-item">
+          <div class="flow-num">1</div>
+          <span>🌐 <strong>Client</strong> ne request bheji: <code>GET /api/users/123</code></span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">2</div>
+          <span>📥 <strong>app.js</strong> ne request receive ki</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">3</div>
+          <span>🔄 <strong>Global Middleware</strong> chalye — <code>express.json()</code>, logging, etc.</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">4</div>
+          <span>🗺️ <strong>app.js</strong> ne path <code>/api/users</code> match kiya → <code>usersRouter</code> pe bhej diya</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">5</div>
+          <span>🔒 <strong>Router Middleware</strong> — authentication check hua</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">6</div>
+          <span>🎯 <strong>Router</strong> ne <code>/:id</code> match kiya → <code>getUserById()</code> controller call hua</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">7</div>
+          <span>🗃️ <strong>Controller</strong> ne <code>User.findById(123)</code> se database se data manga</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">8</div>
+          <span>✅ <strong>Controller</strong> ne <code>res.json(userData)</code> se response bheja</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-item">
+          <div class="flow-num">9</div>
+          <span>🌐 <strong>Client</strong> ko JSON data mila!</span>
+        </div>
+      </div>
+
+      <div class="alert alert-exam reveal">
+        <span class="alert-icon">🎓</span>
+        <div class="alert-content">
+          <div class="alert-title">EXAM TIP — Request Flow</div>
+          Exam mein agar poochha jaye "Express app mein request kaise travel karta hai?" — yaad rakho: <strong>Client → Global Middleware → Router → Router Middleware → Route Handler → Controller → Model → Response</strong>. Yeh sequence bahut important hai!
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 7: LIVE DEMO ==================== -->
+    <section id="demo">
+      <div class="section-header reveal">
+        <div class="section-number">07</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">Live Demo — <span class="gradient-text">Try Karo!</span></h2>
+          <p class="section-sub">Express routing aur middleware simulate karo</p>
+        </div>
+      </div>
+
+      <div class="demo-box reveal">
+        <div class="demo-title">🧪 Route Simulator — Dekho kya hoga</div>
+        <div class="demo-row">
+          <select class="demo-select" id="httpMethod">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+          <input type="text" class="demo-input" id="routePath" placeholder="/api/users/123" value="/api/users/123">
+          <button class="btn" onclick="simulateRoute()">Request Bhejo ▶</button>
+        </div>
+        <div class="demo-result" id="demoResult">🕐 Result yahan dikhega...</div>
+      </div>
+
+      <div class="demo-box reveal">
+        <div class="demo-title">🔧 Middleware Chain Builder</div>
+        <p class="prose" style="margin-bottom:16px;">Yahan middleware add karo aur dekhte hain kaise execute hote hain order mein:</p>
+        <div class="demo-row">
+          <input type="text" class="demo-input" id="middlewareName" placeholder="Middleware ka naam (e.g., auth, logger)">
+          <button class="btn" onclick="addMiddleware()">+ Add</button>
+          <button class="btn" style="background: linear-gradient(135deg,#ef4444,#b91c1c); color:white;" onclick="resetMiddleware()">Reset</button>
+        </div>
+        <div class="demo-result" id="middlewareResult" style="min-height: 100px;">Middleware chain yahan dikhegi...</div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 8: QUIZ ==================== -->
+    <section id="quiz">
+      <div class="section-header reveal">
+        <div class="section-number">08</div>
+        <div class="section-title-wrap">
+          <h2 class="section-title">Quiz — <span class="gradient-text">Test Karo Apne Aap Ko</span></h2>
+          <p class="section-sub">10 sawalaat — aur dekhte hain kitna seekha!</p>
+        </div>
+      </div>
+
+      <div id="quizContainer"></div>
+
+      <div class="quiz-score-bar" id="scoreBar" style="display:none;">
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">AAPKA SCORE</div>
+        <div class="score-display" id="scoreDisplay">0/10</div>
+        <div style="font-size:0.9rem; color:var(--text-secondary); margin-top:12px;" id="scoreMsg"></div>
+        <button class="btn" style="margin-top:20px;" onclick="resetQuiz()">Quiz Dobara Do 🔄</button>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-logo">⚡ CSC337 — Express.js</div>
+      <div class="footer-text">Advanced Web Technologies &nbsp;•&nbsp; Lecture 04 Notes &nbsp;•&nbsp; Happy Learning! 🚀</div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  /* ============================================
+     PROGRESS BAR
+  ============================================ */
+  window.addEventListener('scroll', () => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (window.scrollY / total) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+  });
+
+  /* ============================================
+     SIDEBAR TOGGLE (mobile)
+  ============================================ */
+  const hamburger = document.getElementById('hamburger');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+
+  hamburger.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+  });
+
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+  });
+
+  /* ============================================
+     ACTIVE SIDEBAR LINK (on scroll)
+  ============================================ */
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  /* ============================================
+     REVEAL ON SCROLL
+  ============================================ */
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  revealEls.forEach(el => revealObserver.observe(el));
+
+  /* ============================================
+     DEMO: ROUTE SIMULATOR
+  ============================================ */
+  function simulateRoute() {
+    const method = document.getElementById('httpMethod').value;
+    const path = document.getElementById('routePath').value.trim() || '/';
+    const result = document.getElementById('demoResult');
+
+    // Simple route matching
+    const steps = [];
+    steps.push(`📥 Request received: ${method} ${path}`);
+    steps.push(`🔄 Global middleware chal raha hai...`);
+    steps.push(`   ✔ express.json() — JSON parsing ready`);
+    steps.push(`   ✔ Logger — ${new Date().toISOString()} ${method} ${path}`);
+
+    // Match path patterns
+    if (path.startsWith('/api/users')) {
+      steps.push(`🗺️ Path match: /api/users → usersRouter`);
+      const parts = path.split('/');
+      if (parts.length > 3 && parts[3]) {
+        steps.push(`   🎯 Route match: /:id → id = "${parts[3]}"`);
+        if (method === 'GET') steps.push(`   📦 getUserById("${parts[3]}") controller`);
+        if (method === 'PUT') steps.push(`   ✏️ updateUser("${parts[3]}") controller`);
+        if (method === 'DELETE') steps.push(`   🗑️ deleteUser("${parts[3]}") controller`);
+      } else {
+        if (method === 'GET') steps.push(`   🎯 Route match: / → getAllUsers() controller`);
+        if (method === 'POST') steps.push(`   🎯 Route match: / → createUser() controller`);
+      }
+    } else if (path === '/' || path === '') {
+      steps.push(`🏠 Root route match`);
+      steps.push(`   ✔ "Hello World!" response`);
+    } else {
+      steps.push(`❌ Koi route nahi mila!`);
+      steps.push(`🔴 404 Not Found response bheja gaya`);
+    }
+
+    if (method === 'GET') steps.push(`✅ Status: 200 OK — Data bhej diya`);
+    else if (method === 'POST') steps.push(`✅ Status: 201 Created — Resource ban gaya`);
+    else if (method === 'DELETE') steps.push(`✅ Status: 200 OK — Delete ho gaya`);
+    else steps.push(`✅ Status: 200 OK — Update ho gaya`);
+
+    result.textContent = steps.join('\n');
+  }
+
+  /* ============================================
+     DEMO: MIDDLEWARE BUILDER
+  ============================================ */
+  let middlewareChain = [];
+
+  function addMiddleware() {
+    const input = document.getElementById('middlewareName');
+    const name = input.value.trim();
+    if (!name) return;
+    middlewareChain.push(name);
+    input.value = '';
+    renderMiddlewareChain();
+  }
+
+  function resetMiddleware() {
+    middlewareChain = [];
+    document.getElementById('middlewareResult').textContent = 'Middleware chain yahan dikhegi...';
+  }
+
+  function renderMiddlewareChain() {
+    const result = document.getElementById('middlewareResult');
+    if (middlewareChain.length === 0) {
+      result.textContent = 'Middleware chain yahan dikhegi...';
+      return;
+    }
+
+    let output = '🚀 Request aayi!\n\n';
+    middlewareChain.forEach((mw, i) => {
+      output += `${i + 1}. [${mw}] middleware chala → next() call kiya\n`;
+    });
+    output += `\n✅ Final route handler pe pahunchi request!`;
+    result.textContent = output;
+  }
+
+  /* ============================================
+     QUIZ
+  ============================================ */
+  const quizData = [
+    {
+      q: "Express.js ko kaun sa word best describe karta hai?",
+      opts: ["Heavy framework", "Minimalist framework", "Database manager", "Frontend library"],
+      ans: 1
+    },
+    {
+      q: "Middleware mein 'next()' call karna kab zaroori hai?",
+      opts: ["Kabhi nahi", "Sirf error mein", "Jab request aage bhejna ho", "Response bhejne ke baad"],
+      ans: 2
+    },
+    {
+      q: "Route parameters req.params mein milte hain. Route /:id ke liye URL /users/42 mein req.params.id kya hoga?",
+      opts: ["/users/42", "users", "42", "undefined"],
+      ans: 2
+    },
+    {
+      q: "Error-handling middleware ke kitne parameters hote hain?",
+      opts: ["2", "3", "4", "5"],
+      ans: 2
+    },
+    {
+      q: "express.Router() kisliye use kiya jaata hai?",
+      opts: ["Database connect karne ke liye", "Routes ko modular banana ke liye", "JSON parse karne ke liye", "Server start karne ke liye"],
+      ans: 1
+    },
+    {
+      q: "Naya data create karne ke liye kaunsa HTTP method use hota hai?",
+      opts: ["GET", "DELETE", "POST", "PUT"],
+      ans: 2
+    },
+    {
+      q: "app.use(express.json()) kisliye use hota hai?",
+      opts: ["Static files serve karne ke liye", "Request body ko JSON mein parse karne ke liye", "Error handle karne ke liye", "Router mount karne ke liye"],
+      ans: 1
+    },
+    {
+      q: "Controllers folder mein kya hota hai?",
+      opts: ["Route definitions", "Database schemas", "Business logic aur request handlers", "Static files"],
+      ans: 2
+    },
+    {
+      q: "Middleware execute karne ka order depend karta hai:",
+      opts: ["File name pe", "Jis order mein app.use() call kiya gaya", "HTTP method pe", "URL length pe"],
+      ans: 1
+    },
+    {
+      q: "app.use('/api/users', usersRouter) ka matlab kya hai?",
+      opts: ["Users file delete karo", "/api/users path pe saari requests usersRouter ko do", "Users ka database connect karo", "Static users folder serve karo"],
+      ans: 1
+    }
+  ];
+
+  let answers = new Array(quizData.length).fill(null);
+  let answered = new Array(quizData.length).fill(false);
+
+  function buildQuiz() {
+    const container = document.getElementById('quizContainer');
+    container.innerHTML = '';
+
+    quizData.forEach((q, qi) => {
+      const letters = ['A', 'B', 'C', 'D'];
+      const card = document.createElement('div');
+      card.className = 'quiz-card reveal';
+      card.innerHTML = `
+        <div class="quiz-q"><span>Q${qi + 1}</span>${q.q}</div>
+        <div class="quiz-options" id="opts-${qi}">
+          ${q.opts.map((opt, oi) => `
+            <div class="quiz-opt" id="opt-${qi}-${oi}" onclick="selectAnswer(${qi}, ${oi})">
+              <span class="opt-letter">${letters[oi]}</span>
+              ${opt}
+            </div>
+          `).join('')}
+        </div>
+        <div class="quiz-feedback" id="feedback-${qi}"></div>
+      `;
+      container.appendChild(card);
+    });
+
+    // Re-observe new elements
+    document.querySelectorAll('.quiz-card').forEach(el => revealObserver.observe(el));
+  }
+
+  function selectAnswer(qi, oi) {
+    if (answered[qi]) return;
+    answered[qi] = true;
+    answers[qi] = oi;
+
+    const correct = quizData[qi].ans;
+    const opts = document.querySelectorAll(`#opts-${qi} .quiz-opt`);
+    const feedback = document.getElementById(`feedback-${qi}`);
+
+    opts.forEach((opt, idx) => {
+      if (idx === correct) opt.classList.add('correct');
+      else if (idx === oi && oi !== correct) opt.classList.add('wrong');
+    });
+
+    if (oi === correct) {
+      feedback.style.display = 'block';
+      feedback.style.background = 'rgba(16,185,129,0.12)';
+      feedback.style.border = '1px solid rgba(16,185,129,0.3)';
+      feedback.style.color = '#6ee7b7';
+      feedback.textContent = '✅ Bilkul sahi! Shababash!';
+    } else {
+      feedback.style.display = 'block';
+      feedback.style.background = 'rgba(239,68,68,0.1)';
+      feedback.style.border = '1px solid rgba(239,68,68,0.3)';
+      feedback.style.color = '#fca5a5';
+      feedback.textContent = `❌ Galat! Sahi jawab: ${['A','B','C','D'][correct]} — ${quizData[qi].opts[correct]}`;
+    }
+
+    checkQuizComplete();
+  }
+
+  function checkQuizComplete() {
+    if (answered.every(a => a)) {
+      const score = answers.reduce((acc, ans, i) => acc + (ans === quizData[i].ans ? 1 : 0), 0);
+      const scoreBar = document.getElementById('scoreBar');
+      scoreBar.style.display = 'block';
+      document.getElementById('scoreDisplay').textContent = `${score}/10`;
+
+      let msg = '';
+      if (score === 10) msg = '🏆 Perfect Score! Aap Express.js expert hain!';
+      else if (score >= 7) msg = '🎉 Bahut acha! Aap concept samajh gaye hain!';
+      else if (score >= 5) msg = '👍 Theek hai! Thodi aur practice karo!';
+      else msg = '📚 Notes dobara parho — aap kar sakte ho!';
+
+      document.getElementById('scoreMsg').textContent = msg;
+      scoreBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function resetQuiz() {
+    answers = new Array(quizData.length).fill(null);
+    answered = new Array(quizData.length).fill(false);
+    document.getElementById('scoreBar').style.display = 'none';
+    buildQuiz();
+    document.getElementById('quizContainer').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Init
+  buildQuiz();
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

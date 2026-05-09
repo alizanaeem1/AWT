@@ -1,12 +1,20 @@
 const fs = require("fs");
 const path = require("path");
-const { BrowserWindow, dialog, shell } = require("electron");
+const { BrowserWindow, dialog, shell, app } = require("electron");
 const authService = require("../services/authService");
 const semesterService = require("../services/semesterService");
 const subjectService = require("../services/subjectService");
 const assignmentService = require("../services/assignmentService");
 const fileService = require("../services/fileService");
 const analyticsService = require("../services/analyticsService");
+const timetableService = require("../services/timetableService");
+function loadAiGenerateService() {
+  const resolved = require.resolve("../services/aiGenerateService");
+  if (!app.isPackaged) {
+    delete require.cache[resolved];
+  }
+  return require("../services/aiGenerateService.js");
+}
 
 function wrap(handler) {
   return async (_event, payload) => {
@@ -44,6 +52,7 @@ function registerIpcHandlers(ipcMain, Notification) {
   );
 
   ipcMain.handle("file:list", wrap(fileService.list));
+  ipcMain.handle("file:listByAssignment", wrap(fileService.listByAssignment));
   ipcMain.handle("file:add", wrap(fileService.add));
   ipcMain.handle("file:remove", wrap(({ fileId, semesterId }) => fileService.remove(fileId, semesterId)));
   ipcMain.handle("file:pick", async () => {
@@ -84,6 +93,20 @@ function registerIpcHandlers(ipcMain, Notification) {
   });
 
   ipcMain.handle("analytics:dashboard", wrap(analyticsService.getDashboard));
+
+  ipcMain.handle("timetable:listBySemester", wrap(timetableService.listBySemester));
+  ipcMain.handle("timetable:save", wrap(timetableService.save));
+  ipcMain.handle("timetable:remove", wrap(timetableService.remove));
+
+  ipcMain.handle(
+    "ai:generate",
+    wrap((payload) => {
+      const { generateDailyProgressContent } = loadAiGenerateService();
+      return generateDailyProgressContent(payload?.text ?? "", {
+        attachment: payload?.attachment
+      });
+    })
+  );
   ipcMain.handle("report:gpaPdf", async (_event, payload) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { ok: false, error: "No active window found." };
@@ -106,12 +129,30 @@ function registerIpcHandlers(ipcMain, Notification) {
   });
 
   ipcMain.handle("notify:desktop", async (_event, payload) => {
+    const title = payload?.title || "Reminder";
+    const body = payload?.body || "You have an upcoming task.";
     if (Notification.isSupported()) {
-      new Notification({
-        title: payload.title || "Reminder",
-        body: payload.body || "You have an upcoming task."
-      }).show();
+      try {
+        new Notification({ title, body }).show();
+      } catch {
+        /* ignore */
+      }
     }
+    /** Mirror OS notification into the in-app Notifications list (bell + Notifications page). */
+    const inboxPayload = {
+      title,
+      body,
+      dedupeKey: payload?.dedupeKey ?? null,
+      kind: typeof payload?.kind === "string" ? payload.kind : "general"
+    };
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (win.isDestroyed() || win.webContents.isDestroyed()) return;
+      try {
+        win.webContents.send("notifications:inboxMirror", inboxPayload);
+      } catch {
+        /* ignore */
+      }
+    });
     return { ok: true };
   });
 

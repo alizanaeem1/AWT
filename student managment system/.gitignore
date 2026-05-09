@@ -3,6 +3,7 @@ dist
 release
 .env
 .env.*
+!.env.example
 *.log
 student-management.db
 uploads

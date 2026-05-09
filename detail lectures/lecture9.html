@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TypeScript — Classes, Inheritance & Interfaces</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================================================
+   ROOT VARIABLES
+================================================ */
+:root {
+  --bg:         #07090f;
+  --bg2:        #0c1220;
+  --bg3:        #101828;
+  --card:       #111926;
+  --card-h:     #162135;
+  --b1:         #1c2e47;
+  --b2:         #254060;
+  --cyan:       #38bdf8;
+  --violet:     #818cf8;
+  --emerald:    #34d399;
+  --amber:      #fbbf24;
+  --rose:       #fb7185;
+  --txt:        #e2eaf8;
+  --txt2:       #7fa0be;
+  --txt3:       #3d5a78;
+  --sw:         260px;
+}
+
+/* ================================================
+   RESET
+================================================ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--txt);
+  overflow-x:hidden;
+  line-height:1.75;
+}
+
+/* ================================================
+   PROGRESS BAR
+================================================ */
+#prog{
+  position:fixed;top:0;left:0;
+  height:3px;width:0%;
+  background:linear-gradient(90deg,var(--cyan),var(--violet),var(--emerald));
+  z-index:9999;
+  box-shadow:0 0 12px var(--cyan);
+  transition:width .08s linear;
+}
+
+/* ================================================
+   SIDEBAR
+================================================ */
+#sb{
+  position:fixed;top:0;left:0;
+  width:var(--sw);height:100vh;
+  background:var(--bg2);
+  border-right:1px solid var(--b1);
+  overflow-y:auto;z-index:800;
+  display:flex;flex-direction:column;
+  transition:transform .3s ease;
+}
+#sb::-webkit-scrollbar{width:3px;}
+#sb::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+.sb-head{
+  padding:22px 18px 16px;
+  border-bottom:1px solid var(--b1);
+}
+.sb-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#38bdf815;border:1px solid var(--cyan);
+  border-radius:20px;padding:4px 12px;
+  font-family:'Fira Code',monospace;font-size:.68rem;
+  color:var(--cyan);margin-bottom:8px;
+}
+.sb-head h2{font-size:.95rem;font-weight:700;line-height:1.3;}
+.sb-head p{font-size:.7rem;color:var(--txt3);margin-top:3px;}
+
+.sb-nav{padding:10px 0;flex:1;}
+.sb-sec{
+  font-size:.6rem;font-weight:700;
+  color:var(--txt3);letter-spacing:.15em;
+  text-transform:uppercase;padding:10px 18px 4px;
+  font-family:'Fira Code',monospace;
+}
+.nl{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 18px;color:var(--txt2);
+  text-decoration:none;font-size:.8rem;
+  border-left:3px solid transparent;
+  transition:all .2s;cursor:pointer;
+}
+.nl:hover{color:var(--txt);background:#ffffff07;border-left-color:var(--b2);}
+.nl.active{color:var(--cyan);background:#38bdf810;border-left-color:var(--cyan);font-weight:600;}
+.ni{width:18px;text-align:center;flex-shrink:0;}
+
+.sb-foot{
+  padding:12px 18px;border-top:1px solid var(--b1);
+  font-size:.68rem;color:var(--txt3);
+  font-family:'Fira Code',monospace;
+}
+
+/* Mobile toggle */
+#mtog{
+  display:none;position:fixed;
+  top:10px;left:10px;z-index:1000;
+  background:var(--card);border:1px solid var(--b1);
+  color:var(--cyan);width:38px;height:38px;
+  border-radius:8px;font-size:1.1rem;cursor:pointer;
+  align-items:center;justify-content:center;
+}
+#ov{display:none;position:fixed;inset:0;background:#000a;z-index:700;}
+#ov.show{display:block;}
+
+/* ================================================
+   MAIN
+================================================ */
+#main{margin-left:var(--sw);min-height:100vh;}
+
+/* ================================================
+   HERO
+================================================ */
+#hero{
+  padding:72px 56px 60px;
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(ellipse 55% 55% at 85% 40%,#38bdf80c,transparent),
+    radial-gradient(ellipse 35% 50% at 5% 90%,#818cf80a,transparent),
+    var(--bg);
+  border-bottom:1px solid var(--b1);
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(var(--b1) 1px,transparent 1px),
+    linear-gradient(90deg,var(--b1) 1px,transparent 1px);
+  background-size:44px 44px;opacity:.25;
+}
+.h-rel{position:relative;z-index:1;}
+.htags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+.htag{
+  font-family:'Fira Code',monospace;font-size:.68rem;
+  padding:3px 11px;border-radius:20px;border:1px solid;
+}
+.tc{color:var(--cyan);border-color:var(--cyan);background:#38bdf810;}
+.tv{color:var(--violet);border-color:var(--violet);background:#818cf810;}
+.te{color:var(--emerald);border-color:var(--emerald);background:#34d39910;}
+.ta{color:var(--amber);border-color:var(--amber);background:#fbbf2410;}
+
+h1.ht{
+  font-family:'Outfit',sans-serif;
+  font-size:clamp(1.9rem,3.5vw,3rem);
+  font-weight:800;line-height:1.15;margin-bottom:14px;
+}
+.hc{color:var(--cyan);}
+.hv{color:var(--violet);}
+.he{color:var(--emerald);}
+
+.hsub{
+  font-size:1rem;color:var(--txt2);
+  max-width:600px;margin-bottom:28px;font-weight:300;
+}
+.hstats{display:flex;gap:16px;flex-wrap:wrap;}
+.hstat{
+  background:var(--card);border:1px solid var(--b1);
+  border-radius:10px;padding:12px 18px;text-align:center;
+  min-width:80px;
+}
+.hsn{
+  font-family:'Fira Code',monospace;
+  font-size:1.4rem;font-weight:700;
+  color:var(--cyan);display:block;
+}
+.hsl{font-size:.68rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;}
+
+/* ================================================
+   SECTIONS
+================================================ */
+.sec{
+  padding:56px 56px;
+  border-bottom:1px solid var(--b1);
+  opacity:0;transform:translateY(28px);
+  transition:opacity .55s ease,transform .55s ease;
+}
+.sec.vis{opacity:1;transform:translateY(0);}
+
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.si{
+  width:42px;height:42px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;flex-shrink:0;
+}
+.ic{background:#38bdf818;border:1px solid var(--cyan);}
+.iv{background:#818cf818;border:1px solid var(--violet);}
+.ie{background:#34d39918;border:1px solid var(--emerald);}
+.ia{background:#fbbf2418;border:1px solid var(--amber);}
+.ir{background:#fb718518;border:1px solid var(--rose);}
+
+.stit{font-family:'Outfit',sans-serif;font-size:1.55rem;font-weight:700;}
+.ssub{font-size:.8rem;color:var(--txt3);font-family:'Fira Code',monospace;margin-top:2px;}
+
+/* ================================================
+   CARDS
+================================================ */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:26px;}
+.card{
+  background:var(--card);border:1px solid var(--b1);
+  border-radius:12px;padding:20px;
+  transition:all .3s;position:relative;overflow:hidden;
+}
+.card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  opacity:0;transition:opacity .3s;
+}
+.card:hover{background:var(--card-h);border-color:var(--b2);transform:translateY(-3px);box-shadow:0 10px 36px #38bdf808;}
+.card:hover::after{opacity:1;}
+.acc::after{background:linear-gradient(90deg,var(--cyan),var(--emerald));}
+.acv::after{background:linear-gradient(90deg,var(--violet),var(--cyan));}
+.ace::after{background:linear-gradient(90deg,var(--emerald),var(--amber));}
+.aca::after{background:linear-gradient(90deg,var(--amber),var(--rose));}
+
+.cci{font-size:1.7rem;margin-bottom:8px;}
+.cct{font-size:.9rem;font-weight:700;color:var(--txt);margin-bottom:7px;}
+.ccb{font-size:.8rem;color:var(--txt2);line-height:1.7;}
+.ccb code{
+  font-family:'Fira Code',monospace;
+  background:var(--bg3);border:1px solid var(--b1);
+  padding:1px 5px;border-radius:3px;color:var(--cyan);font-size:.78em;
+}
+
+/* ================================================
+   CODE BLOCKS
+================================================ */
+.cb{background:#040810;border:1px solid var(--b1);border-radius:10px;margin:18px 0;overflow:hidden;}
+.cbh{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;background:var(--bg3);border-bottom:1px solid var(--b1);
+}
+.cbl{
+  font-family:'Fira Code',monospace;font-size:.68rem;
+  color:var(--cyan);font-weight:700;
+  display:flex;align-items:center;gap:8px;
+}
+.dots{display:flex;gap:5px;}
+.d{width:10px;height:10px;border-radius:50%;}
+.dr{background:#ff5f57;}.dy{background:#febc2e;}.dg{background:#28c840;}
+.ccp{
+  background:transparent;border:1px solid var(--b1);
+  color:var(--txt3);padding:3px 9px;border-radius:5px;
+  font-size:.65rem;cursor:pointer;font-family:'Fira Code',monospace;
+  transition:all .2s;
+}
+.ccp:hover{border-color:var(--cyan);color:var(--cyan);}
+.cco{
+  padding:16px 18px;overflow-x:auto;
+  font-family:'Fira Code',monospace;
+  font-size:.78rem;line-height:1.85;color:#c8d8ee;
+}
+.cco::-webkit-scrollbar{height:3px;}
+.cco::-webkit-scrollbar-thumb{background:var(--b2);}
+
+/* Syntax */
+.kw{color:#c792ea;}.fn{color:#82aaff;}.str{color:#c3e88d;}
+.num{color:#f78c6c;}.cm{color:#4a6a80;font-style:italic;}
+.cl{color:#ffcb6b;}.px{color:#89ddff;}.dc{color:#546e7a;}
+
+/* ================================================
+   TABLES
+================================================ */
+.tw{overflow-x:auto;margin:18px 0;border-radius:10px;border:1px solid var(--b1);}
+table{width:100%;border-collapse:collapse;font-size:.8rem;}
+thead tr{background:var(--card);border-bottom:1px solid var(--b2);}
+thead th{
+  padding:12px 14px;text-align:left;
+  font-family:'Fira Code',monospace;font-size:.68rem;
+  color:var(--cyan);letter-spacing:.05em;text-transform:uppercase;
+}
+tbody tr{border-bottom:1px solid var(--b1);transition:background .2s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#ffffff04;}
+td{padding:11px 14px;color:var(--txt2);vertical-align:top;}
+td:first-child{color:var(--txt);font-weight:600;}
+.bg{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.65rem;font-family:'Fira Code',monospace;font-weight:700;}
+.bgc{background:#38bdf820;color:var(--cyan);border:1px solid var(--cyan);}
+.bgv{background:#818cf820;color:var(--violet);border:1px solid var(--violet);}
+.bge{background:#34d39920;color:var(--emerald);border:1px solid var(--emerald);}
+.bgr{background:#fb718520;color:var(--rose);border:1px solid var(--rose);}
+.bga{background:#fbbf2420;color:var(--amber);border:1px solid var(--amber);}
+
+/* ================================================
+   ALERTS
+================================================ */
+.al{
+  display:flex;gap:12px;padding:14px 16px;
+  border-radius:10px;margin:14px 0;font-size:.81rem;
+}
+.alico{font-size:1rem;flex-shrink:0;margin-top:2px;}
+.altx strong{
+  display:block;font-size:.72rem;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;
+  margin-bottom:4px;font-family:'Fira Code',monospace;
+}
+.alt{background:#34d39910;border:1px solid #34d39940;color:#a8ecd4;}
+.alt strong{color:var(--emerald);}
+.alw{background:#fbbf2410;border:1px solid #fbbf2440;color:#ecdda8;}
+.alw strong{color:var(--amber);}
+.ale{background:#818cf810;border:1px solid #818cf840;color:#c4c8f8;}
+.ale strong{color:var(--violet);}
+.ali{background:#38bdf810;border:1px solid #38bdf840;color:#a8d8f0;}
+.ali strong{color:var(--cyan);}
+.alr{background:#fb718510;border:1px solid #fb718540;color:#f8c4cc;}
+.alr strong{color:var(--rose);}
+
+/* ================================================
+   PROSE
+================================================ */
+.pr{font-size:.86rem;color:var(--txt2);line-height:1.85;margin-bottom:14px;}
+.pr strong{color:var(--txt);}
+.pr code{
+  font-family:'Fira Code',monospace;background:var(--card);
+  border:1px solid var(--b1);padding:1px 6px;border-radius:4px;
+  color:var(--cyan);font-size:.8em;
+}
+
+/* Step list */
+.sl{list-style:none;margin:14px 0;}
+.sl li{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.sn{
+  min-width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan),var(--emerald));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:.68rem;font-weight:700;
+  color:#000;flex-shrink:0;margin-top:3px;
+}
+.st{font-size:.83rem;color:var(--txt2);line-height:1.65;}
+.st strong{color:var(--txt);}
+
+/* Flow */
+.flow{
+  display:flex;align-items:center;gap:0;flex-wrap:wrap;
+  margin:20px 0;background:var(--card);border:1px solid var(--b1);
+  border-radius:12px;padding:20px 24px;overflow-x:auto;
+}
+.fs{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:80px;}
+.fb{
+  background:var(--bg3);border:1px solid var(--b2);border-radius:8px;
+  padding:8px 12px;font-size:.72rem;font-weight:600;
+  color:var(--txt);white-space:nowrap;font-family:'Fira Code',monospace;
+}
+.fl2{font-size:.62rem;color:var(--txt3);margin-top:4px;}
+.fa{color:var(--cyan);font-size:1.1rem;padding:0 5px;margin-bottom:16px;}
+.fb.cc{border-color:var(--cyan);color:var(--cyan);}
+.fb.cv{border-color:var(--violet);color:var(--violet);}
+.fb.ce{border-color:var(--emerald);color:var(--emerald);}
+.fb.ca{border-color:var(--amber);color:var(--amber);}
+
+/* Two-col */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:680px){.two{grid-template-columns:1fr;}}
+
+/* ================================================
+   LIVE DEMO
+================================================ */
+.demo{
+  background:var(--card);border:1px solid var(--b1);
+  border-radius:12px;padding:24px;margin:18px 0;
+}
+.demotit{
+  font-size:.82rem;font-weight:700;color:var(--emerald);
+  font-family:'Fira Code',monospace;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.demotit::before{content:'▶';font-size:.68rem;}
+.di{
+  flex:1;min-width:160px;
+  background:var(--bg3);border:1px solid var(--b1);
+  border-radius:8px;padding:9px 13px;
+  color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.83rem;
+  outline:none;transition:border-color .2s;
+}
+.di:focus{border-color:var(--cyan);}
+.di::placeholder{color:var(--txt3);}
+.ds{
+  background:var(--bg3);border:1px solid var(--b1);
+  border-radius:8px;padding:9px 13px;color:var(--txt);
+  font-family:'DM Sans',sans-serif;font-size:.83rem;outline:none;
+}
+.db{
+  padding:9px 18px;background:linear-gradient(135deg,var(--cyan),#0ea5e9);
+  color:#000;border:none;border-radius:8px;font-weight:700;
+  font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .2s;
+}
+.db:hover{transform:translateY(-1px);box-shadow:0 6px 18px #38bdf840;}
+.dr2{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.do{
+  background:#040810;border:1px solid var(--b1);border-radius:8px;
+  padding:13px;font-family:'Fira Code',monospace;font-size:.78rem;
+  min-height:70px;color:var(--emerald);white-space:pre-wrap;
+}
+
+/* OOP explorer */
+.obj-card{
+  background:var(--bg3);border:1px solid var(--b1);
+  border-radius:8px;padding:12px;margin-bottom:8px;
+  font-size:.78rem;font-family:'Fira Code',monospace;
+  display:flex;align-items:center;gap:10px;
+}
+.obj-type{
+  padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:700;
+}
+
+/* ================================================
+   QUIZ
+================================================ */
+.qcard{
+  background:var(--card);border:1px solid var(--b1);
+  border-radius:12px;padding:22px;margin-bottom:16px;
+  transition:border-color .3s;
+}
+.qcard.ok{border-color:var(--emerald);background:#34d39906;}
+.qcard.no{border-color:var(--rose);background:#fb718506;}
+.qq{font-size:.88rem;font-weight:600;color:var(--txt);margin-bottom:14px;line-height:1.5;}
+.qq .qn{font-family:'Fira Code',monospace;color:var(--cyan);font-size:.75rem;margin-right:6px;}
+.qopts{display:flex;flex-direction:column;gap:7px;}
+.qo{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 13px;background:var(--bg3);border:1px solid var(--b1);
+  border-radius:8px;cursor:pointer;font-size:.8rem;
+  color:var(--txt2);transition:all .2s;user-select:none;
+}
+.qo:hover{border-color:var(--b2);color:var(--txt);}
+.qo.sc{background:#34d39912;border-color:var(--emerald);color:var(--emerald);}
+.qo.sw{background:#fb718512;border-color:var(--rose);color:var(--rose);}
+.qo.rc{background:#34d39908;border-color:var(--emerald);color:var(--emerald);}
+.qkey{
+  font-family:'Fira Code',monospace;font-size:.7rem;font-weight:700;
+  width:21px;height:21px;border-radius:4px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--txt3);
+}
+.qfb{margin-top:9px;padding:7px 11px;border-radius:6px;font-size:.76rem;display:none;}
+.qfb.show{display:block;}
+.qfb.cf{background:#34d39912;color:var(--emerald);}
+.qfb.wf{background:#fb718512;color:#f8a0a8;}
+
+.qsbar{
+  background:var(--card);border:1px solid var(--b1);border-radius:12px;
+  padding:18px 22px;margin-top:18px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+}
+.qsc{font-family:'Fira Code',monospace;font-size:1.3rem;font-weight:700;color:var(--cyan);}
+.qst{font-size:.8rem;color:var(--txt2);}
+.qrst{
+  padding:7px 16px;background:transparent;border:1px solid var(--b2);
+  color:var(--txt2);border-radius:8px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:.78rem;transition:all .2s;
+}
+.qrst:hover{border-color:var(--cyan);color:var(--cyan);}
+
+/* ================================================
+   FOOTER
+================================================ */
+footer{
+  background:var(--bg2);border-top:1px solid var(--b1);
+  padding:32px 56px;text-align:center;
+}
+.flogo{font-family:'Fira Code',monospace;font-size:.78rem;color:var(--cyan);margin-bottom:6px;}
+footer p{font-size:.76rem;color:var(--txt3);line-height:1.8;}
+footer strong{color:var(--txt2);}
+
+/* ================================================
+   RESPONSIVE
+================================================ */
+@media(max-width:860px){
+  :root{--sw:0px;}
+  #sb{transform:translateX(-260px);width:260px;}
+  #sb.open{transform:translateX(0);}
+  #mtog{display:flex;}
+  #main{margin-left:0;}
+  .sec,#hero,footer{padding-left:22px;padding-right:22px;}
+  #hero{padding-top:56px;}
+  .cgrid{grid-template-columns:1fr;}
+  .flow{padding:14px;}
+  .hstats{gap:10px;}
+}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+.mb20{margin-bottom:20px;}
+.mt20{margin-top:20px;}
+</style>
+</head>
+<body>
+
+<!-- Progress -->
+<div id="prog"></div>
+
+<!-- Mobile toggle -->
+<button id="mtog" onclick="togSB()" aria-label="Menu">☰</button>
+<div id="ov" onclick="togSB()"></div>
+
+<!-- ================================================
+     SIDEBAR
+================================================ -->
+<aside id="sb">
+  <div class="sb-head">
+    <div class="sb-chip">📘 Lecture 09</div>
+    <h2>TypeScript OOP</h2>
+    <p>Classes · Inheritance · Interfaces</p>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Shuru Karen</div>
+    <a class="nl active" onclick="goTo('hero')"><span class="ni">🏠</span>Overview</a>
+    <a class="nl" onclick="goTo('intro')"><span class="ni">🧠</span>OOP Kya Hai?</a>
+
+    <div class="sb-sec">Core Topics</div>
+    <a class="nl" onclick="goTo('classes')"><span class="ni">🏗️</span>Classes</a>
+    <a class="nl" onclick="goTo('modifiers')"><span class="ni">🔐</span>Access Modifiers</a>
+    <a class="nl" onclick="goTo('inheritance')"><span class="ni">🧬</span>Inheritance</a>
+    <a class="nl" onclick="goTo('interfaces')"><span class="ni">📋</span>Interfaces</a>
+    <a class="nl" onclick="goTo('compare')"><span class="ni">⚖️</span>Class vs Interface</a>
+
+    <div class="sb-sec">Practice</div>
+    <a class="nl" onclick="goTo('demo')"><span class="ni">🎮</span>Live Demo</a>
+    <a class="nl" onclick="goTo('quiz')"><span class="ni">🧩</span>Quiz (MCQs)</a>
+  </nav>
+  <div class="sb-foot">v1.0 · TypeScript · 2 hrs</div>
+</aside>
+
+<!-- ================================================
+     MAIN
+================================================ -->
+<main id="main">
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="h-rel">
+    <div class="htags">
+      <span class="htag tc">TypeScript</span>
+      <span class="htag tv">OOP</span>
+      <span class="htag te">Classes</span>
+      <span class="htag ta">Lecture 09</span>
+    </div>
+    <h1 class="ht">
+      <span class="hc">TypeScript</span> mein<br>
+      <span class="hv">Classes</span>, <span class="he">Inheritance</span><br>
+      aur Interfaces
+    </h1>
+    <p class="hsub">
+      Roman Urdu mein step-by-step samjhao — bilkul jaise teacher padhata hai. Examples, code snippets, aur interactive quiz ke saath!
+    </p>
+    <div class="hstats">
+      <div class="hstat"><span class="hsn">4</span><span class="hsl">Parts</span></div>
+      <div class="hstat"><span class="hsn">5</span><span class="hsl">Quiz</span></div>
+      <div class="hstat"><span class="hsn">2h</span><span class="hsl">Lecture</span></div>
+      <div class="hstat"><span class="hsn">OOP</span><span class="hsl">Focus</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- OOP INTRO -->
+<section class="sec" id="intro">
+  <div class="sh">
+    <div class="si ic">🧠</div>
+    <div>
+      <div class="stit">OOP Kya Hota Hai?</div>
+      <div class="ssub">Object-Oriented Programming — Basics</div>
+    </div>
+  </div>
+
+  <p class="pr">
+    <strong>OOP (Object-Oriented Programming)</strong> programming ka ek tarika hai jisme hum duniya ki cheezein ko <strong>objects</strong> ki tarah sochte hain. Jaise real life mein ek "car" hoti hai jiske properties hote hain (color, brand) aur kaam bhi (chalana, rokna) — bilkul waise TypeScript mein bhi hum objects banate hain.
+  </p>
+
+  <div class="cgrid">
+    <div class="card acc">
+      <div class="cci">🏗️</div>
+      <div class="cct">Class</div>
+      <div class="ccb">Blueprint ya template. Jaise architect ka naksha jo ke building banane ke liye use hota hai. Ek class se hazaron objects ban sakte hain.</div>
+    </div>
+    <div class="card acv">
+      <div class="cci">📦</div>
+      <div class="cct">Object</div>
+      <div class="ccb">Class ka real instance. Jaise naksha se bani asli building. Har object ki apni values hoti hain.</div>
+    </div>
+    <div class="card ace">
+      <div class="cci">🔐</div>
+      <div class="cct">Encapsulation</div>
+      <div class="ccb">Data ko andar chhupaana. Jaise ATM machine — andar ka circuit nahi dikhta, sirf buttons aur screen dikhte hain.</div>
+    </div>
+    <div class="card aca">
+      <div class="cci">🧬</div>
+      <div class="cct">Inheritance</div>
+      <div class="ccb">Ek class doosri class ke properties aur methods le sakti hai. Jaise bacha parents se traits inherit karta hai.</div>
+    </div>
+  </div>
+
+  <div class="al alt">
+    <span class="alico">💡</span>
+    <div class="altx">
+      <strong>Tip</strong>
+      TypeScript JavaScript ke upar bana hai lekin usme <strong>Types</strong> aur OOP features zyada powerful hain. Java jaisi class support milti hai TypeScript mein!
+    </div>
+  </div>
+</section>
+
+<!-- CLASSES -->
+<section class="sec" id="classes">
+  <div class="sh">
+    <div class="si ic">🏗️</div>
+    <div>
+      <div class="stit">Classes in TypeScript</div>
+      <div class="ssub">Part 1 · 0–30 min</div>
+    </div>
+  </div>
+
+  <p class="pr">
+    <strong>Class</strong> ek blueprint hai jisse hum objects banate hain. Socho jaise ek <strong>Student ka form template</strong> hota hai — usme fields hote hain (naam, age, roll number). Jab koi student form bharta hai, ek naya object banta hai usi template se.
+  </p>
+
+  <p class="pr"><strong>Class mein 3 zaroori cheezein hoti hain:</strong></p>
+
+  <div class="cgrid mb20">
+    <div class="card acc">
+      <div class="cci">📝</div>
+      <div class="cct">Properties</div>
+      <div class="ccb">Class ke variables. Jaise <code>name</code>, <code>age</code>, <code>balance</code>. Object ka data yahan store hota hai.</div>
+    </div>
+    <div class="card acv">
+      <div class="cci">🔧</div>
+      <div class="cct">Constructor</div>
+      <div class="ccb">Khaas function jo object banate waqt ek baar chalta hai. Properties ko starting values deta hai.</div>
+    </div>
+    <div class="card ace">
+      <div class="cci">⚙️</div>
+      <div class="cct">Methods</div>
+      <div class="ccb">Class ke andar ke functions. Object kya kaam karta hai woh yahan define hota hai.</div>
+    </div>
+  </div>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>TypeScript — Student Class</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="cm">// Class banana — Student ka blueprint</span>
+<span class="kw">class</span> <span class="cl">Student</span> {
+  <span class="cm">// Properties (class ke variables)</span>
+  name<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>
+  age<span class="px">:</span>  <span class="kw">number</span><span class="px">;</span>
+
+  <span class="cm">// Constructor — object banate waqt chalta hai</span>
+  <span class="fn">constructor</span>(name<span class="px">:</span> <span class="kw">string</span>, age<span class="px">:</span> <span class="kw">number</span>) {
+    <span class="kw">this</span>.name <span class="px">=</span> name<span class="px">;</span>
+    <span class="kw">this</span>.age  <span class="px">=</span> age<span class="px">;</span>
+  }
+
+  <span class="cm">// Method — student ki info dikhao</span>
+  <span class="fn">display</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`Naam: </span><span class="px">${</span><span class="kw">this</span>.name<span class="px">}</span><span class="str">, Umar: </span><span class="px">${</span><span class="kw">this</span>.age<span class="px">}</span><span class="str">`</span>)<span class="px">;</span>
+  }
+}
+
+<span class="cm">// Object banana (class use karna)</span>
+<span class="kw">const</span> s1 <span class="px">=</span> <span class="kw">new</span> <span class="cl">Student</span>(<span class="str">"Ali"</span>, <span class="num">20</span>)<span class="px">;</span>
+<span class="kw">const</span> s2 <span class="px">=</span> <span class="kw">new</span> <span class="cl">Student</span>(<span class="str">"Sara"</span>, <span class="num">22</span>)<span class="px">;</span>
+
+s1.<span class="fn">display</span>()<span class="px">;</span>  <span class="cm">// Output: Naam: Ali, Umar: 20</span>
+s2.<span class="fn">display</span>()<span class="px">;</span>  <span class="cm">// Output: Naam: Sara, Umar: 22</span></div>
+  </div>
+
+  <div class="al ali">
+    <span class="alico">ℹ️</span>
+    <div class="altx">
+      <strong>Yaad Rakho</strong>
+      <code>new</code> keyword se object banta hai. <code>this</code> keyword current object ko refer karta hai — matlab "is class ke is object ki property."
+    </div>
+  </div>
+
+  <p class="pr mt20"><strong>Real-life example — Bank Account:</strong></p>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>TypeScript — BankAccount Class</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="kw">class</span> <span class="cl">BankAccount</span> {
+  accountNumber<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>
+  balance<span class="px">:</span>       <span class="kw">number</span><span class="px">;</span>
+
+  <span class="fn">constructor</span>(accNum<span class="px">:</span> <span class="kw">string</span>, initialBalance<span class="px">:</span> <span class="kw">number</span>) {
+    <span class="kw">this</span>.accountNumber <span class="px">=</span> accNum<span class="px">;</span>
+    <span class="kw">this</span>.balance        <span class="px">=</span> initialBalance<span class="px">;</span>
+  }
+
+  <span class="fn">deposit</span>(amount<span class="px">:</span> <span class="kw">number</span>)<span class="px">:</span> <span class="kw">void</span> {
+    <span class="kw">this</span>.balance <span class="px">+=</span> amount<span class="px">;</span>
+    console.<span class="fn">log</span>(<span class="str">`Jamah: </span><span class="px">${</span>amount<span class="px">}</span><span class="str">. Baqi: </span><span class="px">${</span><span class="kw">this</span>.balance<span class="px">}</span><span class="str">`</span>)<span class="px">;</span>
+  }
+
+  <span class="fn">withdraw</span>(amount<span class="px">:</span> <span class="kw">number</span>)<span class="px">:</span> <span class="kw">void</span> {
+    <span class="kw">if</span> (amount <span class="px">&gt;</span> <span class="kw">this</span>.balance) {
+      console.<span class="fn">log</span>(<span class="str">"Paisay kam hain!"</span>)<span class="px">;</span>
+    } <span class="kw">else</span> {
+      <span class="kw">this</span>.balance <span class="px">-=</span> amount<span class="px">;</span>
+    }
+  }
+}
+
+<span class="kw">const</span> acc <span class="px">=</span> <span class="kw">new</span> <span class="cl">BankAccount</span>(<span class="str">"PKR-001"</span>, <span class="num">5000</span>)<span class="px">;</span>
+acc.<span class="fn">deposit</span>(<span class="num">2000</span>)<span class="px">;</span>   <span class="cm">// Jamah: 2000. Baqi: 7000</span>
+acc.<span class="fn">withdraw</span>(<span class="num">1000</span>)<span class="px">;</span>  <span class="cm">// Balance: 6000</span></div>
+  </div>
+</section>
+
+<!-- ACCESS MODIFIERS -->
+<section class="sec" id="modifiers">
+  <div class="sh">
+    <div class="si ir">🔐</div>
+    <div>
+      <div class="stit">Access Modifiers</div>
+      <div class="ssub">public · private · protected</div>
+    </div>
+  </div>
+
+  <p class="pr">
+    Access Modifiers control karte hain ke class ki properties aur methods <strong>bahar se access ho sakti hain ya nahi</strong>. Jaise ghar mein kuch cheezein sab ke liye hoti hain (drawing room), kuch sirf family ke liye (bedroom), aur kuch sirf aur bachon ke saath share hoti hain (family secrets).
+  </p>
+
+  <div class="tw mb20">
+    <table>
+      <thead>
+        <tr>
+          <th>Modifier</th><th>Kahan Access?</th><th>Real-life Misal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="bg bgc">public</span></td>
+          <td>Har jagah — class ke andar, bahar, child mein</td>
+          <td>Ghar ka drawing room — sab aa sakte hain</td>
+        </tr>
+        <tr>
+          <td><span class="bg bgr">private</span></td>
+          <td>Sirf usi class ke andar</td>
+          <td>Tizori (safe) — sirf maalik access kar sakta hai</td>
+        </tr>
+        <tr>
+          <td><span class="bg bga">protected</span></td>
+          <td>Class + uski child classes mein</td>
+          <td>Family secret — sirf family jaanti hai</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>Access Modifiers Example</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="kw">class</span> <span class="cl">Person</span> {
+  <span class="kw">public</span>    name<span class="px">:</span>    <span class="kw">string</span><span class="px">;</span>   <span class="cm">// Sab access kar sakte hain</span>
+  <span class="kw">private</span>   password<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>   <span class="cm">// Sirf is class mein</span>
+  <span class="kw">protected</span> salary<span class="px">:</span>   <span class="kw">number</span><span class="px">;</span>   <span class="cm">// Class + children</span>
+
+  <span class="fn">constructor</span>(name<span class="px">:</span> <span class="kw">string</span>, pass<span class="px">:</span> <span class="kw">string</span>, sal<span class="px">:</span> <span class="kw">number</span>) {
+    <span class="kw">this</span>.name     <span class="px">=</span> name<span class="px">;</span>
+    <span class="kw">this</span>.password <span class="px">=</span> pass<span class="px">;</span>
+    <span class="kw">this</span>.salary   <span class="px">=</span> sal<span class="px">;</span>
+  }
+}
+
+<span class="kw">const</span> p <span class="px">=</span> <span class="kw">new</span> <span class="cl">Person</span>(<span class="str">"Ali"</span>, <span class="str">"abc123"</span>, <span class="num">50000</span>)<span class="px">;</span>
+console.<span class="fn">log</span>(p.name)<span class="px">;</span>      <span class="cm">// ✅ Theek — public hai</span>
+<span class="cm">// console.log(p.password);  ❌ Error — private hai!</span>
+<span class="cm">// console.log(p.salary);    ❌ Error — protected hai!</span></div>
+  </div>
+
+  <div class="two mt20">
+    <div class="al alw">
+      <span class="alico">⚠️</span>
+      <div class="altx">
+        <strong>Common Mistake</strong>
+        Private property ko bahar access karne ki koshish karna TypeScript mein <strong>compile-time error</strong> deta hai. Agar access chahiye to getter/setter method banao.
+      </div>
+    </div>
+    <div class="al ale">
+      <span class="alico">🎯</span>
+      <div class="altx">
+        <strong>Exam Tip</strong>
+        "private vs protected ka farq" aksar exam mein aata hai. Yaad rakho: private = sirf woh class, protected = woh + uski children.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INHERITANCE -->
+<section class="sec" id="inheritance">
+  <div class="sh">
+    <div class="si iv">🧬</div>
+    <div>
+      <div class="stit">Inheritance — Wiraasat</div>
+      <div class="ssub">Part 2 · 30–60 min</div>
+    </div>
+  </div>
+
+  <p class="pr">
+    <strong>Inheritance</strong> ka matlab hai ek class doosri class se properties aur methods <strong>le sakti hai</strong> — dobara likhe bina! Jaise bacha apne walidain se kuch khasiyatein inherit karta hai (aankhen, rang, qad), bilkul waise child class apni parent class se code inherit karti hai.
+  </p>
+
+  <div class="flow mb20">
+    <div class="fs">
+      <div class="fb ca">Vehicle (Parent)</div>
+      <div class="fl2">move(), fuel</div>
+    </div>
+    <div class="fa">→</div>
+    <div class="fs">
+      <div class="fb cc">Car (Child)</div>
+      <div class="fl2">doors, honk()</div>
+    </div>
+    <div class="fa">→</div>
+    <div class="fs">
+      <div class="fb cv">ElectricCar (Grandchild)</div>
+      <div class="fl2">battery, charge()</div>
+    </div>
+  </div>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>Inheritance — extends keyword</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="cm">// Parent class</span>
+<span class="kw">class</span> <span class="cl">Animal</span> {
+  name<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>
+
+  <span class="fn">constructor</span>(name<span class="px">:</span> <span class="kw">string</span>) {
+    <span class="kw">this</span>.name <span class="px">=</span> name<span class="px">;</span>
+  }
+
+  <span class="fn">move</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`</span><span class="px">${</span><span class="kw">this</span>.name<span class="px">}</span><span class="str"> chal raha hai...`</span>)<span class="px">;</span>
+  }
+}
+
+<span class="cm">// Child class — Animal se inherit karta hai</span>
+<span class="kw">class</span> <span class="cl">Dog</span> <span class="kw">extends</span> <span class="cl">Animal</span> {
+
+  <span class="cm">// ⭐ super() parent ka constructor call karta hai</span>
+  <span class="fn">constructor</span>(name<span class="px">:</span> <span class="kw">string</span>) {
+    <span class="kw">super</span>(name)<span class="px">;</span>
+  }
+
+  <span class="cm">// Dog ka apna method</span>
+  <span class="fn">bark</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`</span><span class="px">${</span><span class="kw">this</span>.name<span class="px">}</span><span class="str"> bhaunk raha hai!`</span>)<span class="px">;</span>
+  }
+}
+
+<span class="kw">const</span> dog <span class="px">=</span> <span class="kw">new</span> <span class="cl">Dog</span>(<span class="str">"Tommy"</span>)<span class="px">;</span>
+dog.<span class="fn">move</span>()<span class="px">;</span>   <span class="cm">// ✅ Parent se mila — Tommy chal raha hai...</span>
+dog.<span class="fn">bark</span>()<span class="px">;</span>   <span class="cm">// ✅ Apna — Tommy bhaunk raha hai!</span></div>
+  </div>
+
+  <p class="pr mt20"><strong>Method Overriding — Parent ka method badalna:</strong></p>
+  <p class="pr">Kabhi kabhi child class chahti hai ke parent ka method usi naam se ho lekin <strong>kaam alag kare</strong>. Isay Method Overriding kehte hain.</p>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>Method Overriding</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="kw">class</span> <span class="cl">Animal</span> {
+  <span class="fn">speak</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">"Animal koi awaaz karta hai"</span>)<span class="px">;</span>
+  }
+}
+
+<span class="kw">class</span> <span class="cl">Cat</span> <span class="kw">extends</span> <span class="cl">Animal</span> {
+  <span class="cm">// ⭐ Override — same naam, alag kaam</span>
+  <span class="fn">speak</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">"Billi: Meow Meow! 🐱"</span>)<span class="px">;</span>
+  }
+}
+
+<span class="kw">class</span> <span class="cl">Dog</span> <span class="kw">extends</span> <span class="cl">Animal</span> {
+  <span class="fn">speak</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">"Kutta: Woof Woof! 🐶"</span>)<span class="px">;</span>
+  }
+}
+
+<span class="kw">const</span> cat <span class="px">=</span> <span class="kw">new</span> <span class="cl">Cat</span>()<span class="px">;</span>
+<span class="kw">const</span> dog <span class="px">=</span> <span class="kw">new</span> <span class="cl">Dog</span>()<span class="px">;</span>
+cat.<span class="fn">speak</span>()<span class="px">;</span>  <span class="cm">// Billi: Meow Meow!</span>
+dog.<span class="fn">speak</span>()<span class="px">;</span>  <span class="cm">// Kutta: Woof Woof!</span></div>
+  </div>
+
+  <div class="cgrid mt20">
+    <div class="card acc">
+      <div class="cci">♻️</div>
+      <div class="cct">Code Reuse</div>
+      <div class="ccb">Ek baar likha code baar baar use hota hai. Parent class ka method child apne aap use kar sakti hai.</div>
+    </div>
+    <div class="card acv">
+      <div class="cci">🧹</div>
+      <div class="cct">Saaf Structure</div>
+      <div class="ccb">Code zyada organized hota hai. Related cheezein ek jagah hoti hain — easier to understand.</div>
+    </div>
+    <div class="card ace">
+      <div class="cci">🔧</div>
+      <div class="cct">Easy Maintenance</div>
+      <div class="ccb">Parent mein ek jagah change karo — sab children mein automatically apply ho jaata hai.</div>
+    </div>
+  </div>
+
+  <div class="al ale">
+    <span class="alico">🎯</span>
+    <div class="altx">
+      <strong>Exam Tip</strong>
+      <code>extends</code> keyword inheritance ke liye use hota hai. <code>super()</code> parent constructor call karta hai — child constructor mein <strong>super() pehle</strong> aana chahiye!
+    </div>
+  </div>
+</section>
+
+<!-- INTERFACES -->
+<section class="sec" id="interfaces">
+  <div class="sh">
+    <div class="si ie">📋</div>
+    <div>
+      <div class="stit">Interfaces — Contract</div>
+      <div class="ssub">Part 3 · 60–90 min</div>
+    </div>
+  </div>
+
+  <p class="pr">
+    <strong>Interface</strong> ek <em>contract</em> (samjhauta) hai jo define karta hai ke class mein <strong>kya hona chahiye</strong> — lekin <em>kaise</em> nahi batata. Socho jaise ek naukri ka contract: "Aapko yeh kaam karna hai" — procedure aap decide karo.
+  </p>
+
+  <div class="cgrid mb20">
+    <div class="card acc">
+      <div class="cci">📄</div>
+      <div class="cct">Naukri Contract</div>
+      <div class="ccb">Contract kehta hai: "Clerk ko attendance register karna hai, filing karni hai." — Kaise karna hai woh clerk decide karta hai.</div>
+    </div>
+    <div class="card acv">
+      <div class="cci">🔌</div>
+      <div class="cct">USB Standard</div>
+      <div class="ccb">USB port ka standard define hai — size, pins. Koi bhi company USB device bana sakti hai us standard ko follow karke.</div>
+    </div>
+    <div class="card ace">
+      <div class="cci">📐</div>
+      <div class="cct">Shape Interface</div>
+      <div class="ccb">Agar "Shape" interface area() maange, to Circle, Rectangle, Triangle sab apne hisaab se area() calculate karein — formula alag hoga.</div>
+    </div>
+  </div>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>Interface Syntax + implements</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="cm">// Interface — sirf structure define karta hai</span>
+<span class="kw">interface</span> <span class="cl">Shape</span> {
+  color<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>
+  <span class="fn">area</span>()<span class="px">:</span> <span class="kw">number</span><span class="px">;</span>    <span class="cm">// Koi implementation nahi!</span>
+  <span class="fn">describe</span>()<span class="px">:</span> <span class="kw">void</span><span class="px">;</span>
+}
+
+<span class="cm">// Circle class Shape interface follow karti hai</span>
+<span class="kw">class</span> <span class="cl">Circle</span> <span class="kw">implements</span> <span class="cl">Shape</span> {
+  color<span class="px">:</span>  <span class="kw">string</span><span class="px">;</span>
+  radius<span class="px">:</span> <span class="kw">number</span><span class="px">;</span>
+
+  <span class="fn">constructor</span>(color<span class="px">:</span> <span class="kw">string</span>, radius<span class="px">:</span> <span class="kw">number</span>) {
+    <span class="kw">this</span>.color  <span class="px">=</span> color<span class="px">;</span>
+    <span class="kw">this</span>.radius <span class="px">=</span> radius<span class="px">;</span>
+  }
+
+  <span class="cm">// Interface ne kaha tha area() banao — yahan banaya</span>
+  <span class="fn">area</span>()<span class="px">:</span> <span class="kw">number</span> {
+    <span class="kw">return</span> Math.PI <span class="px">*</span> <span class="kw">this</span>.radius <span class="px">**</span> <span class="num">2</span><span class="px">;</span>
+  }
+
+  <span class="fn">describe</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`</span><span class="px">${</span><span class="kw">this</span>.color<span class="px">}</span><span class="str"> circle, area: </span><span class="px">${</span><span class="kw">this</span>.<span class="fn">area</span>().<span class="fn">toFixed</span>(<span class="num">2</span>)<span class="px">}</span><span class="str">`</span>)<span class="px">;</span>
+  }
+}
+
+<span class="kw">const</span> c <span class="px">=</span> <span class="kw">new</span> <span class="cl">Circle</span>(<span class="str">"Laal"</span>, <span class="num">5</span>)<span class="px">;</span>
+c.<span class="fn">describe</span>()<span class="px">;</span>  <span class="cm">// Laal circle, area: 78.54</span></div>
+  </div>
+
+  <p class="pr mt20"><strong>Multiple Interfaces — Ek class kai interfaces follow kar sakti hai:</strong></p>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>Multiple Interfaces</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="kw">interface</span> <span class="cl">Printable</span> {
+  <span class="fn">print</span>()<span class="px">:</span> <span class="kw">void</span><span class="px">;</span>
+}
+
+<span class="kw">interface</span> <span class="cl">Saveable</span> {
+  <span class="fn">save</span>()<span class="px">:</span> <span class="kw">void</span><span class="px">;</span>
+}
+
+<span class="cm">// ⭐ Dono interfaces ek saath implement ki!</span>
+<span class="kw">class</span> <span class="cl">Document</span> <span class="kw">implements</span> <span class="cl">Printable</span>, <span class="cl">Saveable</span> {
+  title<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>
+
+  <span class="fn">constructor</span>(title<span class="px">:</span> <span class="kw">string</span>) {
+    <span class="kw">this</span>.title <span class="px">=</span> title<span class="px">;</span>
+  }
+
+  <span class="fn">print</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`Printing: </span><span class="px">${</span><span class="kw">this</span>.title<span class="px">}</span><span class="str">`</span>)<span class="px">;</span>
+  }
+
+  <span class="fn">save</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`Saving: </span><span class="px">${</span><span class="kw">this</span>.title<span class="px">}</span><span class="str">`</span>)<span class="px">;</span>
+  }
+}
+
+<span class="kw">const</span> doc <span class="px">=</span> <span class="kw">new</span> <span class="cl">Document</span>(<span class="str">"Meri Report"</span>)<span class="px">;</span>
+doc.<span class="fn">print</span>()<span class="px">;</span>  <span class="cm">// Printing: Meri Report</span>
+doc.<span class="fn">save</span>()<span class="px">;</span>   <span class="cm">// Saving: Meri Report</span></div>
+  </div>
+
+  <div class="al alw">
+    <span class="alico">⚠️</span>
+    <div class="altx">
+      <strong>Important</strong>
+      Interface mein <strong>koi implementation nahi</strong> hoti — sirf structure. Agar interface mein koi method likha aur class mein implement nahi kiya to TypeScript <strong>error dega</strong>!
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section class="sec" id="compare">
+  <div class="sh">
+    <div class="si ia">⚖️</div>
+    <div>
+      <div class="stit">Class vs Interface</div>
+      <div class="ssub">Part 4 · 90–120 min</div>
+    </div>
+  </div>
+
+  <p class="pr">
+    Ab dono mein farq samajhte hain. Yeh table bahut zaroori hai — <strong>exam mein zaroor aata hai!</strong>
+  </p>
+
+  <div class="tw mb20">
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>Class</th><th>Interface</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Kaam (Purpose)</td>
+          <td>Blueprint + Implementation</td>
+          <td>Sirf Contract/Structure</td>
+        </tr>
+        <tr>
+          <td>Object Banana</td>
+          <td><span class="bg bge">Haan — new keyword se</span></td>
+          <td><span class="bg bgr">Nahi</span></td>
+        </tr>
+        <tr>
+          <td>Constructor</td>
+          <td><span class="bg bge">Hota hai</span></td>
+          <td><span class="bg bgr">Nahi hota</span></td>
+        </tr>
+        <tr>
+          <td>Implementation</td>
+          <td><span class="bg bge">Methods ka code hota hai</span></td>
+          <td><span class="bg bgr">Sirf signature (naam)</span></td>
+        </tr>
+        <tr>
+          <td>Inheritance</td>
+          <td><span class="bg bgc">extends — sirf ek</span></td>
+          <td><span class="bg bgv">extends — kai sare</span></td>
+        </tr>
+        <tr>
+          <td>Multiple Follow</td>
+          <td><span class="bg bgr">Ek se extend — Multiple nahi</span></td>
+          <td><span class="bg bge">Kai interfaces implement ho sakte hain</span></td>
+        </tr>
+        <tr>
+          <td>Keyword</td>
+          <td><code>extends</code></td>
+          <td><code>implements</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="two">
+    <div class="card acc">
+      <div class="cci">🏗️</div>
+      <div class="cct">Class kab use karein?</div>
+      <div class="ccb">
+        Jab aapko <strong>actual implementation</strong> chahiye — methods ka kaam karna bhi likhna ho. Jab object banana ho. Jab constructor chahiye. 
+        <br><br><em>Example: Student, BankAccount, Car</em>
+      </div>
+    </div>
+    <div class="card acv">
+      <div class="cci">📋</div>
+      <div class="cct">Interface kab use karein?</div>
+      <div class="ccb">
+        Jab sirf <strong>structure ya contract</strong> define karna ho. Jab multiple types ek jesi structure follow karain. Jab flexibility chahiye.
+        <br><br><em>Example: Shape, Printable, Serializable</em>
+      </div>
+    </div>
+  </div>
+
+  <p class="pr mt20"><strong>Combined Example — tینوں concepts ek saath:</strong></p>
+
+  <div class="cb">
+    <div class="cbh">
+      <div class="cbl"><div class="dots"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div></div>Interface + Class + Inheritance</div>
+      <button class="ccp" onclick="cpCode(this)">Copy</button>
+    </div>
+    <div class="cco">
+<span class="cm">// Interface — Vehicle ke rules</span>
+<span class="kw">interface</span> <span class="cl">VehicleRules</span> {
+  fuel<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>
+  <span class="fn">startEngine</span>()<span class="px">:</span> <span class="kw">void</span><span class="px">;</span>
+}
+
+<span class="cm">// Base class — interface implement karta hai</span>
+<span class="kw">class</span> <span class="cl">Car</span> <span class="kw">implements</span> <span class="cl">VehicleRules</span> {
+  fuel<span class="px">:</span>  <span class="kw">string</span><span class="px">;</span>
+  brand<span class="px">:</span> <span class="kw">string</span><span class="px">;</span>
+
+  <span class="fn">constructor</span>(brand<span class="px">:</span> <span class="kw">string</span>, fuel<span class="px">:</span> <span class="kw">string</span>) {
+    <span class="kw">this</span>.brand <span class="px">=</span> brand<span class="px">;</span>
+    <span class="kw">this</span>.fuel  <span class="px">=</span> fuel<span class="px">;</span>
+  }
+
+  <span class="fn">startEngine</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`</span><span class="px">${</span><span class="kw">this</span>.brand<span class="px">}</span><span class="str"> engine start — </span><span class="px">${</span><span class="kw">this</span>.fuel<span class="px">}</span><span class="str"> se`</span>)<span class="px">;</span>
+  }
+}
+
+<span class="cm">// Child class — Car se inherit karta hai</span>
+<span class="kw">class</span> <span class="cl">ElectricCar</span> <span class="kw">extends</span> <span class="cl">Car</span> {
+  battery<span class="px">:</span> <span class="kw">number</span><span class="px">;</span>
+
+  <span class="fn">constructor</span>(brand<span class="px">:</span> <span class="kw">string</span>, batteryKwh<span class="px">:</span> <span class="kw">number</span>) {
+    <span class="kw">super</span>(brand, <span class="str">"Electric"</span>)<span class="px">;</span>  <span class="cm">// Parent constructor call</span>
+    <span class="kw">this</span>.battery <span class="px">=</span> batteryKwh<span class="px">;</span>
+  }
+
+  <span class="fn">charge</span>()<span class="px">:</span> <span class="kw">void</span> {
+    console.<span class="fn">log</span>(<span class="str">`Charging </span><span class="px">${</span><span class="kw">this</span>.battery<span class="px">}</span><span class="str"> kWh battery...`</span>)<span class="px">;</span>
+  }
+}
+
+<span class="kw">const</span> tesla <span class="px">=</span> <span class="kw">new</span> <span class="cl">ElectricCar</span>(<span class="str">"Tesla"</span>, <span class="num">100</span>)<span class="px">;</span>
+tesla.<span class="fn">startEngine</span>()<span class="px">;</span>  <span class="cm">// Tesla engine start — Electric se</span>
+tesla.<span class="fn">charge</span>()<span class="px">;</span>       <span class="cm">// Charging 100 kWh battery...</span></div>
+  </div>
+
+  <div class="al ale">
+    <span class="alico">🎯</span>
+    <div class="altx">
+      <strong>Exam Tip</strong>
+      "Interface aur Class mein farq" + "Multiple Interfaces implement karna" + "Method Overriding" — yeh teeno concepts <strong>short questions aur MCQs</strong> mein bahut common hain!
+    </div>
+  </div>
+</section>
+
+<!-- LIVE DEMO -->
+<section class="sec" id="demo">
+  <div class="sh">
+    <div class="si ie">🎮</div>
+    <div>
+      <div class="stit">Live Demo — OOP Explorer</div>
+      <div class="ssub">Interactive Object Creator</div>
+    </div>
+  </div>
+
+  <p class="pr">Yahan aap <strong>live objects create</strong> kar sakte hain — TypeScript OOP concepts ko simulate karke dekhein!</p>
+
+  <!-- Student Creator -->
+  <div class="demo mb20">
+    <div class="demotit">Student Class — Object Banao</div>
+    <div class="dr2">
+      <input class="di" id="sname" type="text" placeholder="Student ka naam (e.g. Ali)" />
+      <input class="di" id="sage" type="number" placeholder="Umar (e.g. 20)" min="15" max="40"/>
+      <select class="ds" id="smod">
+        <option value="public">public name</option>
+        <option value="private">private name</option>
+      </select>
+      <button class="db" onclick="createStudent()">Object Banao</button>
+    </div>
+    <div class="do" id="sout">// Yahan output aayega...</div>
+  </div>
+
+  <!-- Inheritance Demo -->
+  <div class="demo mb20">
+    <div class="demotit">Inheritance — Animal Hierarchy</div>
+    <div class="dr2">
+      <input class="di" id="aname" type="text" placeholder="Animal ka naam (e.g. Tommy)" />
+      <select class="ds" id="atype">
+        <option value="Dog">Dog 🐶 (bark)</option>
+        <option value="Cat">Cat 🐱 (meow)</option>
+        <option value="Bird">Bird 🐦 (tweet)</option>
+      </select>
+      <button class="db" onclick="createAnimal()">Create & Speak</button>
+    </div>
+    <div class="do" id="aout">// Yahan animal output aayega...</div>
+    <div id="animals-list" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- Interface Check -->
+  <div class="demo">
+    <div class="demotit">Interface Checker — Contract Verify</div>
+    <div class="dr2">
+      <input class="di" id="iname" type="text" placeholder="Shape naam (e.g. Circle)" />
+      <input class="di" id="ivalue" type="number" placeholder="Value (radius/side)" min="1" max="100"/>
+      <select class="ds" id="ishape">
+        <option value="circle">Circle</option>
+        <option value="square">Square</option>
+        <option value="rectangle">Rectangle (value×2)</option>
+      </select>
+      <button class="db" onclick="calcArea()">Area Calculate</button>
+    </div>
+    <div class="do" id="iout">// Shape area yahan aayega...</div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section class="sec" id="quiz">
+  <div class="sh">
+    <div class="si iv">🧩</div>
+    <div>
+      <div class="stit">Quiz — 5 MCQs</div>
+      <div class="ssub">Apni samajh check karo!</div>
+    </div>
+  </div>
+
+  <p class="pr mb20">Sahi jawab select karo — instant feedback milega!</p>
+
+  <!-- Q1 -->
+  <div class="qcard" id="q1">
+    <div class="qq"><span class="qn">Q.1</span>TypeScript mein inheritance ke liye kaun sa keyword use hota hai?</div>
+    <div class="qopts">
+      <div class="qo" onclick="ans(this,'q1',false)"><span class="qkey">A</span>implement</div>
+      <div class="qo" onclick="ans(this,'q1',true)"><span class="qkey">B</span>extends</div>
+      <div class="qo" onclick="ans(this,'q1',false)"><span class="qkey">C</span>inherit</div>
+      <div class="qo" onclick="ans(this,'q1',false)"><span class="qkey">D</span>super</div>
+    </div>
+    <div class="qfb" id="q1-fb"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="qcard" id="q2">
+    <div class="qq"><span class="qn">Q.2</span>Interface implement karne ke liye kaunsa keyword use karte hain?</div>
+    <div class="qopts">
+      <div class="qo" onclick="ans(this,'q2',false)"><span class="qkey">A</span>extends</div>
+      <div class="qo" onclick="ans(this,'q2',false)"><span class="qkey">B</span>inherit</div>
+      <div class="qo" onclick="ans(this,'q2',true)"><span class="qkey">C</span>implements</div>
+      <div class="qo" onclick="ans(this,'q2',false)"><span class="qkey">D</span>interface</div>
+    </div>
+    <div class="qfb" id="q2-fb"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="qcard" id="q3">
+    <div class="qq"><span class="qn">Q.3</span><code>private</code> modifier se property kahan accessible hoti hai?</div>
+    <div class="qopts">
+      <div class="qo" onclick="ans(this,'q3',false)"><span class="qkey">A</span>Har jagah</div>
+      <div class="qo" onclick="ans(this,'q3',true)"><span class="qkey">B</span>Sirf usi class ke andar</div>
+      <div class="qo" onclick="ans(this,'q3',false)"><span class="qkey">C</span>Class aur uski children mein</div>
+      <div class="qo" onclick="ans(this,'q3',false)"><span class="qkey">D</span>Sirf child classes mein</div>
+    </div>
+    <div class="qfb" id="q3-fb"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="qcard" id="q4">
+    <div class="qq"><span class="qn">Q.4</span>Interface mein kya hota hai?</div>
+    <div class="qopts">
+      <div class="qo" onclick="ans(this,'q4',false)"><span class="qkey">A</span>Constructor aur implementation</div>
+      <div class="qo" onclick="ans(this,'q4',false)"><span class="qkey">B</span>Sirf constructor</div>
+      <div class="qo" onclick="ans(this,'q4',true)"><span class="qkey">C</span>Sirf structure/definitions — koi implementation nahi</div>
+      <div class="qo" onclick="ans(this,'q4',false)"><span class="qkey">D</span>Objects</div>
+    </div>
+    <div class="qfb" id="q4-fb"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="qcard" id="q5">
+    <div class="qq"><span class="qn">Q.5</span>Ek class kitni interfaces implement kar sakti hai?</div>
+    <div class="qopts">
+      <div class="qo" onclick="ans(this,'q5',false)"><span class="qkey">A</span>Sirf ek</div>
+      <div class="qo" onclick="ans(this,'q5',false)"><span class="qkey">B</span>Sirf do</div>
+      <div class="qo" onclick="ans(this,'q5',true)"><span class="qkey">C</span>Kai saari (multiple)</div>
+      <div class="qo" onclick="ans(this,'q5',false)"><span class="qkey">D</span>Koi nahi</div>
+    </div>
+    <div class="qfb" id="q5-fb"></div>
+  </div>
+
+  <div class="qsbar">
+    <div>
+      <div class="qsc">Score: <span id="sc">0</span>/5</div>
+      <div class="qst">Answered: <span id="an">0</span> questions</div>
+    </div>
+    <button class="qrst" onclick="resetQ()">🔄 Reset Quiz</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="flogo">📘 TypeScript — CSC337 / Advanced Web Technologies</div>
+  <p>
+    <strong>Lecture 09:</strong> Classes · Inheritance · Access Modifiers · Interfaces · 2 Hours<br>
+    <strong>Keywords:</strong> class · extends · implements · super · public · private · protected<br><br>
+    Roman Urdu mein explained — Students ke liye
+  </p>
+</footer>
+
+</main>
+
+<!-- ================================================
+     JAVASCRIPT
+================================================ -->
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const p = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('prog').style.width = p + '%';
+  updateNav();
+});
+
+// Intersection observer for fade-in
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.07 });
+document.querySelectorAll('.sec').forEach(s => obs.observe(s));
+
+// Scroll to section
+function goTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (window.innerWidth < 860) togSB(true);
+}
+
+// Active nav
+const secIds = ['hero','intro','classes','modifiers','inheritance','interfaces','compare','demo','quiz'];
+const linkMap = { hero:0, intro:1, classes:2, modifiers:3, inheritance:4, interfaces:5, compare:6, demo:7, quiz:8 };
+function updateNav() {
+  let cur = 'hero';
+  secIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 200) cur = id;
+  });
+  document.querySelectorAll('.nl').forEach((l, i) => l.classList.toggle('active', i === linkMap[cur]));
+}
+
+// Sidebar toggle
+function togSB(close) {
+  const sb = document.getElementById('sb');
+  const ov = document.getElementById('ov');
+  const open = sb.classList.contains('open');
+  if (close || open) { sb.classList.remove('open'); ov.classList.remove('show'); }
+  else { sb.classList.add('open'); ov.classList.add('show'); }
+}
+
+// Copy code
+function cpCode(btn) {
+  const txt = btn.closest('.cb').querySelector('.cco').innerText;
+  navigator.clipboard.writeText(txt).then(() => {
+    btn.textContent = '✓ Done!';
+    btn.style.borderColor = 'var(--emerald)';
+    btn.style.color = 'var(--emerald)';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.style.borderColor = ''; btn.style.color = ''; }, 1800);
+  });
+}
+
+// ================================================
+// LIVE DEMO — Student Creator
+// ================================================
+function createStudent() {
+  const name = document.getElementById('sname').value.trim();
+  const age  = parseInt(document.getElementById('sage').value);
+  const mod  = document.getElementById('smod').value;
+  const out  = document.getElementById('sout');
+
+  if (!name || isNaN(age)) {
+    out.textContent = '❌ Naam aur umar dono dalo!';
+    out.style.color = 'var(--rose)';
+    return;
+  }
+
+  out.style.color = 'var(--emerald)';
+  if (mod === 'private') {
+    out.textContent =
+`// class Student { private name: string; ... }
+const s = new Student("${name}", ${age});
+
+✅ Object successfully banaya gaya!
+📝 Properties:
+   - name: "${name}"   ← private (sirf class ke andar)
+   - age:  ${age}        ← public (bahar bhi)
+
+✅ s.age   → ${age}       (accessible)
+❌ s.name  → Error: Property 'name' is private!
+
+🔒 Encapsulation kaam kar raha hai!`;
+  } else {
+    out.textContent =
+`// class Student { public name: string; ... }
+const s = new Student("${name}", ${age});
+
+✅ Object successfully banaya gaya!
+📝 Properties:
+   - name: "${name}"   ← public (sab access kar sakte)
+   - age:  ${age}        ← public
+
+✅ s.name  → "${name}"
+✅ s.age   → ${age}
+✅ s.display() → "Naam: ${name}, Umar: ${age}"`;
+  }
+}
+
+// ================================================
+// LIVE DEMO — Animal Inheritance
+// ================================================
+const animals = [];
+function createAnimal() {
+  const name = document.getElementById('aname').value.trim();
+  const type = document.getElementById('atype').value;
+  const out  = document.getElementById('aout');
+  const list = document.getElementById('animals-list');
+
+  if (!name) {
+    out.textContent = '❌ Animal ka naam likho!'; out.style.color='var(--rose)'; return;
+  }
+
+  const sounds = { Dog: 'Woof Woof! 🐶', Cat: 'Meow Meow! 🐱', Bird: 'Tweet Tweet! 🐦' };
+  const moves  = { Dog: 'daudata', Cat: 'chalti', Bird: 'urta' };
+  out.style.color = 'var(--emerald)';
+  out.textContent =
+`// ${type} extends Animal
+const a = new ${type}("${name}");
+
+✅ Inheritance in action:
+   move()  ← Animal (parent) se mila
+   speak() ← ${type} ne override kiya
+
+a.move()  → "${name} ${moves[type]} hai... (Animal se)"
+a.speak() → "${name}: ${sounds[type]}"`;
+
+  animals.push({ name, type });
+  list.innerHTML = animals.map(a =>
+    `<div class="obj-card">
+      <span class="obj-type" style="background:${a.type==='Dog'?'#38bdf820':a.type==='Cat'?'#818cf820':'#34d39920'};color:${a.type==='Dog'?'var(--cyan)':a.type==='Cat'?'var(--violet)':'var(--emerald)'};border:1px solid ${a.type==='Dog'?'var(--cyan)':a.type==='Cat'?'var(--violet)':'var(--emerald)'}">${a.type}</span>
+      <span>${a.name}</span>
+      <span style="margin-left:auto;font-size:.7rem;color:var(--txt3)">new ${a.type}("${a.name}")</span>
+    </div>`
+  ).join('');
+  document.getElementById('aname').value = '';
+}
+
+// ================================================
+// LIVE DEMO — Interface / Area Calculator
+// ================================================
+function calcArea() {
+  const name  = document.getElementById('iname').value.trim() || 'MyShape';
+  const val   = parseFloat(document.getElementById('ivalue').value);
+  const shape = document.getElementById('ishape').value;
+  const out   = document.getElementById('iout');
+
+  if (isNaN(val) || val <= 0) {
+    out.textContent = '❌ Value dalo (0 se zyada)!'; out.style.color='var(--rose)'; return;
+  }
+
+  let area, formula, cls;
+  if (shape === 'circle') {
+    area = (Math.PI * val * val).toFixed(2);
+    formula = `Math.PI × ${val}² = ${area}`;
+    cls = 'Circle';
+  } else if (shape === 'square') {
+    area = (val * val).toFixed(2);
+    formula = `${val} × ${val} = ${area}`;
+    cls = 'Square';
+  } else {
+    area = (val * val * 2).toFixed(2);
+    formula = `${val} × ${val*2} = ${area}`;
+    cls = 'Rectangle';
+  }
+
+  out.style.color = 'var(--emerald)';
+  out.textContent =
+`// Interface: Shape { area(): number }
+// Class: ${cls} implements Shape
+
+interface Shape {
+  area(): number;  ← Contract defined
+}
+
+class ${cls} implements Shape {
+  area(): number {
+    return ${formula};
+  }
+}
+
+const s = new ${cls}(${val});
+✅ s.area() → ${area}
+📐 Shape: ${name} (${cls})
+📏 Area: ${area} square units
+✅ Interface contract successfully follow kiya!`;
+}
+
+// ================================================
+// QUIZ
+// ================================================
+const qa = {};
+let score = 0, answered = 0;
+
+const fb = {
+  q1: { t: "Sahi! 'extends' keyword inheritance ke liye use hota hai. 'super()' parent constructor call karta hai — alag cheez hai.", f: "Nahi. 'extends' sahi jawab hai. 'implements' interfaces ke liye hota hai, 'inherit' TypeScript mein nahi hota." },
+  q2: { t: "Bilkul sahi! 'implements' keyword se class interface follow karti hai.", f: "Galat. 'implements' sahi hai. 'extends' class inheritance ke liye, 'interface' declaration ke liye hota hai." },
+  q3: { t: "Perfect! private sirf apni class ke andar accessible hai — bahar se access karne par compile error aata hai.", f: "Galat. private = sirf usi class mein. protected = class + children. public = har jagah." },
+  q4: { t: "Bilkul sahi! Interface mein sirf structure/contract hota hai — method ka naam aur type. Implementation nahi.", f: "Nahi. Interface mein koi implementation nahi hoti — sirf definitions (method signatures, properties)." },
+  q5: { t: "Ekdum sahi! Ek class kai interfaces implement kar sakti hai: class A implements B, C, D { }", f: "Galat. Multiple interfaces implement ho sakti hain ek class mein — yahi interface ka faida hai class ke upar." }
+};
+
+function ans(el, qid, correct) {
+  if (qa[qid] !== undefined) return;
+  qa[qid] = correct;
+  if (correct) score++;
+  answered++;
+
+  const card = document.getElementById(qid);
+  const fb_el = document.getElementById(qid + '-fb');
+  const opts = card.querySelectorAll('.qo');
+
+  el.classList.add(correct ? 'sc' : 'sw');
+  if (!correct) opts.forEach(o => { if (o.onclick.toString().includes(',true')) o.classList.add('rc'); });
+
+  fb_el.textContent = (correct ? '✅ ' : '❌ ') + fb[qid][correct ? 't' : 'f'];
+  fb_el.className = 'qfb show ' + (correct ? 'cf' : 'wf');
+  card.classList.add(correct ? 'ok' : 'no');
+  opts.forEach(o => o.style.pointerEvents = 'none');
+
+  document.getElementById('sc').textContent = score;
+  document.getElementById('an').textContent = answered;
+}
+
+function resetQ() {
+  Object.keys(qa).forEach(k => delete qa[k]);
+  score = 0; answered = 0;
+  document.querySelectorAll('.qcard').forEach(c => c.classList.remove('ok','no'));
+  document.querySelectorAll('.qo').forEach(o => { o.classList.remove('sc','sw','rc'); o.style.pointerEvents = ''; });
+  document.querySelectorAll('.qfb').forEach(f => f.className = 'qfb');
+  document.getElementById('sc').textContent = '0';
+  document.getElementById('an').textContent = '0';
+}
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

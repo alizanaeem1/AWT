@@ -8,6 +8,7 @@ const navItems = [
   { route: "Assignments & Quiz", label: "Assignments & Quiz", icon: "📝" },
   { route: "Files", label: "Files", icon: "📁" },
   { route: "Analytics", label: "Analytics", icon: "📊" },
+  { route: "Daily Progress", label: "Daily Progress", icon: "✍️" },
   { route: "Calendar", label: "Calendar", icon: "📅" },
   { route: "Notifications", label: "Notifications", icon: "🔔" },
   { route: "Settings", label: "Settings", icon: "⚙️" }

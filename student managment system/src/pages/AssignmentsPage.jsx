@@ -9,6 +9,56 @@ const labelClass = "mb-1 block text-sm font-medium text-gray-300";
 
 const today = new Date().toISOString().slice(0, 10);
 
+/** @param {unknown} data */
+function normalizedAssignmentSavePayload(data) {
+  if (Array.isArray(data)) return { list: data, insertedId: null };
+  return {
+    list: Array.isArray(data?.assignments) ? data.assignments : [],
+    insertedId: data?.insertedId != null && Number.isFinite(Number(data.insertedId)) ? Number(data.insertedId) : null
+  };
+}
+
+/** Fallback when save returns no insertedId (legacy array response) but we need to link files to the new row. */
+function resolveAssignmentIdForAttachments({ savedList, insertedId, editingId, payload }) {
+  if (insertedId != null && Number.isFinite(Number(insertedId))) return Number(insertedId);
+  if (editingId != null && Number.isFinite(Number(editingId))) return Number(editingId);
+  if (!Array.isArray(savedList)) return null;
+  const sid = Number(payload.subjectId);
+  const title = String(payload.title || "").trim();
+  const dueSlice = String(payload.dueDate || "").slice(0, 10);
+  const bySubjectTitle = savedList.filter(
+    (x) => Number(x.subjectId) === sid && String(x.title || "").trim() === title
+  );
+  const strict = bySubjectTitle.filter((x) => String(x.dueDate || "").slice(0, 10) === dueSlice);
+  const pool = strict.length > 0 ? strict : bySubjectTitle;
+  if (pool.length === 0) return null;
+  return Math.max(...pool.map((x) => Number(x.id)));
+}
+
+function safeAttachmentCount(row) {
+  const v = row?.attachmentCount ?? row?.attachmentcount;
+  if (typeof v === "bigint") return Number(v);
+  const n = Number(v ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function attachmentNames(row) {
+  const n = row?.attachmentNames ?? row?.attachmentnames;
+  return typeof n === "string" && n.trim() ? n.trim() : "";
+}
+
+function ellipsis(s, max) {
+  const t = String(s || "").trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, Math.max(0, max - 1))}…`;
+}
+
+function basenameFromPath(absPath) {
+  const normalized = String(absPath || "").replace(/\\/g, "/");
+  const parts = normalized.split("/");
+  return parts[parts.length - 1] || absPath || "file";
+}
+
 export default function AssignmentsPage({
   initialSubjectId,
   onClearInitialSubject,
@@ -16,7 +66,7 @@ export default function AssignmentsPage({
   listOnly = false,
   forcedType = null
 }) {
-  const { activeSemester, bumpDataVersion, pushToast } = useApp();
+  const { activeSemester, dataVersion, bumpDataVersion, pushToast } = useApp();
   const [subjects, setSubjects] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [error, setError] = useState("");
@@ -34,11 +84,16 @@ export default function AssignmentsPage({
     details: "",
     status: "pending"
   });
+  /** New files to copy in after save (absolute paths from OS picker). */
+  const [pendingAttachmentPaths, setPendingAttachmentPaths] = useState([]);
+  /** Saved files for the assignment being edited. */
+  const [assignmentFiles, setAssignmentFiles] = useState([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!activeSemester) return;
     loadData();
-  }, [activeSemester]);
+  }, [activeSemester, dataVersion]);
 
   useEffect(() => {
     if (!initialSubjectId) return;
@@ -82,6 +137,8 @@ export default function AssignmentsPage({
   function resetForm() {
     setEditingId(null);
     setShowForm(false);
+    setPendingAttachmentPaths([]);
+    setAssignmentFiles([]);
     setForm((prev) => ({
       subjectId: subjects[0] ? String(subjects[0].id) : "",
       title: "",
@@ -102,41 +159,104 @@ export default function AssignmentsPage({
       return setError("Subject, title, and due date are required.");
     }
 
-    const payload = {
-      id: editingId,
-      semesterId: activeSemester.id,
-      subjectId: Number(form.subjectId),
-      title: form.title.trim(),
-      type: form.type,
-      dueDate: form.dueDate,
-      reminderAt: form.reminderAt || null,
-      details: form.details.trim() || null,
-      status: form.status,
-      marks: null
-    };
+    setSaving(true);
+    try {
+      const payload = {
+        id: editingId,
+        semesterId: activeSemester.id,
+        subjectId: Number(form.subjectId),
+        title: form.title.trim(),
+        type: form.type,
+        dueDate: form.dueDate,
+        reminderAt: form.reminderAt || null,
+        details: form.details.trim() || null,
+        status: form.status,
+        marks: null
+      };
 
-    const res = await desktopAPI.assignments.save(payload);
-    if (!res.ok) return setError(res.error || "Failed to save assignment.");
-    setAssignments(res.data);
-    bumpDataVersion();
-    pushToast({
-      title: "Successful",
-      message: editingId ? `${itemLabel} updated successfully.` : `${itemLabel} added successfully.`,
-      variant: "success"
-    });
-    if (payload.status === "pending" && payload.reminderAt) {
-      const selectedSubject = subjects.find((subject) => subject.id === payload.subjectId);
-      const reminderText = `${payload.type.toUpperCase()} "${payload.title}" (${selectedSubject?.name || "Subject"}) due ${payload.dueDate} | reminder ${payload.reminderAt}`;
-      pushToast({
-        title: "Reminder scheduled",
-        message: `${reminderText}. Alerts at 1h and 2h before this time (app open).`,
-        variant: "info"
+      const res = await desktopAPI.assignments.save(payload);
+      if (!res.ok) {
+        setError(res.error || "Failed to save assignment.");
+        return;
+      }
+
+      const { list: savedList, insertedId } = normalizedAssignmentSavePayload(res.data);
+      setAssignments(savedList);
+
+      const targetAssignmentId = resolveAssignmentIdForAttachments({
+        savedList,
+        insertedId,
+        editingId,
+        payload
       });
+
+      if (pendingAttachmentPaths.length > 0) {
+        if (targetAssignmentId == null) {
+          pushToast({
+            title: "Assignment saved",
+            message:
+              "Attached files could not be linked to this row. Edit the assignment, add attachments again, then save—or fully restart the app and retry.",
+            variant: "error"
+          });
+        } else {
+          let uploadFailed = false;
+          let uploadErrorDetail = "";
+          for (const sourcePath of pendingAttachmentPaths) {
+            const fres = await desktopAPI.files.add({
+              semesterId: activeSemester.id,
+              subjectId: Number(form.subjectId),
+              assignmentId: targetAssignmentId,
+              sourcePath
+            });
+            if (!fres.ok) {
+              uploadFailed = true;
+              const msg = typeof fres.error === "string" ? fres.error.trim() : "";
+              if (msg) uploadErrorDetail = msg;
+            }
+          }
+          if (uploadFailed) {
+            pushToast({
+              title: "Saved with file warnings",
+              message: uploadErrorDetail
+                ? `One or more files did not attach: ${uploadErrorDetail}`
+                : "Assignment was saved but one or more files could not be attached.",
+              variant: "error"
+            });
+          }
+        }
+      }
+
+      const refresh = await desktopAPI.assignments.listBySemester(activeSemester.id);
+      if (refresh.ok) setAssignments(refresh.data);
+
+      bumpDataVersion();
+      if (!(pendingAttachmentPaths.length > 0 && targetAssignmentId == null)) {
+        pushToast({
+          title: "Successful",
+          message: editingId ? `${itemLabel} updated successfully.` : `${itemLabel} added successfully.`,
+          variant: "success"
+        });
+      }
+      if (payload.status === "pending" && payload.reminderAt) {
+        const selectedSubject = subjects.find((subject) => subject.id === payload.subjectId);
+        const reminderText = `${payload.type.toUpperCase()} "${payload.title}" (${selectedSubject?.name || "Subject"}) due ${payload.dueDate} | reminder ${payload.reminderAt}`;
+        pushToast({
+          title: "Reminder scheduled",
+          message: `${reminderText}. Alerts at 1h and 2h before this time (app open).`,
+          variant: "info"
+        });
+      }
+      resetForm();
+    } catch (err) {
+      setError(err?.message || "Something went wrong while saving.");
+    } finally {
+      setSaving(false);
     }
-    resetForm();
   }
 
-  function startEdit(item) {
+  async function startEdit(item) {
+    setPendingAttachmentPaths([]);
+    setAssignmentFiles([]);
     setShowForm(true);
     setEditingId(item.id);
     setForm({
@@ -148,6 +268,35 @@ export default function AssignmentsPage({
       details: item.details || "",
       status: item.status
     });
+    const fres = await desktopAPI.files.listByAssignment(item.id);
+    if (fres.ok && Array.isArray(fres.data)) setAssignmentFiles(fres.data);
+  }
+
+  async function pickAssignmentAttachments() {
+    const res = await desktopAPI.files.pick();
+    if (!res.ok || !Array.isArray(res.data) || res.data.length === 0) return;
+    setPendingAttachmentPaths((prev) => [...prev, ...res.data]);
+  }
+
+  async function removeLinkedFile(fileRow) {
+    if (!activeSemester || !editingId) return;
+    if (typeof window !== "undefined" && !window.confirm(`Remove "${fileRow.fileName}" from this ${itemLabel.toLowerCase()}?`))
+      return;
+    const res = await desktopAPI.files.remove({
+      fileId: fileRow.id,
+      semesterId: activeSemester.id
+    });
+    if (!res.ok) return setError(res.error || "Could not delete file.");
+    setAssignmentFiles((prev) => prev.filter((f) => f.id !== fileRow.id));
+    const refresh = await desktopAPI.assignments.listBySemester(activeSemester.id);
+    if (refresh.ok) setAssignments(refresh.data);
+    bumpDataVersion();
+    pushToast({ title: "File removed", message: String(fileRow.fileName), variant: "success" });
+  }
+
+  async function openLinkedFile(filePath) {
+    const res = await desktopAPI.files.open(filePath);
+    if (!res?.ok) pushToast({ title: "Open failed", message: res?.error || "Could not open file.", variant: "error" });
   }
 
   async function deleteAssignment(id) {
@@ -176,7 +325,8 @@ export default function AssignmentsPage({
     };
     const res = await desktopAPI.assignments.save(payload);
     if (!res.ok) return setError(res.error || "Failed to update status.");
-    setAssignments(res.data);
+    const { list } = normalizedAssignmentSavePayload(res.data);
+    setAssignments(list);
     bumpDataVersion();
     pushToast({ title: "Successful", message: `Status changed to ${nextStatus}.`, variant: "success" });
   }
@@ -371,18 +521,94 @@ export default function AssignmentsPage({
                 onChange={(e) => setForm((prev) => ({ ...prev, details: e.target.value }))}
               />
             </div>
+
+            <div className="md:col-span-2 xl:col-span-3 flex flex-col gap-3 rounded-xl border border-dashed border-gray-600/90 bg-gray-950/40 p-4">
+              <div>
+                <label className={labelClass}>📎 Attached files</label>
+                <p className="text-xs text-gray-500">
+                  Add images or documents — they&apos;re copied into this semester and linked to this {form.type}. Use
+                  this button (not the Files tab alone), or this column stays empty.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={pickAssignmentAttachments}
+                className="w-fit rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-xs font-medium text-gray-100 hover:bg-gray-700 disabled:opacity-50"
+              >
+                + Browse files…
+              </button>
+              {pendingAttachmentPaths.length > 0 ? (
+                <ul className="space-y-1.5">
+                  {pendingAttachmentPaths.map((p, idx) => (
+                    <li
+                      key={`${p}-${idx}`}
+                      className="flex items-center justify-between gap-2 rounded-lg border border-gray-700 bg-gray-800/70 px-2 py-1.5 text-xs text-gray-300"
+                    >
+                      <span className="truncate" title={p}>
+                        {basenameFromPath(p)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPendingAttachmentPaths((prev) => prev.filter((_, i) => i !== idx))
+                        }
+                        className="shrink-0 text-rose-400 hover:text-rose-300"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {editingId && assignmentFiles.length > 0 ? (
+                <>
+                  <p className="text-xs font-medium text-gray-400">Saved attachments</p>
+                  <ul className="space-y-1.5">
+                    {assignmentFiles.map((f) => (
+                      <li
+                        key={f.id}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1.5 text-xs text-gray-200"
+                      >
+                        <span className="min-w-0 truncate" title={f.fileName}>
+                          {f.fileName}
+                        </span>
+                        <div className="flex shrink-0 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openLinkedFile(f.filePath)}
+                            className="text-indigo-300 hover:text-indigo-200"
+                          >
+                            Open
+                          </button>
+                          <button type="button" onClick={() => removeLinkedFile(f)} className="text-rose-400 hover:text-rose-300">
+                            Delete
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+            </div>
+
             <div className="md:col-span-2 xl:col-span-1 flex items-end justify-start gap-2 xl:justify-end">
               {editingId ? (
                 <button
                   type="button"
+                  disabled={saving}
                   onClick={resetForm}
-                  className="rounded-lg bg-gray-700 px-4 py-2 text-sm text-gray-100 hover:bg-gray-600"
+                  className="rounded-lg bg-gray-700 px-4 py-2 text-sm text-gray-100 hover:bg-gray-600 disabled:opacity-50"
                 >
                   Cancel
                 </button>
               ) : null}
-              <button className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-500">
-                {editingId ? `Update ${itemLabel}` : `Add ${itemLabel}`}
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-500 disabled:opacity-50"
+              >
+                {saving ? "Saving…" : editingId ? `Update ${itemLabel}` : `Add ${itemLabel}`}
               </button>
             </div>
               </form>
@@ -418,6 +644,7 @@ export default function AssignmentsPage({
                 <th className="px-2 py-2">Type</th>
                 <th className="px-2 py-2">Course</th>
                 <th className="px-2 py-2">Due Date</th>
+                <th className="px-2 py-2 hidden sm:table-cell">Files</th>
                 <th className="px-2 py-2">Status</th>
                 <th className="px-2 py-2 text-right">Actions</th>
               </tr>
@@ -425,7 +652,7 @@ export default function AssignmentsPage({
             <tbody>
               {filteredAssignments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-2 py-3 text-gray-500">
+                  <td colSpan="7" className="px-2 py-3 text-gray-500">
                     No matching assignments or quizzes found.
                   </td>
                 </tr>
@@ -435,6 +662,8 @@ export default function AssignmentsPage({
                   const dueIn = isValid(parsedDate) ? differenceInCalendarDays(parsedDate, new Date()) : null;
                   const reminderParsed = item.reminderAt ? parseISO(item.reminderAt) : null;
                   const reminderOk = reminderParsed && isValid(reminderParsed);
+                  const attachCount = safeAttachmentCount(item);
+                  const names = attachmentNames(item);
                   return (
                     <tr key={item.id} className="border-t border-gray-800 text-gray-200">
                       <td className="px-2 py-2">
@@ -468,6 +697,22 @@ export default function AssignmentsPage({
                         {reminderOk ? (
                           <p className="text-xs text-indigo-300">🔔 Reminder {format(reminderParsed, "dd MMM, HH:mm")}</p>
                         ) : null}
+                      </td>
+                      <td className="px-2 py-2 hidden max-w-[14rem] sm:table-cell text-left text-xs text-gray-400">
+                        {attachCount > 0 ? (
+                          <div className="space-y-0.5">
+                            <p className="font-medium text-gray-300">
+                              📎 {attachCount} {attachCount === 1 ? "file" : "files"}
+                            </p>
+                            {names ? (
+                              <p className="max-w-[12rem] truncate text-[11px] text-slate-500" title={names}>
+                                {ellipsis(names, 48)}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
                       </td>
                       <td className="px-2 py-2">
                         <select

@@ -81,4 +81,22 @@ addColumnIfMissing("Semesters", "gpa", "REAL");
 addColumnIfMissing("Semesters", "totalCreditHours", "INTEGER");
 addColumnIfMissing("Semesters", "expectedSubjects", "INTEGER");
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS TimetableEntries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    semesterId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    dayOfWeek INTEGER NOT NULL,
+    startTime TEXT NOT NULL,
+    endTime TEXT NOT NULL,
+    location TEXT,
+    notifyMinutesBefore INTEGER NOT NULL DEFAULT 10,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(userId) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY(semesterId) REFERENCES Semesters(id) ON DELETE CASCADE
+  );
+`);
+
 module.exports = db;

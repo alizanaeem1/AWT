@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Node.js Seekho — Roman Urdu Mein</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================
+   CSS VARIABLES — Color System
+   ============================================ */
+:root {
+  --bg-base: #060b14;
+  --bg-deep: #030609;
+  --bg-card: #0d1525;
+  --bg-card-hover: #111d32;
+  --bg-sidebar: #080f1e;
+  --accent-cyan: #00e5ff;
+  --accent-blue: #3b82f6;
+  --accent-purple: #a855f7;
+  --accent-green: #10b981;
+  --accent-yellow: #f59e0b;
+  --accent-red: #ef4444;
+  --text-primary: #e2eaf8;
+  --text-secondary: #8ba3c7;
+  --text-muted: #4a6080;
+  --border: rgba(59, 130, 246, 0.15);
+  --border-bright: rgba(0, 229, 255, 0.3);
+  --glow-cyan: 0 0 20px rgba(0, 229, 255, 0.3);
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.4);
+  --sidebar-w: 270px;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Space Mono', monospace;
+  --font-code: 'JetBrains Mono', monospace;
+}
+
+/* ============================================
+   RESET & BASE
+   ============================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   SCROLL PROGRESS BAR
+   ============================================ */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  z-index: 9999;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 10px var(--accent-cyan);
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+#sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 30px;
+  transition: transform 0.3s ease;
+}
+
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.sidebar-logo .logo-icon {
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.sidebar-logo h2 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+}
+
+.sidebar-logo p {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 20px 6px;
+}
+
+#sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 12px;
+  font-family: var(--font-body);
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+}
+
+#sidebar nav a:hover {
+  color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.05);
+  border-left-color: rgba(0, 229, 255, 0.4);
+}
+
+#sidebar nav a.active {
+  color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.08);
+  border-left-color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+#sidebar nav a .nav-icon { font-size: 15px; flex-shrink: 0; }
+#sidebar nav a .nav-num {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-family: var(--font-code);
+}
+
+/* Mobile toggle */
+#menu-toggle {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 200;
+  background: var(--bg-card);
+  border: 1px solid var(--border-bright);
+  color: var(--accent-cyan);
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+#main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+#hero {
+  position: relative;
+  padding: 80px 60px 70px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 50%, rgba(0, 229, 255, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(168, 85, 247, 0.07) 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-base) 100%);
+  pointer-events: none;
+}
+
+/* Grid dots pattern */
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(59, 130, 246, 0.15) 1px, transparent 1px);
+  background-size: 30px 30px;
+  opacity: 0.4;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  color: var(--accent-cyan);
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-family: var(--font-code);
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge .dot {
+  width: 6px; height: 6px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 20px;
+}
+
+.hero-title .highlight {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 560px;
+  line-height: 1.9;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 36px;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-number {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   SECTION STYLING
+   ============================================ */
+.section {
+  padding: 60px 60px;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.section-num {
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.section-title span {
+  color: var(--accent-cyan);
+}
+
+.section-intro {
+  color: var(--text-secondary);
+  font-size: 13px;
+  max-width: 700px;
+  margin-bottom: 32px;
+  line-height: 1.9;
+}
+
+/* ============================================
+   CONCEPT CARDS
+   ============================================ */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-cyan), transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(0, 229, 255, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.card:hover::before { transform: scaleX(1); }
+
+.card-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 8px;
+}
+
+.card-body {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.card-tag {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 10px;
+  font-family: var(--font-code);
+  color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* Colored card variants */
+.card.blue { border-color: rgba(59, 130, 246, 0.2); }
+.card.blue::before { background: linear-gradient(90deg, var(--accent-blue), transparent); }
+.card.blue .card-title { color: var(--accent-blue); }
+
+.card.purple { border-color: rgba(168, 85, 247, 0.2); }
+.card.purple::before { background: linear-gradient(90deg, var(--accent-purple), transparent); }
+.card.purple .card-title { color: var(--accent-purple); }
+
+.card.green { border-color: rgba(16, 185, 129, 0.2); }
+.card.green::before { background: linear-gradient(90deg, var(--accent-green), transparent); }
+.card.green .card-title { color: var(--accent-green); }
+
+/* ============================================
+   CODE BLOCKS
+   ============================================ */
+.code-block {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.code-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.code-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.code-dot.red { background: #ff5f57; }
+.code-dot.yellow { background: #ffbd2e; }
+.code-dot.green { background: #28ca41; }
+
+.code-lang {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.copy-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: var(--font-code);
+  transition: all 0.2s;
+}
+
+.copy-btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+pre {
+  padding: 20px;
+  overflow-x: auto;
+  font-family: var(--font-code);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Syntax coloring */
+.kw { color: #c084fc; } /* keyword - purple */
+.fn { color: #60a5fa; } /* function - blue */
+.str { color: #86efac; } /* string - green */
+.num { color: #fbbf24; } /* number - yellow */
+.cmt { color: #4a6080; font-style: italic; } /* comment */
+.var { color: #e2eaf8; } /* variable */
+.obj { color: #00e5ff; } /* object/module - cyan */
+
+/* ============================================
+   ALERTS / TIPS
+   ============================================ */
+.alert {
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 10px;
+  margin: 16px 0;
+  border-left: 3px solid;
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+
+.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+.alert.tip {
+  background: rgba(16, 185, 129, 0.07);
+  border-color: var(--accent-green);
+  color: #a7f3d0;
+}
+
+.alert.warning {
+  background: rgba(245, 158, 11, 0.07);
+  border-color: var(--accent-yellow);
+  color: #fde68a;
+}
+
+.alert.exam {
+  background: rgba(168, 85, 247, 0.07);
+  border-color: var(--accent-purple);
+  color: #e9d5ff;
+}
+
+.alert.info {
+  background: rgba(59, 130, 246, 0.07);
+  border-color: var(--accent-blue);
+  color: #bfdbfe;
+}
+
+.alert strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-size: 13px;
+}
+
+/* ============================================
+   COMPARISON TABLES
+   ============================================ */
+.table-wrap {
+  overflow-x: auto;
+  margin: 20px 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+thead {
+  background: rgba(0, 229, 255, 0.06);
+}
+
+thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.2s;
+}
+
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+tbody td {
+  padding: 11px 16px;
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+
+tbody td:first-child {
+  font-family: var(--font-code);
+  color: var(--accent-cyan);
+  font-size: 11px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-family: var(--font-code);
+}
+.badge.yes { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+.badge.no { background: rgba(239,68,68,0.12); color: var(--accent-red); }
+
+/* ============================================
+   FLOW DIAGRAM (Custom CSS)
+   ============================================ */
+.flow-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 480px;
+  margin: 24px auto;
+}
+
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  position: relative;
+}
+
+.flow-step::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 44px;
+  bottom: -16px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent-cyan), transparent);
+}
+
+.flow-step:last-child::before { display: none; }
+
+.flow-num {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(0, 229, 255, 0.1);
+  border: 2px solid var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.flow-content strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.flow-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ============================================
+   LIVE DEMO
+   ============================================ */
+.demo-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin: 20px 0;
+}
+
+.demo-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 6px;
+}
+
+.demo-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.demo-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.demo-input {
+  flex: 1;
+  min-width: 180px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-family: var(--font-code);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.demo-input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.08);
+}
+
+.demo-btn {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  border: none;
+  color: var(--bg-deep);
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.demo-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 229, 255, 0.3);
+}
+
+.demo-output {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--accent-green);
+  min-height: 48px;
+  line-height: 1.8;
+  display: none;
+}
+
+.demo-output.visible { display: block; }
+
+/* ============================================
+   QUIZ SECTION
+   ============================================ */
+#quiz {
+  background: var(--bg-card);
+}
+
+.quiz-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.quiz-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.quiz-progress-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-code);
+}
+
+.question-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: border-color 0.3s;
+}
+
+.question-card.answered { border-color: rgba(0, 229, 255, 0.2); }
+
+.question-num {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--accent-blue);
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.question-text {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: left;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.option-btn:hover:not(:disabled) {
+  border-color: rgba(0, 229, 255, 0.3);
+  color: var(--text-primary);
+  background: rgba(0, 229, 255, 0.04);
+}
+
+.option-btn:disabled { cursor: default; }
+
+.option-btn.correct {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-green);
+  color: #a7f3d0;
+}
+
+.option-btn.wrong {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: var(--accent-red);
+  color: #fca5a5;
+}
+
+.option-letter {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.answer-reveal {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(0, 229, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-cyan);
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: none;
+  line-height: 1.8;
+}
+
+.answer-reveal.show { display: block; }
+
+.quiz-score {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(59, 130, 246, 0.1));
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  padding: 28px;
+  text-align: center;
+  display: none;
+  margin-top: 20px;
+}
+
+.quiz-score.show { display: block; }
+
+.score-number {
+  font-family: var(--font-display);
+  font-size: 60px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+  padding: 48px 60px;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 32px;
+}
+
+.footer-brand h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  margin-bottom: 10px;
+}
+
+.footer-brand p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 280px;
+}
+
+.footer-links h4 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.footer-links ul { list-style: none; }
+.footer-links li { margin-bottom: 8px; }
+.footer-links a {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--accent-cyan); }
+
+.footer-bottom {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: gap;
+  gap: 12px;
+}
+
+.footer-bottom p {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer-tag {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.08);
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+  :root { --sidebar-w: 0px; }
+
+  #sidebar {
+    transform: translateX(-270px);
+    width: 270px;
+  }
+
+  #sidebar.open { transform: translateX(0); }
+
+  #menu-toggle { display: flex; }
+
+  #main { margin-left: 0; }
+
+  .section, #hero { padding: 50px 24px; }
+
+  .hero-stats { gap: 20px; }
+
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 600px) {
+  .section, #hero { padding: 40px 18px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .demo-row { flex-direction: column; }
+  .demo-btn { width: 100%; text-align: center; }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#hero .hero-badge { animation: fadeInUp 0.5s ease both; }
+#hero .hero-title { animation: fadeInUp 0.5s 0.1s ease both; }
+#hero .hero-subtitle { animation: fadeInUp 0.5s 0.2s ease both; }
+#hero .hero-stats { animation: fadeInUp 0.5s 0.3s ease both; }
+
+/* Inline highlight */
+.hl { 
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+.hl-y { color: var(--accent-yellow); }
+.hl-g { color: var(--accent-green); }
+.hl-p { color: var(--accent-purple); }
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 28px 0;
+}
+
+/* Overlay for mobile menu */
+#overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+#overlay.show { display: block; }
+</style>
+</head>
+
+<body>
+
+<!-- ============================================
+     SCROLL PROGRESS BAR
+     ============================================ -->
+<div id="progress-bar"></div>
+
+<!-- ============================================
+     MOBILE OVERLAY
+     ============================================ -->
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ============================================
+     MOBILE MENU TOGGLE
+     ============================================ -->
+<button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<!-- ============================================
+     SIDEBAR
+     ============================================ -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⬡</div>
+    <h2>Node.js Sikho</h2>
+    <p>Roman Urdu Mein — Complete Guide</p>
+  </div>
+
+  <div class="nav-section-label">Lectures</div>
+  <nav>
+    <a href="#hero" class="active">
+      <span class="nav-icon">🏠</span> Home
+      <span class="nav-num">00</span>
+    </a>
+    <a href="#sec-intro">
+      <span class="nav-icon">🟢</span> Node.js Kya Hai?
+      <span class="nav-num">01</span>
+    </a>
+    <a href="#sec-features">
+      <span class="nav-icon">⚡</span> Core Features
+      <span class="nav-num">02</span>
+    </a>
+    <a href="#sec-arch">
+      <span class="nav-icon">🏗️</span> Architecture
+      <span class="nav-num">03</span>
+    </a>
+    <a href="#sec-modules">
+      <span class="nav-icon">📦</span> Modules
+      <span class="nav-num">04</span>
+    </a>
+    <a href="#sec-eventloop">
+      <span class="nav-icon">🔄</span> Event Loop
+      <span class="nav-num">05</span>
+    </a>
+    <a href="#sec-npm">
+      <span class="nav-icon">📥</span> NPM
+      <span class="nav-num">06</span>
+    </a>
+    <a href="#sec-demo">
+      <span class="nav-icon">🧪</span> Live Demo
+      <span class="nav-num">07</span>
+    </a>
+    <a href="#quiz">
+      <span class="nav-icon">🎯</span> Quiz
+      <span class="nav-num">08</span>
+    </a>
+  </nav>
+
+  <div class="nav-section-label" style="margin-top:auto">Reference</div>
+  <nav>
+    <a href="#sec-intro">
+      <span class="nav-icon">📚</span> Greg — Ch 1–4
+    </a>
+  </nav>
+</aside>
+
+<!-- ============================================
+     MAIN CONTENT
+     ============================================ -->
+<main id="main">
+
+  <!-- =================== HERO =================== -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+
+    <div class="hero-badge">
+      <span class="dot"></span>
+      LECTURE NOTES — 2 GHANTE KI CLASS
+    </div>
+
+    <h1 class="hero-title">
+      Node.js Sikhein<br>
+      <span class="highlight">Roman Urdu</span> Mein
+    </h1>
+
+    <p class="hero-subtitle">
+      Ye notes aapke liye specially banaye gaye hain — jaise teacher class mein samjhata hai, waise hi step-by-step har cheez explain ki gayi hai. Architecture se lekar NPM tak, sab kuch yahan hai.
+    </p>
+
+    <div class="hero-stats">
+      <div class="stat-box">
+        <span class="stat-number">4</span>
+        <span class="stat-label">Major Topics</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-number">2h</span>
+        <span class="stat-label">Class Duration</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-number">8</span>
+        <span class="stat-label">Code Examples</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-number">10</span>
+        <span class="stat-label">Quiz Questions</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== SECTION 1: INTRO =================== -->
+  <section class="section" id="sec-intro">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Node.js <span>Kya Hai?</span></h2>
+    </div>
+
+    <p class="section-intro">
+      Pehle samjhein ke Node.js actually hai kya — kyunki bahut se students sochte hain ye ek programming language hai. Nahi! Ye ek <strong>runtime environment</strong> hai.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">🌐</span>
+        <div class="card-title">Open-Source Hai</div>
+        <div class="card-body">Node.js bilkul free hai. Koi bhi use kar sakta hai, modify kar sakta hai. Duniya bhar ke developers isko improve karte rehte hain.</div>
+        <span class="card-tag">FREE TO USE</span>
+      </div>
+      <div class="card blue">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">Runtime Environment</div>
+        <div class="card-body">JavaScript sirf browser mein chalti thi — lekin Node.js ki wajah se aap JavaScript ko <strong>server par</strong> bhi chala sakte hain. Browser ke bahar!</div>
+        <span class="card-tag">SERVER-SIDE JS</span>
+      </div>
+      <div class="card purple">
+        <span class="card-icon">🏎️</span>
+        <div class="card-title">V8 Engine</div>
+        <div class="card-body">Google Chrome ka V8 engine use karta hai. Ye engine JavaScript code ko seedha machine code mein convert karta hai — isiliye bahut fast hota hai.</div>
+        <span class="card-tag">GOOGLE V8</span>
+      </div>
+      <div class="card green">
+        <span class="card-icon">💻</span>
+        <div class="card-title">Cross-Platform</div>
+        <div class="card-body">Windows pe bhi, Linux pe bhi, Mac pe bhi — Node.js har jagah chalta hai. Ek baar likho, kahin bhi chalao.</div>
+        <span class="card-tag">WINDOWS · LINUX · MAC</span>
+      </div>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div>
+        <strong>Simple samajhne wali baat:</strong>
+        Sochein ke pehle JavaScript sirf ghar (browser) ke andar kaam karti thi. Node.js ne JavaScript ko ghar se bahar — yani server tak — pohoncha diya!
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">Terminal — Node.js Version Check</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><span class="cmt"># Node.js install hai ya nahi check karein:</span>
+<span class="fn">node</span> <span class="str">--version</span>    <span class="cmt"># Output: v20.x.x</span>
+<span class="fn">npm</span>  <span class="str">--version</span>    <span class="cmt"># Output: 10.x.x</span>
+
+<span class="cmt"># Pehla Node.js program chalayein:</span>
+<span class="fn">node</span> <span class="str">hello.js</span></pre>
+    </div>
+
+    <div class="alert exam">
+      <span class="alert-icon">🎓</span>
+      <div>
+        <strong>Exam Tip:</strong>
+        "Node.js ek programming language hai" — ye GALAT hai. Node.js ek <strong>JavaScript Runtime Environment</strong> hai jo V8 engine pe based hai. Exam mein ye zaroor aata hai!
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== SECTION 2: FEATURES =================== -->
+  <section class="section" id="sec-features">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Core <span>Features</span></h2>
+    </div>
+
+    <p class="section-intro">
+      Ab samjhein ke Node.js ItNa popular kyun hai — in 4 main features ki wajah se Node.js bahut powerful aur fast hai.
+    </p>
+
+    <!-- Feature 1: Non-blocking -->
+    <div class="card" style="margin-bottom:16px; max-width:100%">
+      <span class="card-icon">🔀</span>
+      <div class="card-title" style="font-size:17px; margin-bottom:10px">1. Asynchronous & Non-Blocking — "Ruka Nahi Karta"</div>
+      <div class="card-body" style="font-size:13px; color: var(--text-primary)">
+        <p style="margin-bottom:12px">Ye Node.js ka sabse bada feature hai. Normal programming mein ek kaam hoga tab doosra shuru hoga — Node.js yeh nahi karta. Ye ek saath multiple kaam karta rehta hai.</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin: 14px 0">
+          <div style="background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.2); border-radius:8px; padding:14px">
+            <strong style="color:var(--accent-red); font-size:12px; display:block; margin-bottom:8px">❌ Blocking (Puraani Style)</strong>
+            <p style="font-size:11px; color:var(--text-secondary); line-height:1.7">Waiter order leta hai → kitchen mein khana banne tak wahan khara rehta hai → khana lata hai → phir doosre customer ke paas jata hai.<br><br><em>Result: Customers wait karte hain!</em></p>
+          </div>
+          <div style="background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:14px">
+            <strong style="color:var(--accent-green); font-size:12px; display:block; margin-bottom:8px">✅ Non-Blocking (Node.js Style)</strong>
+            <p style="font-size:11px; color:var(--text-secondary); line-height:1.7">Waiter order leta hai → doosre customer ke paas chala jata hai → jab khana ready hota hai tab serve karta hai.<br><br><em>Result: Sabhi customers khush!</em></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">JavaScript — Async Example</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><span class="cmt">// Asynchronous code ka example</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"1 — Pehla kaam shuru"</span>);
+
+<span class="fn">setTimeout</span>(<span class="kw">function</span>() {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"2 — File read hui (2 second baad)"</span>);
+}, <span class="num">2000</span>);
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"3 — Teesra kaam (2 ka wait nahi kiya!)"</span>);
+
+<span class="cmt">// Output Order:
+// 1 — Pehla kaam shuru
+// 3 — Teesra kaam (2 ka wait nahi kiya!)
+// 2 — File read hui (2 second baad)</span></pre>
+    </div>
+
+    <!-- Other features -->
+    <div class="cards-grid" style="margin-top:20px">
+      <div class="card blue">
+        <span class="card-icon">🧵</span>
+        <div class="card-title">Single-Threaded</div>
+        <div class="card-body">Node.js ek hi thread use karta hai — lekin event-driven architecture ki wajah se hazaron requests handle kar sakta hai. Ek engine — hazaron kaam.</div>
+      </div>
+      <div class="card purple">
+        <span class="card-icon">🚀</span>
+        <div class="card-title">Fast Performance</div>
+        <div class="card-body">V8 engine JavaScript ko seedha machine code mein convert karta hai — interpreter ka chakkar nahi. Isiliye bahut tez hota hai.</div>
+      </div>
+      <div class="card green">
+        <span class="card-icon">📡</span>
+        <div class="card-title">Real-time Apps</div>
+        <div class="card-body">Chat apps, live notifications, online games — jo cheezein real-time data chahti hain, Node.js unke liye best choice hai.</div>
+      </div>
+    </div>
+
+    <div class="alert warning">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <strong>Dhyan rakhein:</strong>
+        Node.js CPU-intensive kaam (video processing, badi calculations) ke liye theek nahi. Ye I/O operations (file read/write, database, network) ke liye best hai.
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== SECTION 3: ARCHITECTURE =================== -->
+  <section class="section" id="sec-arch">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Node.js <span>Architecture</span></h2>
+    </div>
+
+    <p class="section-intro">
+      Architecture matlab — Node.js andar se kaam kaise karta hai? Client se request aayi, kahan gayi, kya hua, response kab aaya? Ye poora cycle samjhein.
+    </p>
+
+    <div class="alert info">
+      <span class="alert-icon">🏗️</span>
+      <div>
+        <strong>Node.js ka Model:</strong>
+        Node.js teen cheezein follow karta hai — <strong>Event-Driven</strong> (events pe kaam karta hai), <strong>Non-Blocking I/O</strong> (ruka nahi karta), aur <strong>Client-Server Architecture</strong> (client request karta hai, server jawaab deta hai).
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display); color:var(--text-primary); margin: 24px 0 8px; font-size:16px">Request ka Safar — Step by Step:</h3>
+
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <strong>Client Request Bhejta Hai</strong>
+          <p>Browser ya mobile app server ko request bhejta hai — jaise "mujhe yeh page do"</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <strong>Event Queue Mein Jata Hai</strong>
+          <p>Request seedha process nahi hoti — pehle event queue mein line mein lagti hai</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <strong>Event Loop Check Karta Hai</strong>
+          <p>Event loop har waqt check karta rehta hai — koi kaam pending hai? Agar ha, process karo</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <strong>Heavy Kaam Background Thread Ko</strong>
+          <p>File padhna ya database query — ye kaam background mein hota hai taake main thread ruka na rahe</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-content">
+          <strong>Response Client Ko Bheja</strong>
+          <p>Kaam complete hone par response wapas client ko bhej diya jata hai</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">JavaScript — Simple HTTP Server</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><span class="kw">const</span> <span class="obj">http</span> = <span class="fn">require</span>(<span class="str">'http'</span>);  <span class="cmt">// http module load karo</span>
+
+<span class="cmt">// Server banao</span>
+<span class="kw">const</span> <span class="var">server</span> = <span class="obj">http</span>.<span class="fn">createServer</span>((<span class="var">req</span>, <span class="var">res</span>) => {
+  <span class="var">res</span>.<span class="fn">writeHead</span>(<span class="num">200</span>, { <span class="str">'Content-Type'</span>: <span class="str">'text/plain'</span> });
+  <span class="var">res</span>.<span class="fn">end</span>(<span class="str">'Assalam o Alaikum! Ye mera server hai.'</span>);
+});
+
+<span class="cmt">// Port 3000 pe sunna shuru karo</span>
+<span class="var">server</span>.<span class="fn">listen</span>(<span class="num">3000</span>, () => {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'Server chalu hai: http://localhost:3000'</span>);
+});</pre>
+    </div>
+
+    <div class="alert tip">
+      <span class="alert-icon">✅</span>
+      <div>
+        <strong>Real Life Example:</strong>
+        Architecture ko restaurant ki tarah samjhein — Customer (Client) order deta hai, order pad (Event Queue) pe likha jata hai, manager (Event Loop) order check karta hai, kitchen (Background Thread) mein khaana banta hai, phir customer ko serve hota hai.
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== SECTION 4: MODULES =================== -->
+  <section class="section" id="sec-modules">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Node.js <span>Modules</span></h2>
+    </div>
+
+    <p class="section-intro">
+      Module matlab — code ka ek alag hissa. Jaise ek kitaab mein chapters hote hain, waise hi Node.js mein modules hote hain. Har module ek specific kaam karta hai.
+    </p>
+
+    <div class="alert info">
+      <span class="alert-icon">📦</span>
+      <div>
+        <strong>Yaad rakhein:</strong>
+        Node.js mein <strong>har file ek module hoti hai</strong>. Aap <code style="font-family:var(--font-code); color:var(--accent-cyan)">require()</code> se module load karte hain aur <code style="font-family:var(--font-code); color:var(--accent-cyan)">module.exports</code> se bahar nikaalte hain.
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">🔧</span>
+        <div class="card-title">Core Modules</div>
+        <div class="card-body">
+          Node.js ke sath already aate hain — install karne ki zaroorat nahi.<br><br>
+          <strong style="color:var(--text-primary)">Examples:</strong><br>
+          • <code style="color:var(--accent-cyan); font-family:var(--font-code)">fs</code> — File padhna/likhna<br>
+          • <code style="color:var(--accent-cyan); font-family:var(--font-code)">http</code> — Web server banana<br>
+          • <code style="color:var(--accent-cyan); font-family:var(--font-code)">path</code> — File paths handle karna<br>
+          • <code style="color:var(--accent-cyan); font-family:var(--font-code)">os</code> — Operating system info
+        </div>
+        <span class="card-tag">BUILT-IN</span>
+      </div>
+
+      <div class="card blue">
+        <span class="card-icon">✍️</span>
+        <div class="card-title">Local Modules</div>
+        <div class="card-body">
+          Aap khud banate hain — apna code organize karne ke liye.<br><br>
+          <strong style="color:var(--text-primary)">Faida:</strong> Code ek jagah hone ke bajaye alag-alag files mein hota hai — samajhna aur manage karna asaan.
+        </div>
+        <span class="card-tag">KHUD BANAO</span>
+      </div>
+
+      <div class="card purple">
+        <span class="card-icon">📥</span>
+        <div class="card-title">Third-Party Modules</div>
+        <div class="card-body">
+          NPM se download karke use karte hain.<br><br>
+          <strong style="color:var(--text-primary)">Examples:</strong><br>
+          • <code style="color:var(--accent-purple); font-family:var(--font-code)">express</code> — Web framework<br>
+          • <code style="color:var(--accent-purple); font-family:var(--font-code)">mongoose</code> — MongoDB ke liye<br>
+          • <code style="color:var(--accent-purple); font-family:var(--font-code)">nodemon</code> — Auto restart
+        </div>
+        <span class="card-tag">NPM INSTALL</span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">JavaScript — Modules Ka Use</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><span class="cmt">// ===== 1. Core Module Use Karna =====</span>
+<span class="kw">const</span> <span class="obj">fs</span> = <span class="fn">require</span>(<span class="str">'fs'</span>);  <span class="cmt">// Install nahi, bas require karo</span>
+
+<span class="obj">fs</span>.<span class="fn">readFile</span>(<span class="str">'data.txt'</span>, <span class="str">'utf8'</span>, (<span class="var">err</span>, <span class="var">data</span>) => {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">data</span>);  <span class="cmt">// File ka content print karo</span>
+});
+
+<span class="cmt">// ===== 2. Local Module Banana =====</span>
+<span class="cmt">// math.js file mein likho:</span>
+<span class="kw">function</span> <span class="fn">jama</span>(<span class="var">a</span>, <span class="var">b</span>) { <span class="kw">return</span> <span class="var">a</span> + <span class="var">b</span>; }
+<span class="var">module</span>.<span class="var">exports</span> = { <span class="fn">jama</span> };
+
+<span class="cmt">// app.js mein use karo:</span>
+<span class="kw">const</span> <span class="obj">math</span> = <span class="fn">require</span>(<span class="str">'./math'</span>);  <span class="cmt">// ./ matlab same folder</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="obj">math</span>.<span class="fn">jama</span>(<span class="num">5</span>, <span class="num">3</span>));  <span class="cmt">// Output: 8</span></pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Module Type</th>
+            <th>Install Zaroori?</th>
+            <th>Kahan Se Aata Hai?</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Core Module</td>
+            <td><span class="badge no">Nahi</span></td>
+            <td style="color:var(--text-secondary)">Node.js ke saath built-in</td>
+            <td style="color:var(--text-secondary)">fs, http, path</td>
+          </tr>
+          <tr>
+            <td>Local Module</td>
+            <td><span class="badge no">Nahi</span></td>
+            <td style="color:var(--text-secondary)">Aap khud banate hain</td>
+            <td style="color:var(--text-secondary)">./myModule</td>
+          </tr>
+          <tr>
+            <td>Third-Party</td>
+            <td><span class="badge yes">Haan</span></td>
+            <td style="color:var(--text-secondary)">npm install se</td>
+            <td style="color:var(--text-secondary)">express, mongoose</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert exam">
+      <span class="alert-icon">🎓</span>
+      <div>
+        <strong>Exam Tip:</strong>
+        Core modules install nahi karne padte — ye Node.js ke andar already hote hain. Jab question aaye "Which module is used to create a server?" — answer hai <strong>http</strong>.
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== SECTION 5: EVENT LOOP =================== -->
+  <section class="section" id="sec-eventloop">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Event Loop, Callbacks <span>&amp; Emitters</span></h2>
+    </div>
+
+    <p class="section-intro">
+      Ye Node.js ka "dil" hai. Agar ye samajh gaye toh Node.js ki poori asynchronous power samajh mein aa jaayegi.
+    </p>
+
+    <!-- Event Loop -->
+    <div class="card" style="max-width:100%; margin-bottom:16px">
+      <span class="card-icon">🔄</span>
+      <div class="card-title" style="font-size:17px; margin-bottom:10px">Event Loop — Traffic Police Wala</div>
+      <div class="card-body" style="font-size:13px; color:var(--text-primary); line-height:1.9">
+        Event Loop Node.js ka woh hissa hai jo continuously check karta rehta hai:<br>
+        • <span class="hl">Call Stack</span> — Koi kaam abhi chal raha hai?<br>
+        • <span class="hl-y">Event Queue</span> — Koi kaam pending hai?<br>
+        • <span class="hl-g">Callback Queue</span> — Koi purana kaam complete hua?<br><br>
+        Jaise traffic police officer decide karta hai kaun sa traffic pehle jayega — Event Loop decide karta hai kaunsa request pehle process ho.
+      </div>
+    </div>
+
+    <!-- Callbacks -->
+    <div class="card blue" style="max-width:100%; margin-bottom:16px">
+      <span class="card-icon">📞</span>
+      <div class="card-title" style="font-size:17px; margin-bottom:10px">Callback — "Kaam Hone Par Bulana"</div>
+      <div class="card-body" style="font-size:13px; color:var(--text-primary); line-height:1.9">
+        Callback ek function hai jo doosre function ko diya jata hai — aur jab kaam complete ho tab ye function call hota hai.<br><br>
+        <strong>Real Life:</strong> Aapne restaurant mein order diya. Aap keh dete hain "jab khana ready ho tab mujhe bata dena" — ye callback hai. Aap wahan khare nahi rehte — dusra kaam karte rehte hain.
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">JavaScript — Callback Example</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><span class="kw">const</span> <span class="obj">fs</span> = <span class="fn">require</span>(<span class="str">'fs'</span>);
+
+<span class="cmt">// File padhna + callback function</span>
+<span class="obj">fs</span>.<span class="fn">readFile</span>(<span class="str">'data.txt'</span>, <span class="str">'utf8'</span>, <span class="kw">function</span>(<span class="var">err</span>, <span class="var">result</span>) {
+  <span class="cmt">// Ye function tab chalega jab file read ho jayegi</span>
+  <span class="kw">if</span> (<span class="var">err</span>) {
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'Error aaya!'</span>, <span class="var">err</span>);
+  } <span class="kw">else</span> {
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'File ka content:'</span>, <span class="var">result</span>);
+  }
+});
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'File read ho rahi hai...'</span>);
+<span class="cmt">// Ye line pehle chalegi! Callback baad mein.</span></pre>
+    </div>
+
+    <!-- Event Emitters -->
+    <div class="card purple" style="max-width:100%; margin-bottom:20px">
+      <span class="card-icon">📢</span>
+      <div class="card-title" style="font-size:17px; margin-bottom:10px">Event Emitter — "Awaz Lagana aur Sunna"</div>
+      <div class="card-body" style="font-size:13px; color:var(--text-primary); line-height:1.9">
+        Event Emitter <strong>Observer Pattern</strong> pe kaam karta hai. Koi event "emit" (broadcast) karta hai — aur jis ne "listen" kar rakha hai woh react karta hai.<br><br>
+        <strong>Examples:</strong> File upload complete hui → event emit → doosra kaam shuru. Button click hua → event → function chala.
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">JavaScript — Event Emitter</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><span class="kw">const</span> <span class="obj">EventEmitter</span> = <span class="fn">require</span>(<span class="str">'events'</span>);
+<span class="kw">const</span> <span class="var">myEmitter</span> = <span class="kw">new</span> <span class="obj">EventEmitter</span>();
+
+<span class="cmt">// Event ko "listen" karo (observer)</span>
+<span class="var">myEmitter</span>.<span class="fn">on</span>(<span class="str">'khaanaReady'</span>, (<span class="var">naam</span>) => {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`${naam} ka khaana ready hai!`</span>);
+});
+
+<span class="cmt">// Event "emit" karo (trigger karo)</span>
+<span class="var">myEmitter</span>.<span class="fn">emit</span>(<span class="str">'khaanaReady'</span>, <span class="str">'Ali'</span>);
+<span class="cmt">// Output: Ali ka khaana ready hai!</span></pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cheez</th>
+            <th>Kya Karta Hai?</th>
+            <th>Real Life Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Event Loop</td>
+            <td style="color:var(--text-secondary)">Queue check karta hai, kaam assign karta hai</td>
+            <td style="color:var(--text-secondary)">Traffic Police Officer</td>
+          </tr>
+          <tr>
+            <td>Callback</td>
+            <td style="color:var(--text-secondary)">Kaam hone ke baad call hone wala function</td>
+            <td style="color:var(--text-secondary)">Restaurant mein "Hona pe bulao"</td>
+          </tr>
+          <tr>
+            <td>Event Emitter</td>
+            <td style="color:var(--text-secondary)">Event broadcast karta hai</td>
+            <td style="color:var(--text-secondary)">School ka bell bajana</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =================== SECTION 6: NPM =================== -->
+  <section class="section" id="sec-npm">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2 class="section-title">NPM — <span>Node Package Manager</span></h2>
+    </div>
+
+    <p class="section-intro">
+      NPM duniya ki sabse badi software registry hai. Agar koi feature chahiye toh khud banana zaroori nahi — NPM pe already available hai. Bas install karo aur use karo!
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">📦</span>
+        <div class="card-title">NPM Kya Hai?</div>
+        <div class="card-body">Node Package Manager — yaani node ke packages manage karne wala tool. Jaise Google Play se apps download karte hain, NPM se Node.js packages download karte hain.</div>
+      </div>
+      <div class="card blue">
+        <span class="card-icon">🗂️</span>
+        <div class="card-title">package.json</div>
+        <div class="card-body">Ye aapke project ki "shopping list" hai — project ka naam, version, aur kaunse packages use ho rahe hain — sab kuch is file mein hota hai.</div>
+      </div>
+      <div class="card green">
+        <span class="card-icon">🌍</span>
+        <div class="card-title">NPM Registry</div>
+        <div class="card-body">Online database jahan 2 million se zyada packages available hain. Express, mongoose, lodash, socket.io — sab yahan milte hain.</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">Terminal — NPM Commands</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><span class="cmt"># Naya project shuru karo (package.json banega)</span>
+<span class="fn">npm</span> <span class="str">init</span>
+
+<span class="cmt"># Express install karo</span>
+<span class="fn">npm</span> <span class="str">install</span> <span class="var">express</span>
+
+<span class="cmt"># Aik saath kai packages install karo</span>
+<span class="fn">npm</span> <span class="str">install</span> <span class="var">express mongoose nodemon</span>
+
+<span class="cmt"># Package remove karo</span>
+<span class="fn">npm</span> <span class="str">uninstall</span> <span class="var">express</span>
+
+<span class="cmt"># NPM version dekho</span>
+<span class="fn">npm</span> <span class="str">-v</span>
+
+<span class="cmt"># Saare installed packages list karo</span>
+<span class="fn">npm</span> <span class="str">list</span></pre>
+    </div>
+
+    <h3 style="font-family:var(--font-display); color:var(--text-primary); margin: 24px 0 12px; font-size:16px">package.json — Samjhein:</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot yellow"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">JSON — package.json</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre>{
+  <span class="str">"name"</span>: <span class="str">"mera-project"</span>,         <span class="cmt">// Project ka naam</span>
+  <span class="str">"version"</span>: <span class="str">"1.0.0"</span>,           <span class="cmt">// Version number</span>
+  <span class="str">"description"</span>: <span class="str">"Mera app"</span>,   <span class="cmt">// Mukhtasar taaruf</span>
+  <span class="str">"main"</span>: <span class="str">"index.js"</span>,           <span class="cmt">// Entry point file</span>
+  <span class="str">"scripts"</span>: {
+    <span class="str">"start"</span>: <span class="str">"node index.js"</span>,   <span class="cmt">// npm start se chalega</span>
+    <span class="str">"dev"</span>: <span class="str">"nodemon index.js"</span>    <span class="cmt">// Development ke liye</span>
+  },
+  <span class="str">"dependencies"</span>: {
+    <span class="str">"express"</span>: <span class="str">"^4.18.0"</span>        <span class="cmt">// Required packages</span>
+  }
+}</pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Kya Karta Hai?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>npm init</td>
+            <td style="color:var(--text-secondary)">Naya project shuru karo, package.json banega</td>
+          </tr>
+          <tr>
+            <td>npm install</td>
+            <td style="color:var(--text-secondary)">Saare dependencies install karo (package.json se)</td>
+          </tr>
+          <tr>
+            <td>npm install [naam]</td>
+            <td style="color:var(--text-secondary)">Ek specific package install karo</td>
+          </tr>
+          <tr>
+            <td>npm uninstall [naam]</td>
+            <td style="color:var(--text-secondary)">Package remove karo</td>
+          </tr>
+          <tr>
+            <td>npm -v</td>
+            <td style="color:var(--text-secondary)">NPM version check karo</td>
+          </tr>
+          <tr>
+            <td>npm start</td>
+            <td style="color:var(--text-secondary)">Project ko chalaao (package.json script se)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert tip">
+      <span class="alert-icon">✅</span>
+      <div>
+        <strong>Pro Tip:</strong>
+        Hamesha <code style="font-family:var(--font-code); color:var(--accent-green)">node_modules</code> folder ko <code style="font-family:var(--font-code); color:var(--accent-green)">.gitignore</code> mein daalo. Ye folder share nahi karte — dusra banda <code style="font-family:var(--font-code); color:var(--accent-green)">npm install</code> se sab kuch dobara install kar sakta hai.
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== SECTION 7: LIVE DEMO =================== -->
+  <section class="section" id="sec-demo">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2 class="section-title">Live <span>Demo</span></h2>
+    </div>
+
+    <p class="section-intro">
+      Kuch interactive exercises try karein — samajh aayega ke concepts practically kaise kaam karte hain.
+    </p>
+
+    <!-- Demo 1: String Reversal -->
+    <div class="demo-box">
+      <div class="demo-title">🔄 String Ulta Karo</div>
+      <div class="demo-subtitle">Koi bhi text type karo — Node.js style mein reverse ho jayega</div>
+      <div class="demo-row">
+        <input type="text" class="demo-input" id="reverseInput" placeholder="Yahan kuch likho..." />
+        <button class="demo-btn" onclick="reverseString()">Reverse Karo ⚡</button>
+      </div>
+      <div class="demo-output" id="reverseOutput"></div>
+    </div>
+
+    <!-- Demo 2: Word Count -->
+    <div class="demo-box">
+      <div class="demo-title">📊 Words Count Karo</div>
+      <div class="demo-subtitle">Koi sentence likho — words, characters aur spaces count hoge</div>
+      <div class="demo-row">
+        <input type="text" class="demo-input" id="wordInput" placeholder="Koi sentence likho..." />
+        <button class="demo-btn" onclick="countWords()">Analyze Karo 🔍</button>
+      </div>
+      <div class="demo-output" id="wordOutput"></div>
+    </div>
+
+    <!-- Demo 3: Callback Simulation -->
+    <div class="demo-box">
+      <div class="demo-title">⏱️ Async Callback Simulate Karo</div>
+      <div class="demo-subtitle">Dekho ke async kaise kaam karta hai — order mein nahi chalega!</div>
+      <div class="demo-row">
+        <button class="demo-btn" onclick="simulateAsync()">Chalao Async Demo 🚀</button>
+      </div>
+      <div class="demo-output" id="asyncOutput"></div>
+    </div>
+  </section>
+
+  <!-- =================== QUIZ SECTION =================== -->
+  <section class="section" id="quiz" style="background:var(--bg-card)">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2 class="section-title">Quiz — <span>Test Karein!</span></h2>
+    </div>
+    <p class="section-intro">Ab test karte hain — kitna samajh aaya! Har question ke options mein se sahi jawab choose karein.</p>
+
+    <!-- Q1 -->
+    <div class="question-card" id="q1">
+      <div class="question-num">QUESTION 01 / 05</div>
+      <div class="question-text">Node.js ko konsa engine power karta hai?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="checkAnswer(this, 'q1', false, 'SpiderMonkey Mozilla Firefox ka engine hai, Node.js ka nahi.')">
+          <span class="option-letter">A</span> SpiderMonkey
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q1', true, 'Bilkul sahi! Google Chrome ka V8 engine Node.js ko power karta hai — JavaScript ko seedha machine code mein convert karta hai.')">
+          <span class="option-letter">B</span> V8 Engine
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q1', false, 'Chakra Microsoft Edge ka engine tha, Node.js ka nahi.')">
+          <span class="option-letter">C</span> Chakra
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q1', false, 'JVM Java ke liye hai, JavaScript ke liye nahi.')">
+          <span class="option-letter">D</span> JVM
+        </button>
+      </div>
+      <div class="answer-reveal" id="reveal-q1"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-card" id="q2">
+      <div class="question-num">QUESTION 02 / 05</div>
+      <div class="question-text">Node.js mein har file ko kya treat kiya jata hai?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="checkAnswer(this, 'q2', false, 'Class nahi — Node.js mein har file ek module hoti hai.')">
+          <span class="option-letter">A</span> Class
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q2', false, 'Function nahi — poori file ek module hoti hai.')">
+          <span class="option-letter">B</span> Function
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q2', true, 'Bilkul sahi! Node.js mein har file automatically ek module treat hoti hai. Isliye require() se import karte hain.')">
+          <span class="option-letter">C</span> Module
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q2', false, 'Package nahi — package kai modules ka collection hota hai.')">
+          <span class="option-letter">D</span> Package
+        </button>
+      </div>
+      <div class="answer-reveal" id="reveal-q2"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-card" id="q3">
+      <div class="question-num">QUESTION 03 / 05</div>
+      <div class="question-text">HTTP server banane ke liye kaunsa core module use hota hai?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="checkAnswer(this, 'q3', false, 'fs module file system ke liye hai — file padhna/likhna.')">
+          <span class="option-letter">A</span> fs
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q3', true, 'Bilkul sahi! http module se HTTP server create hota hai — require(\"http\") se load karte hain.')">
+          <span class="option-letter">B</span> http
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q3', false, 'path module file paths handle karne ke liye hai.')">
+          <span class="option-letter">C</span> path
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q3', false, 'os module operating system information ke liye hai.')">
+          <span class="option-letter">D</span> os
+        </button>
+      </div>
+      <div class="answer-reveal" id="reveal-q3"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-card" id="q4">
+      <div class="question-num">QUESTION 04 / 05</div>
+      <div class="question-text">NPM ka full form kya hai?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="checkAnswer(this, 'q4', false, 'Ye galat hai — NPM Node ke packages manage karta hai.')">
+          <span class="option-letter">A</span> New Programming Method
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q4', false, 'Network Performance Manager galat hai.')">
+          <span class="option-letter">B</span> Network Performance Manager
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q4', true, 'Bilkul sahi! NPM = Node Package Manager — duniya ki sabse badi package registry jo Node.js ke packages manage karta hai.')">
+          <span class="option-letter">C</span> Node Package Manager
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q4', false, 'Node Process Monitor galat hai.')">
+          <span class="option-letter">D</span> Node Process Monitor
+        </button>
+      </div>
+      <div class="answer-reveal" id="reveal-q4"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-card" id="q5">
+      <div class="question-num">QUESTION 05 / 05</div>
+      <div class="question-text">Event Loop ko Node.js mein kya keh sakte hain?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="checkAnswer(this, 'q5', false, 'Event loop sirf database nahi chalata — ye asynchronous operations manage karta hai.')">
+          <span class="option-letter">A</span> Database ka Controller
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q5', true, 'Bilkul sahi! Event Loop Node.js ka "heart" hai — continuously check karta hai ke kaunsa asynchronous operation complete hua aur callback queue mein rakhta hai.')">
+          <span class="option-letter">B</span> Node.js ka Dil (Heart)
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q5', false, 'Event loop module loader nahi hai — require() modules load karta hai.')">
+          <span class="option-letter">C</span> Module Loader
+        </button>
+        <button class="option-btn" onclick="checkAnswer(this, 'q5', false, 'Event loop NPM nahi hai — dono alag cheezein hain.')">
+          <span class="option-letter">D</span> NPM ka Part
+        </button>
+      </div>
+      <div class="answer-reveal" id="reveal-q5"></div>
+    </div>
+
+    <!-- Score -->
+    <div class="quiz-score" id="quizScore">
+      <div class="score-number" id="scoreNum">0/5</div>
+      <div class="score-label" id="scoreMsg">Quiz complete!</div>
+      <button class="demo-btn" onclick="resetQuiz()" style="margin-top:20px">Dobara Try Karo 🔁</button>
+    </div>
+  </section>
+
+  <!-- =================== FOOTER =================== -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>⬡ Node.js Sikho</h3>
+        <p>
+          Ye lecture notes specially Roman Urdu mein banaye gaye hain taake har student asaani se samajh sake. Greg Chapter 1–4 ke reference se tayyar.
+        </p>
+      </div>
+      <div class="footer-links">
+        <h4>Topics</h4>
+        <ul>
+          <li><a href="#sec-intro">Node.js Kya Hai?</a></li>
+          <li><a href="#sec-features">Core Features</a></li>
+          <li><a href="#sec-arch">Architecture</a></li>
+          <li><a href="#sec-modules">Modules</a></li>
+          <li><a href="#sec-eventloop">Event Loop</a></li>
+          <li><a href="#sec-npm">NPM</a></li>
+          <li><a href="#quiz">Quiz</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Node.js Lecture Notes — Roman Urdu Mein | Reference: Greg Chapters 1–4</p>
+      <span class="footer-tag">Web / Server-Side Development</span>
+    </div>
+  </footer>
+
+</main><!-- end #main -->
+
+<!-- ============================================
+     JAVASCRIPT
+     ============================================ -->
+<script>
+// ============================================
+// SCROLL PROGRESS BAR
+// ============================================
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.body.scrollHeight - window.innerHeight;
+  const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  document.getElementById('progress-bar').style.width = progress + '%';
+});
+
+// ============================================
+// SIDEBAR ACTIVE LINK ON SCROLL
+// ============================================
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('#sidebar nav a');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => link.classList.remove('active'));
+      const activeLink = document.querySelector(`#sidebar nav a[href="#${entry.target.id}"]`);
+      if (activeLink) activeLink.classList.add('active');
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+sections.forEach(section => observer.observe(section));
+
+// ============================================
+// SCROLL ANIMATIONS (fade in sections)
+// ============================================
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.section').forEach(section => {
+  fadeObserver.observe(section);
+});
+
+// ============================================
+// MOBILE SIDEBAR TOGGLE
+// ============================================
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// Close sidebar on nav link click (mobile)
+navLinks.forEach(link => {
+  link.addEventListener('click', closeSidebar);
+});
+
+// ============================================
+// COPY CODE BUTTON
+// ============================================
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--accent-green)';
+    btn.style.borderColor = 'var(--accent-green)';
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+
+// ============================================
+// DEMO 1: STRING REVERSE
+// ============================================
+function reverseString() {
+  const input = document.getElementById('reverseInput').value.trim();
+  const output = document.getElementById('reverseOutput');
+  
+  if (!input) {
+    output.textContent = '⚠️ Kuch likho pehle!';
+    output.classList.add('visible');
+    output.style.color = 'var(--accent-yellow)';
+    return;
+  }
+  
+  const reversed = input.split('').reverse().join('');
+  output.innerHTML = `<span style="color:var(--text-muted)">Input:</span>  "${input}"\n<span style="color:var(--text-muted)">Output:</span> "${reversed}"\n\n<span style="color:var(--text-muted)">// Code: input.split('').reverse().join('')</span>`;
+  output.style.color = 'var(--accent-green)';
+  output.classList.add('visible');
+}
+
+document.getElementById('reverseInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') reverseString();
+});
+
+// ============================================
+// DEMO 2: WORD COUNT
+// ============================================
+function countWords() {
+  const input = document.getElementById('wordInput').value;
+  const output = document.getElementById('wordOutput');
+  
+  if (!input.trim()) {
+    output.textContent = '⚠️ Pehle kuch likho!';
+    output.classList.add('visible');
+    output.style.color = 'var(--accent-yellow)';
+    return;
+  }
+  
+  const words = input.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const chars = input.length;
+  const charsNoSpaces = input.replace(/\s/g, '').length;
+  const sentences = (input.match(/[.!?]+/g) || []).length;
+
+  output.innerHTML = `📝 Words:      ${words}\n📊 Characters: ${chars}\n🔤 Chars (no spaces): ${charsNoSpaces}\n📌 Sentences:  ${sentences || 'N/A'}`;
+  output.style.color = 'var(--accent-cyan)';
+  output.classList.add('visible');
+}
+
+document.getElementById('wordInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') countWords();
+});
+
+// ============================================
+// DEMO 3: ASYNC SIMULATION
+// ============================================
+function simulateAsync() {
+  const output = document.getElementById('asyncOutput');
+  output.classList.add('visible');
+  output.style.color = 'var(--accent-cyan)';
+  output.textContent = '';
+
+  const messages = [
+    { text: '▶ console.log("Step 1 shuru") — execute hua', delay: 100, color: 'var(--accent-cyan)' },
+    { text: '▶ setTimeout set ho gaya (2 sec baad chalega)', delay: 600, color: 'var(--accent-yellow)' },
+    { text: '▶ console.log("Step 3") — ABHEE chalaya! (Step 2 ka wait nahi kiya)', delay: 1100, color: 'var(--accent-cyan)' },
+    { text: '⏳ 2 seconds wait ho raha hai...', delay: 1600, color: 'var(--text-muted)' },
+    { text: '✅ Step 2 — setTimeout callback finally chala! (2 sec baad)', delay: 2800, color: 'var(--accent-green)' },
+    { text: '\n💡 Yahi hai Non-Blocking! Step 3 ne Step 2 ka wait nahi kiya.', delay: 3200, color: 'var(--accent-purple)' },
+  ];
+
+  let fullText = '';
+  messages.forEach(msg => {
+    setTimeout(() => {
+      fullText += (fullText ? '\n' : '') + msg.text;
+      output.textContent = fullText;
+    }, msg.delay);
+  });
+}
+
+// ============================================
+// QUIZ LOGIC
+// ============================================
+let score = 0;
+let answered = 0;
+const totalQ = 5;
+
+function checkAnswer(btn, questionId, isCorrect, explanation) {
+  const card = document.getElementById(questionId);
+  
+  // Agar already answered ho
+  if (card.classList.contains('answered')) return;
+  card.classList.add('answered');
+  
+  // Sare buttons disable karo
+  card.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    // Sahi jawab highlight karo
+    card.querySelectorAll('.option-btn').forEach(b => {
+      const onclick = b.getAttribute('onclick');
+      if (onclick && onclick.includes('true,')) b.classList.add('correct');
+    });
+  }
+
+  // Explanation dikhao
+  const reveal = document.getElementById(`reveal-${questionId}`);
+  reveal.textContent = (isCorrect ? '✅ ' : '❌ ') + explanation;
+  reveal.classList.add('show');
+
+  answered++;
+  
+  // Agar sare jawab diye toh score dikhao
+  if (answered === totalQ) {
+    setTimeout(() => {
+      const scoreDiv = document.getElementById('quizScore');
+      document.getElementById('scoreNum').textContent = `${score}/${totalQ}`;
+      
+      let msg = '';
+      if (score === 5) msg = '🏆 Zabardast! Perfect score! Aap Node.js samajh gaye!';
+      else if (score >= 3) msg = '👍 Achha kiya! Thodi aur practice karo.';
+      else msg = '📖 Notes dobara parho — phir quiz dena!';
+      
+      document.getElementById('scoreMsg').textContent = msg;
+      scoreDiv.classList.add('show');
+      scoreDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 600);
+  }
+}
+
+function resetQuiz() {
+  score = 0;
+  answered = 0;
+  
+  for (let i = 1; i <= totalQ; i++) {
+    const card = document.getElementById(`q${i}`);
+    card.classList.remove('answered');
+    card.querySelectorAll('.option-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct', 'wrong');
+    });
+    const reveal = document.getElementById(`reveal-q${i}`);
+    reveal.classList.remove('show');
+    reveal.textContent = '';
+  }
+  
+  document.getElementById('quizScore').classList.remove('show');
+  document.getElementById('quiz').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

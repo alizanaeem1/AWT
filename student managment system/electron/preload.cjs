@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld("desktopAPI", {
   },
   files: {
     list: (semesterId) => ipcRenderer.invoke("file:list", semesterId),
+    listByAssignment: (assignmentId) => ipcRenderer.invoke("file:listByAssignment", assignmentId),
     add: (payload) => ipcRenderer.invoke("file:add", payload),
     remove: (fileId) => ipcRenderer.invoke("file:remove", fileId),
     pick: () => ipcRenderer.invoke("file:pick"),
@@ -40,10 +41,38 @@ contextBridge.exposeInMainWorld("desktopAPI", {
   analytics: {
     dashboard: (payload) => ipcRenderer.invoke("analytics:dashboard", payload)
   },
+  timetable: {
+    listBySemester: (payload) => ipcRenderer.invoke("timetable:listBySemester", payload),
+    save: (payload) => ipcRenderer.invoke("timetable:save", payload),
+    remove: (payload) => ipcRenderer.invoke("timetable:remove", payload)
+  },
+  ai: {
+    generate: (payload) => ipcRenderer.invoke("ai:generate", payload)
+  },
   reports: {
     exportGpaPdf: (payload) => ipcRenderer.invoke("report:gpaPdf", payload)
   },
   notify: (payload) => ipcRenderer.invoke("notify:desktop", payload),
+  /**
+   * Registers listener for mirrored OS notifications → in-app Notifications inbox (dedupe in React).
+   * @param {(detail: { title: string; body: string; dedupeKey?: string|null; kind?: string }) => void} handler
+   * @returns {() => void} cleanup
+   */
+  onInboxMirrorFromMain: (handler) => {
+    if (typeof handler !== "function") return () => {};
+    const channel = "notifications:inboxMirror";
+    const wrapped = (_event, detail) => {
+      try {
+        handler(detail);
+      } catch {
+        /* ignore */
+      }
+    };
+    ipcRenderer.on(channel, wrapped);
+    return () => {
+      ipcRenderer.removeListener(channel, wrapped);
+    };
+  },
   window: {
     minimize: () => ipcRenderer.invoke("window:minimize"),
     maximize: () => ipcRenderer.invoke("window:maximize"),

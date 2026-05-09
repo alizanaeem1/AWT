@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEAN Stack & React - CSC337 Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================
+     CSS VARIABLES - Colors & Theme
+  ============================================ */
+  :root {
+    --bg-primary: #050a14;
+    --bg-secondary: #0a1628;
+    --bg-card: #0d1f3c;
+    --bg-card-hover: #112545;
+    --accent-cyan: #00d4ff;
+    --accent-green: #00ff9d;
+    --accent-orange: #ff6b2b;
+    --accent-purple: #a855f7;
+    --accent-yellow: #ffd60a;
+    --text-primary: #e2f0ff;
+    --text-secondary: #8aadcc;
+    --text-muted: #4a6580;
+    --border: #1a3a5c;
+    --border-bright: #2a5a8c;
+    --sidebar-width: 270px;
+    --header-height: 4px;
+  }
+
+  /* ============================================
+     RESET & BASE
+  ============================================ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    line-height: 1.7;
+  }
+
+  /* ============================================
+     PROGRESS BAR (Top scroll indicator)
+  ============================================ */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green), var(--accent-purple));
+    z-index: 9999;
+    transition: width 0.1s ease;
+    box-shadow: 0 0 10px var(--accent-cyan);
+  }
+
+  /* ============================================
+     SIDEBAR
+  ============================================ */
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  .sidebar-logo {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #00d4ff22, #a855f722);
+    border: 1px solid var(--accent-cyan);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-cyan);
+    margin-bottom: 8px;
+  }
+
+  .sidebar-logo h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .sidebar-logo p {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  .sidebar-nav { padding: 12px 0; flex: 1; }
+
+  .nav-section-title {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 10px 20px 4px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 400;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+    background: #ffffff08;
+    border-left-color: var(--border-bright);
+  }
+
+  .nav-link.active {
+    color: var(--accent-cyan);
+    background: #00d4ff10;
+    border-left-color: var(--accent-cyan);
+    font-weight: 600;
+  }
+
+  .nav-link .nav-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Mobile sidebar toggle */
+  #mob-toggle {
+    display: none;
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 1100;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--accent-cyan);
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ============================================
+     MAIN CONTENT
+  ============================================ */
+  #main {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+  }
+
+  /* ============================================
+     HERO SECTION
+  ============================================ */
+  #hero {
+    position: relative;
+    padding: 80px 60px 70px;
+    overflow: hidden;
+    background: 
+      radial-gradient(ellipse 60% 50% at 80% 50%, #00d4ff0d 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, #a855f708 0%, transparent 60%),
+      var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+  }
+
+  .hero-content { position: relative; z-index: 1; }
+
+  .hero-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+
+  .tag-cyan { color: var(--accent-cyan); border-color: var(--accent-cyan); background: #00d4ff12; }
+  .tag-green { color: var(--accent-green); border-color: var(--accent-green); background: #00ff9d10; }
+  .tag-orange { color: var(--accent-orange); border-color: var(--accent-orange); background: #ff6b2b12; }
+  .tag-purple { color: var(--accent-purple); border-color: var(--accent-purple); background: #a855f712; }
+
+  .hero-title {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .hero-title .highlight-cyan { color: var(--accent-cyan); }
+  .hero-title .highlight-green { color: var(--accent-green); }
+
+  .hero-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    max-width: 620px;
+    margin-bottom: 30px;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    text-align: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    min-width: 90px;
+  }
+
+  .stat-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ============================================
+     SECTIONS (Content)
+  ============================================ */
+  .section {
+    padding: 60px 60px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+
+  .section-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .icon-cyan { background: #00d4ff18; border: 1px solid var(--accent-cyan); }
+  .icon-green { background: #00ff9d18; border: 1px solid var(--accent-green); }
+  .icon-orange { background: #ff6b2b18; border: 1px solid var(--accent-orange); }
+  .icon-purple { background: #a855f718; border: 1px solid var(--accent-purple); }
+  .icon-yellow { background: #ffd60a18; border: 1px solid var(--accent-yellow); }
+
+  .section-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .section-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    margin-top: 2px;
+  }
+
+  /* ============================================
+     CARDS
+  ============================================ */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-bright);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px #00d4ff0a;
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-icon { font-size: 1.8rem; margin-bottom: 10px; }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .card-body {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .card-accent-cyan { border-top: 2px solid var(--accent-cyan); }
+  .card-accent-green { border-top: 2px solid var(--accent-green); }
+  .card-accent-orange { border-top: 2px solid var(--accent-orange); }
+  .card-accent-purple { border-top: 2px solid var(--accent-purple); }
+
+  /* ============================================
+     FLOW DIAGRAM (Inline)
+  ============================================ */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 24px 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 26px;
+    overflow-x: auto;
+  }
+
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 90px;
+  }
+
+  .flow-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .flow-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
+
+  .flow-arrow {
+    color: var(--accent-cyan);
+    font-size: 1.2rem;
+    padding: 0 6px;
+    line-height: 1;
+    margin-bottom: 18px;
+  }
+
+  .flow-box.cyan { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .flow-box.green { border-color: var(--accent-green); color: var(--accent-green); }
+  .flow-box.orange { border-color: var(--accent-orange); color: var(--accent-orange); }
+  .flow-box.purple { border-color: var(--accent-purple); color: var(--accent-purple); }
+
+  /* ============================================
+     CODE BLOCKS
+  ============================================ */
+  .code-block {
+    background: #020810;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #0a1628;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent-cyan);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .code-dots { display: flex; gap: 5px; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green { background: #28c840; }
+
+  .code-copy {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 0.68rem;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.2s;
+  }
+  .code-copy:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+  .code-content {
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: #c9d7e8;
+  }
+
+  .code-content::-webkit-scrollbar { height: 4px; }
+  .code-content::-webkit-scrollbar-thumb { background: var(--border-bright); }
+
+  /* Syntax highlighting */
+  .kw { color: #c792ea; } /* keywords */
+  .fn { color: #82aaff; } /* functions */
+  .str { color: #c3e88d; } /* strings */
+  .num { color: #f78c6c; } /* numbers */
+  .cmt { color: #546e7a; font-style: italic; } /* comments */
+  .obj { color: #ffcb6b; } /* object/class names */
+  .punct { color: #89ddff; } /* punctuation */
+
+  /* ============================================
+     TABLES
+  ============================================ */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  thead tr {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-bright);
+  }
+
+  thead th {
+    padding: 13px 16px;
+    text-align: left;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent-cyan);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #ffffff05; }
+
+  td {
+    padding: 12px 16px;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  td:first-child { color: var(--text-primary); font-weight: 600; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+  }
+
+  .badge-green { background: #00ff9d20; color: var(--accent-green); border: 1px solid var(--accent-green); }
+  .badge-red { background: #ff5f5720; color: #ff5f57; border: 1px solid #ff5f57; }
+  .badge-cyan { background: #00d4ff20; color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+  .badge-orange { background: #ff6b2b20; color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+
+  /* ============================================
+     ALERT BOXES
+  ============================================ */
+  .alert {
+    display: flex;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    margin: 16px 0;
+    font-size: 0.83rem;
+  }
+
+  .alert-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+  .alert-content strong {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .alert-tip {
+    background: #00ff9d10;
+    border: 1px solid #00ff9d40;
+    color: #a8f0d0;
+  }
+  .alert-tip strong { color: var(--accent-green); }
+
+  .alert-warn {
+    background: #ff6b2b10;
+    border: 1px solid #ff6b2b40;
+    color: #f0c4a8;
+  }
+  .alert-warn strong { color: var(--accent-orange); }
+
+  .alert-exam {
+    background: #a855f710;
+    border: 1px solid #a855f740;
+    color: #d4a8f0;
+  }
+  .alert-exam strong { color: var(--accent-purple); }
+
+  .alert-info {
+    background: #00d4ff10;
+    border: 1px solid #00d4ff40;
+    color: #a8d4f0;
+  }
+  .alert-info strong { color: var(--accent-cyan); }
+
+  /* ============================================
+     STEP LIST
+  ============================================ */
+  .step-list { list-style: none; margin: 16px 0; }
+
+  .step-list li {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    min-width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #000;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .step-text strong { color: var(--text-primary); }
+
+  /* ============================================
+     LIVE DEMO
+  ============================================ */
+  .demo-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px;
+    margin: 20px 0;
+  }
+
+  .demo-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-green);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .demo-title::before {
+    content: '▶';
+    font-size: 0.7rem;
+  }
+
+  .demo-input-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .demo-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .demo-input:focus { border-color: var(--accent-cyan); }
+  .demo-input::placeholder { color: var(--text-muted); }
+
+  .demo-select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .demo-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--accent-cyan), #0099bb);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .demo-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px #00d4ff40;
+  }
+
+  .demo-btn-danger {
+    background: linear-gradient(135deg, #ff5f57, #cc3333);
+    color: #fff;
+  }
+
+  .demo-output {
+    background: #020810;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    min-height: 80px;
+    color: var(--accent-green);
+    white-space: pre-wrap;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #0a1628;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+
+  .task-item.done { opacity: 0.5; text-decoration: line-through; }
+
+  .task-checkbox {
+    width: 16px; height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent-cyan);
+  }
+
+  .task-delete {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid #ff5f5760;
+    color: #ff5f57;
+    border-radius: 4px;
+    width: 24px; height: 24px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .task-delete:hover { background: #ff5f5720; }
+
+  /* ============================================
+     QUIZ SECTION
+  ============================================ */
+  .quiz-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 18px;
+    transition: border-color 0.3s;
+  }
+
+  .quiz-card.correct { border-color: var(--accent-green); background: #00ff9d08; }
+  .quiz-card.wrong { border-color: #ff5f57; background: #ff5f5708; }
+
+  .quiz-q {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .quiz-q span.q-num {
+    font-family: 'Space Mono', monospace;
+    color: var(--accent-cyan);
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .quiz-option:hover { border-color: var(--border-bright); color: var(--text-primary); }
+  .quiz-option.selected-correct { background: #00ff9d15; border-color: var(--accent-green); color: var(--accent-green); }
+  .quiz-option.selected-wrong { background: #ff5f5715; border-color: #ff5f57; color: #ff5f57; }
+  .quiz-option.reveal-correct { background: #00ff9d10; border-color: var(--accent-green); color: var(--accent-green); }
+
+  .quiz-option-key {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-muted);
+  }
+
+  .quiz-feedback {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    display: none;
+  }
+
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: #00ff9d15; color: var(--accent-green); }
+  .quiz-feedback.wrong-fb { background: #ff5f5715; color: #ff8a85; }
+
+  .quiz-score-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .score-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+  }
+
+  .score-text { font-size: 0.82rem; color: var(--text-secondary); }
+
+  .reset-btn {
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+  /* ============================================
+     FOOTER
+  ============================================ */
+  footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 36px 60px;
+    text-align: center;
+  }
+
+  .footer-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent-cyan);
+    margin-bottom: 8px;
+  }
+
+  footer p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+
+  footer strong { color: var(--text-secondary); }
+
+  /* ============================================
+     PROSE TEXT (body paragraphs)
+  ============================================ */
+  .prose {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.85;
+    margin-bottom: 16px;
+  }
+
+  .prose strong { color: var(--text-primary); }
+  .prose code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: var(--accent-cyan);
+  }
+
+  /* ============================================
+     RESPONSIVE
+  ============================================ */
+  @media (max-width: 900px) {
+    :root { --sidebar-width: 0px; }
+
+    #sidebar {
+      transform: translateX(-270px);
+      width: 270px;
+    }
+
+    #sidebar.open { transform: translateX(0); }
+
+    #mob-toggle { display: flex; }
+
+    #main { margin-left: 0; }
+
+    .section, #hero, footer { padding-left: 24px; padding-right: 24px; }
+
+    #hero { padding-top: 60px; }
+
+    .hero-stats { gap: 12px; }
+
+    .cards-grid { grid-template-columns: 1fr; }
+
+    .flow-diagram { gap: 4px; padding: 16px; }
+  }
+
+  /* ============================================
+     UTILITY
+  ============================================ */
+  .mb-16 { margin-bottom: 16px; }
+  .mb-24 { margin-bottom: 24px; }
+  .mt-24 { margin-top: 24px; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Overlay for mobile sidebar */
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #00000080;
+    z-index: 900;
+  }
+
+  #overlay.show { display: block; }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Mobile Toggle -->
+<button id="mob-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+
+<!-- Overlay (mobile) -->
+<div id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ============================================
+     SIDEBAR
+============================================ -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">📚 CSC337</div>
+    <h2>MEAN Stack & React</h2>
+    <p>Study Guide — Roman Urdu</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Shuru Karen</div>
+    <a class="nav-link active" onclick="scrollTo('hero')">
+      <span class="nav-icon">🏠</span> Overview
+    </a>
+    <a class="nav-link" onclick="scrollTo('mean-intro')">
+      <span class="nav-icon">🔗</span> MEAN Kya Hai?
+    </a>
+
+    <div class="nav-section-title">Backend</div>
+    <a class="nav-link" onclick="scrollTo('rest-api')">
+      <span class="nav-icon">📡</span> REST API Design
+    </a>
+    <a class="nav-link" onclick="scrollTo('express-mongo')">
+      <span class="nav-icon">⚙️</span> Express + MongoDB
+    </a>
+
+    <div class="nav-section-title">Frontend</div>
+    <a class="nav-link" onclick="scrollTo('react-basics')">
+      <span class="nav-icon">⚛️</span> React Components
+    </a>
+    <a class="nav-link" onclick="scrollTo('hooks')">
+      <span class="nav-icon">🪝</span> Hooks & Lifecycle
+    </a>
+    <a class="nav-link" onclick="scrollTo('virtual-dom')">
+      <span class="nav-icon">🌐</span> Virtual DOM
+    </a>
+
+    <div class="nav-section-title">Practice</div>
+    <a class="nav-link" onclick="scrollTo('live-demo')">
+      <span class="nav-icon">🎮</span> Live Demo
+    </a>
+    <a class="nav-link" onclick="scrollTo('quiz')">
+      <span class="nav-icon">🧩</span> Quiz (MCQs)
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">v1.0 · Lecture 12 · 2 hrs</div>
+</aside>
+
+<!-- ============================================
+     MAIN CONTENT
+============================================ -->
+<main id="main">
+
+  <!-- ==================== HERO ==================== -->
+  <section id="hero">
+    <div class="hero-grid-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-tags">
+        <span class="tag tag-cyan">MEAN Stack</span>
+        <span class="tag tag-green">ReactJS</span>
+        <span class="tag tag-orange">REST API</span>
+        <span class="tag tag-purple">CSC337</span>
+      </div>
+      <h1 class="hero-title">
+        <span class="highlight-cyan">MEAN Stack</span> aur<br>
+        <span class="highlight-green">ReactJS</span> Seekhen
+      </h1>
+      <p class="hero-subtitle">
+        Bilkul simple Roman Urdu mein — jaise teacher samjhata hai. Step by step, examples ke saath, aur code bhi. Lecture 12 ka poora content ek jagah!
+      </p>
+      <div class="hero-stats">
+        <div class="stat-box">
+          <span class="stat-number">6</span>
+          <span class="stat-label">Topics</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">5</span>
+          <span class="stat-label">MCQs</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">2h</span>
+          <span class="stat-label">Lecture</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">4</span>
+          <span class="stat-label">CLOs</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MEAN INTRO ==================== -->
+  <section class="section" id="mean-intro">
+    <div class="section-header">
+      <div class="section-icon icon-cyan">🔗</div>
+      <div>
+        <div class="section-title">MEAN Stack Kya Hota Hai?</div>
+        <div class="section-subtitle">Part A · 0–10 min</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>MEAN</strong> ek full-stack technology combination hai jisme 4 cheezein hoti hain. Socho jaise ek factory ka pipeline — kaam ek jagah se shuru hota hai aur doosri jagah khatam hota hai. React UI pe user kuch karta hai → Express/Node process karta hai → MongoDB mein data save hota hai.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card card-accent-cyan">
+        <div class="card-icon">⚛️</div>
+        <div class="card-title">M — MongoDB</div>
+        <div class="card-body">Database hai. Jahan saara data save hota hai. JSON jaisi format mein data rakhta hai. Jaise ek bada digital almirah.</div>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-icon">🟢</div>
+        <div class="card-title">E — Express.js</div>
+        <div class="card-body">Backend web framework hai. Node ke upar kaam karta hai. Routes banata hai — matlab kaunsa URL request pe kya karna hai.</div>
+      </div>
+      <div class="card card-accent-orange">
+        <div class="card-icon">🟡</div>
+        <div class="card-title">A — Angular / React</div>
+        <div class="card-body">Frontend UI framework. Is lecture mein hum React use kar rahe hain. Jo user screen pe dekhta hai, woh React banata hai.</div>
+      </div>
+      <div class="card card-accent-purple">
+        <div class="card-icon">⬡</div>
+        <div class="card-title">N — Node.js</div>
+        <div class="card-body">JavaScript ko server pe chalata hai. Browser ke bahar JS run hoti hai. Express issi ke upar bana hai.</div>
+      </div>
+    </div>
+
+    <p class="prose mb-24">Ab dekho poora request flow kaise kaam karta hai:</p>
+
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <div class="flow-box cyan">React UI</div>
+        <div class="flow-label">User action</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box orange">HTTP Request</div>
+        <div class="flow-label">fetch / axios</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box green">Express Route</div>
+        <div class="flow-label">Node.js server</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box purple">Mongoose</div>
+        <div class="flow-label">DB query</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box cyan">MongoDB</div>
+        <div class="flow-label">Data store</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box green">JSON Response</div>
+        <div class="flow-label">Back to React</div>
+      </div>
+    </div>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">💡</span>
+      <div class="alert-content">
+        <strong>Important Rule</strong>
+        React (frontend) kabhi directly MongoDB se baat nahi karta. Hamesha REST API (Express) ke zariye kaam hota hai. Yeh separation bahut zaroori hai!
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REST API ==================== -->
+  <section class="section" id="rest-api">
+    <div class="section-header">
+      <div class="section-icon icon-orange">📡</div>
+      <div>
+        <div class="section-title">REST API Design</div>
+        <div class="section-subtitle">Part B · 10–30 min</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>REST</strong> ek convention hai — ek agreement — ke hum API kaise design karein. Socho jaise ek restaurant menu. Har cheez ka alag naam aur order karne ka tarika hota hai. REST mein har "resource" (jaise tasks) ka alag URL hota hai, aur action HTTP method se pata chalta hai.
+    </p>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ️</span>
+      <div class="alert-content">
+        <strong>Naming Rule</strong>
+        URL mein verb mat likho! <code>/api/getTasks</code> galat hai. Sahi hai: <code>/api/tasks</code> — method (GET/POST) hi action batata hai.
+      </div>
+    </div>
+
+    <div class="table-wrap mb-24">
+      <table>
+        <thead>
+          <tr>
+            <th>HTTP Method</th>
+            <th>URL / Route</th>
+            <th>Kya Karta Hai</th>
+            <th>Status Code</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-cyan">GET</span></td>
+            <td><code>/api/tasks</code></td>
+            <td>Saari tasks ki list lo</td>
+            <td><span class="badge badge-green">200 OK</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">POST</span></td>
+            <td><code>/api/tasks</code></td>
+            <td>Nayi task banao</td>
+            <td><span class="badge badge-green">201 Created</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-orange">PUT/PATCH</span></td>
+            <td><code>/api/tasks/:id</code></td>
+            <td>Existing task update karo</td>
+            <td><span class="badge badge-green">200 OK</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-red">DELETE</span></td>
+            <td><code>/api/tasks/:id</code></td>
+            <td>Task delete karo</td>
+            <td><span class="badge badge-green">200 OK</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="prose"><strong>Real example:</strong> Task banane ke liye POST request ka JSON body kuch aisa hoga:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          JSON — Request & Response
+        </div>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+      </div>
+      <div class="code-content">
+<span class="cmt">// POST /api/tasks — Request Body (jo hum bhejte hain)</span>
+{
+  <span class="str">"title"</span>: <span class="str">"Milk khareedna"</span>,
+  <span class="str">"done"</span>: <span class="kw">false</span>
+}
+
+<span class="cmt">// Server ka Response (jo wapas milta hai)</span>
+{
+  <span class="str">"_id"</span>: <span class="str">"64f3a1b2c9d4e5f6a7b8c9d0"</span>,
+  <span class="str">"title"</span>: <span class="str">"Milk khareedna"</span>,
+  <span class="str">"done"</span>: <span class="kw">false</span>,
+  <span class="str">"createdAt"</span>: <span class="str">"2024-01-15T10:30:00Z"</span>
+}</div>
+    </div>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <strong>Common Mistake</strong>
+        Agar frontend <code>id</code> expect kare aur backend <code>_id</code> bheje — to app "broken" lagegi lekin dono sides sahi kaam kar rahi hongi! JSON keys same rakho.
+      </div>
+    </div>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">🎯</span>
+      <div class="alert-content">
+        <strong>Exam Tip</strong>
+        REST mapping table yaad karo: Method + Route + Purpose + Status Code. Yeh theory mein zaroor aata hai!
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== EXPRESS + MONGO ==================== -->
+  <section class="section" id="express-mongo">
+    <div class="section-header">
+      <div class="section-icon icon-green">⚙️</div>
+      <div>
+        <div class="section-title">Express + MongoDB Backend</div>
+        <div class="section-subtitle">Part C · 30–55 min</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>Express</strong> routes handle karta hai — matlab kaunse URL pe kya karna hai. <strong>Mongoose</strong> MongoDB ke saath kaam karta hai — JavaScript objects ko database documents mein convert karta hai. Dono mil kar backend banate hain.
+    </p>
+
+    <p class="prose mb-24"><strong>Backend banana ka step-by-step tarika:</strong></p>
+
+    <ul class="step-list mb-24">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>npm init -y</strong> — Nayi Node project banao. <code>package.json</code> file banega.</div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Dependencies install karo:</strong> <code>npm install express mongoose cors</code> — ye teeno packages chahiye.</div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>server.js banao</strong> — Main entry point. Express app yahan setup hoti hai.</div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-text"><strong>MongoDB connect karo</strong> — Mongoose.connect() se database se connection banao.</div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-text"><strong>Routes implement karo</strong> — GET, POST, PATCH, DELETE endpoints banao.</div>
+      </li>
+    </ul>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          server.js — Express Backend
+        </div>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+      </div>
+      <div class="code-content">
+<span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> mongoose = <span class="fn">require</span>(<span class="str">'mongoose'</span>);
+<span class="kw">const</span> cors = <span class="fn">require</span>(<span class="str">'cors'</span>);
+
+<span class="kw">const</span> app = <span class="fn">express</span>();
+
+<span class="cmt">// ⭐ Middleware — Bina is ke req.body undefined hoga!</span>
+app.<span class="fn">use</span>(express.<span class="fn">json</span>());
+
+<span class="cmt">// ⭐ CORS — React dev server ko allow karo</span>
+app.<span class="fn">use</span>(<span class="fn">cors</span>());
+
+<span class="cmt">// MongoDB se connect karo</span>
+mongoose.<span class="fn">connect</span>(<span class="str">'mongodb://localhost/taskdb'</span>);
+
+<span class="cmt">// Task Schema banana</span>
+<span class="kw">const</span> TaskSchema = <span class="kw">new</span> mongoose.<span class="obj">Schema</span>({
+  title: { type: <span class="obj">String</span>, required: <span class="kw">true</span> },
+  done:  { type: <span class="obj">Boolean</span>, default: <span class="kw">false</span> }
+}, { timestamps: <span class="kw">true</span> });
+
+<span class="kw">const</span> Task = mongoose.<span class="fn">model</span>(<span class="str">'Task'</span>, TaskSchema);
+
+<span class="cmt">// GET — Saari tasks lo</span>
+app.<span class="fn">get</span>(<span class="str">'/api/tasks'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> tasks = <span class="kw">await</span> Task.<span class="fn">find</span>();
+  res.<span class="fn">json</span>(tasks);
+});
+
+<span class="cmt">// POST — Nayi task banao</span>
+app.<span class="fn">post</span>(<span class="str">'/api/tasks'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> task = <span class="kw">new</span> Task(req.body);
+  <span class="kw">await</span> task.<span class="fn">save</span>();
+  res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(task);
+});
+
+app.<span class="fn">listen</span>(<span class="num">5000</span>, () => console.<span class="fn">log</span>(<span class="str">'Server chal raha hai!'</span>));</div>
+    </div>
+
+    <div class="two-col mt-24">
+      <div class="alert alert-warn">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content">
+          <strong>Common Mistake #1</strong>
+          <code>app.use(express.json())</code> bhool gaye? To <code>req.body</code> <code>undefined</code> aayega aur kuch nahi samjhega kyun nahi chal raha!
+        </div>
+      </div>
+      <div class="alert alert-warn">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content">
+          <strong>Common Mistake #2</strong>
+          CORS enable nahi kiya? Browser React se API call block kar dega. Error milega: "CORS policy blocked."
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REACT BASICS ==================== -->
+  <section class="section" id="react-basics">
+    <div class="section-header">
+      <div class="section-icon icon-cyan">⚛️</div>
+      <div>
+        <div class="section-title">React: Components, Props & State</div>
+        <div class="section-subtitle">Part D · 65–85 min</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      React mein poori UI choti choti <strong>components</strong> se banti hai — jaise LEGO blocks. Har component apna kaam karta hai. Data do tareeqon se move hoti hai: <strong>Props</strong> parent se child ko data deti hai, aur <strong>State</strong> component ka apna internal data hota hai jo change hone par screen update karta hai.
+    </p>
+
+    <div class="cards-grid mb-24">
+      <div class="card card-accent-cyan">
+        <div class="card-icon">🧩</div>
+        <div class="card-title">Component</div>
+        <div class="card-body">Ek function jo JSX return kare. <code>TaskList</code>, <code>TaskForm</code>, <code>TaskItem</code> — sab components hain. Chhote pieces milke bari UI banate hain.</div>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-icon">📩</div>
+        <div class="card-title">Props</div>
+        <div class="card-body">Parent se child ko diya gaya data. <strong>Read-only</strong> hoti hai — child change nahi kar sakta. Jaise function arguments.</div>
+      </div>
+      <div class="card card-accent-orange">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">State</div>
+        <div class="card-body">Component ka apna data. <code>useState</code> se banate hain. Jab change ho, React screen automatically update karta hai.</div>
+      </div>
+    </div>
+
+    <div class="table-wrap mb-24">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Props</th>
+            <th>State</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Malik Kaun?</td>
+            <td>Parent component</td>
+            <td>Component khud</td>
+          </tr>
+          <tr>
+            <td>Change Ho Sakta?</td>
+            <td><span class="badge badge-red">Read-only</span></td>
+            <td><span class="badge badge-green">Setter se change hota</span></td>
+          </tr>
+          <tr>
+            <td>Re-render kab?</td>
+            <td>Jab parent change kare</td>
+            <td>Jab setter call ho</td>
+          </tr>
+          <tr>
+            <td>Use kab karein?</td>
+            <td>Data pass karna ho</td>
+            <td>Dynamic data store karna ho</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          React JSX — TaskApp Example
+        </div>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+      </div>
+      <div class="code-content">
+<span class="cmt">// TaskApp — Main parent component</span>
+<span class="kw">function</span> <span class="fn">TaskApp</span>() {
+  <span class="cmt">// State — tasks ki list (dynamic data)</span>
+  <span class="kw">const</span> [tasks, setTasks] = <span class="fn">useState</span>([]);
+
+  <span class="kw">const</span> <span class="fn">handleAdd</span> = (newTask) => {
+    <span class="fn">setTasks</span>([...tasks, newTask]); <span class="cmt">// state update = re-render</span>
+  };
+
+  <span class="kw">return</span> (
+    <span class="punct">&lt;</span><span class="obj">div</span><span class="punct">&gt;</span>
+      <span class="cmt">{/* Props: onAdd function pass ho raha hai */}</span>
+      <span class="punct">&lt;</span><span class="obj">TaskForm</span> onAdd={handleAdd} <span class="punct">/&gt;</span>
+      <span class="cmt">{/* Props: tasks array pass ho raha hai */}</span>
+      <span class="punct">&lt;</span><span class="obj">TaskList</span> tasks={tasks} <span class="punct">/&gt;</span>
+    <span class="punct">&lt;/</span><span class="obj">div</span><span class="punct">&gt;</span>
+  );
+}
+
+<span class="cmt">// TaskList — Child component, props receive karta hai</span>
+<span class="kw">function</span> <span class="fn">TaskList</span>({ tasks }) {
+  <span class="kw">return</span> (
+    <span class="punct">&lt;</span><span class="obj">ul</span><span class="punct">&gt;</span>
+      {tasks.<span class="fn">map</span>(task => (
+        <span class="cmt">{/* key prop zaroor do list mein! */}</span>
+        <span class="punct">&lt;</span><span class="obj">TaskItem</span> key={task._id} task={task} <span class="punct">/&gt;</span>
+      ))}
+    <span class="punct">&lt;/</span><span class="obj">ul</span><span class="punct">&gt;</span>
+  );
+}</div>
+    </div>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">🎯</span>
+      <div class="alert-content">
+        <strong>Exam Tip</strong>
+        Classic question: "Props aur State mein farq batao example ke saath." Yaad rakho — Props parent deta hai, State khud ka hota hai!
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== HOOKS ==================== -->
+  <section class="section" id="hooks">
+    <div class="section-header">
+      <div class="section-icon icon-purple">🪝</div>
+      <div>
+        <div class="section-title">Hooks & Lifecycle (useEffect)</div>
+        <div class="section-subtitle">Part E · 85–105 min</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      Pehle React mein class components hote the aur lifecycle methods hoti thi. Ab <strong>Hooks</strong> ne unko replace kar diya. <code>useState</code> se state banate hain, aur <code>useEffect</code> se side effects handle karte hain — jaise API call karna, timer set karna, etc.
+    </p>
+
+    <div class="cards-grid mb-24">
+      <div class="card card-accent-purple">
+        <div class="card-icon">🟣</div>
+        <div class="card-title">useEffect(() => {}, [])</div>
+        <div class="card-body">Empty array [] dene se <strong>sirf ek baar</strong> chalta hai — jab component pehli baar screen pe aaye. Bilkul <code>componentDidMount</code> jaisa!</div>
+      </div>
+      <div class="card card-accent-cyan">
+        <div class="card-icon">🔵</div>
+        <div class="card-title">useEffect(() => {}, [value])</div>
+        <div class="card-body">Jab <code>value</code> change ho tabhi chalega. Agar list filter change ho to naya data fetch karo.</div>
+      </div>
+      <div class="card card-accent-orange">
+        <div class="card-icon">🟠</div>
+        <div class="card-title">useEffect(() => {})</div>
+        <div class="card-body"><strong>Koi array nahi</strong> — Har render pe chalega. Zyadatar infinite loop ka zariya banta hai! Bachke rehna.</div>
+      </div>
+    </div>
+
+    <p class="prose"><strong>API Call ka sahi pattern:</strong></p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-lang">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          React Hooks — API Fetching
+        </div>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+      </div>
+      <div class="code-content">
+<span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">function</span> <span class="fn">TaskApp</span>() {
+  <span class="kw">const</span> [tasks, setTasks]     = <span class="fn">useState</span>([]);
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>);
+  <span class="kw">const</span> [error, setError]     = <span class="fn">useState</span>(<span class="kw">null</span>);
+
+  <span class="cmt">// Step 1: Page load hote hi tasks fetch karo</span>
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">const</span> <span class="fn">fetchTasks</span> = <span class="kw">async</span> () => {
+      <span class="kw">try</span> {
+        <span class="fn">setLoading</span>(<span class="kw">true</span>);                           <span class="cmt">// Loading shuru</span>
+        <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/tasks'</span>);
+        <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();             <span class="cmt">// ⭐ await zaroor!</span>
+        <span class="fn">setTasks</span>(data);                            <span class="cmt">// State update</span>
+      } <span class="kw">catch</span> (err) {
+        <span class="fn">setError</span>(<span class="str">'Tasks load nahi ho sakin!'</span>);
+      } <span class="kw">finally</span> {
+        <span class="fn">setLoading</span>(<span class="kw">false</span>);                         <span class="cmt">// Loading khatam</span>
+      }
+    };
+    <span class="fn">fetchTasks</span>();
+  }, []); <span class="cmt">// ← Empty array = sirf ek baar</span>
+
+  <span class="kw">if</span> (loading) <span class="kw">return</span> <span class="punct">&lt;</span><span class="obj">p</span><span class="punct">&gt;</span>Loading...<span class="punct">&lt;/</span><span class="obj">p</span><span class="punct">&gt;</span>;
+  <span class="kw">if</span> (error)   <span class="kw">return</span> <span class="punct">&lt;</span><span class="obj">p</span><span class="punct">&gt;</span>{error}<span class="punct">&lt;/</span><span class="obj">p</span><span class="punct">&gt;</span>;
+
+  <span class="kw">return</span> <span class="punct">&lt;</span><span class="obj">TaskList</span> tasks={tasks} <span class="punct">/&gt;</span>;
+}</div>
+    </div>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <strong>Infinite Loop Bug</strong>
+        Agar useEffect ke andar state update karo aur dependency array mein woh state dalo — to infinite loop ho jaata hai! Effect chalta hai → state update → effect phir chalta hai → yeh cycle khatam nahi hoti.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== VIRTUAL DOM ==================== -->
+  <section class="section" id="virtual-dom">
+    <div class="section-header">
+      <div class="section-icon icon-yellow">🌐</div>
+      <div>
+        <div class="section-title">Virtual DOM & Rendering</div>
+        <div class="section-subtitle">Part F · 105–115 min</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      Real DOM (HTML page ka structure) ko directly baar baar update karna <strong>bahut slow</strong> hota hai. React ne solution nikala: pehle ek <strong>Virtual DOM</strong> banao — ek lightweight copy memory mein. Jab state change ho, pehle Virtual DOM update karo, phir <strong>diff karo</strong> (pehle aur abhi mein kya farq hai), aur sirf woh changes Real DOM mein apply karo.
+    </p>
+
+    <div class="flow-diagram mb-24">
+      <div class="flow-step">
+        <div class="flow-box orange">State Change</div>
+        <div class="flow-label">setTasks(...)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box cyan">New V-DOM</div>
+        <div class="flow-label">Memory mein</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box purple">Diffing</div>
+        <div class="flow-label">Kya badla?</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box green">Patch Real DOM</div>
+        <div class="flow-label">Sirf farq update</div>
+      </div>
+    </div>
+
+    <div class="cards-grid mb-24">
+      <div class="card card-accent-green">
+        <div class="card-icon">✅</div>
+        <div class="card-title">Re-render ≠ Page Reload</div>
+        <div class="card-body">Sirf component re-render hota hai. Poora page reload nahi hota. Isliye React bahut fast feel hota hai.</div>
+      </div>
+      <div class="card card-accent-orange">
+        <div class="card-icon">🔑</div>
+        <div class="card-title">Key Prop Kyun Zaroori?</div>
+        <div class="card-body">List mein key dene se React identify karta hai kaun sa item add/remove hua. Key ke bina React galat element update kar sakta hai!</div>
+      </div>
+      <div class="card card-accent-purple">
+        <div class="card-icon">🧊</div>
+        <div class="card-title">State Immutability</div>
+        <div class="card-body">State seedha mutate mat karo. Hamesha setter use karo: <code>setTasks([...tasks, newTask])</code>. Spread operator se nayi copy banao.</div>
+      </div>
+    </div>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">🎯</span>
+      <div class="alert-content">
+        <strong>Exam Tip</strong>
+        "Virtual DOM aur Reconciliation explain karo example ke saath" — yeh descriptive question bahut common hai. Flow yaad rakho: State → V-DOM → Diff → Real DOM patch.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LIVE DEMO ==================== -->
+  <section class="section" id="live-demo">
+    <div class="section-header">
+      <div class="section-icon icon-green">🎮</div>
+      <div>
+        <div class="section-title">Live Demo — Task Manager</div>
+        <div class="section-subtitle">Interactive mini-app (simulate REST calls)</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      Yeh ek <strong>simulated Task Manager</strong> hai jo React concepts ko demonstrate karta hai — State management, component updates, aur CRUD operations. Real API calls simulate ki gayi hain.
+    </p>
+
+    <div class="demo-box">
+      <div class="demo-title">Task Manager — React State Demo</div>
+
+      <div class="demo-input-row">
+        <input class="demo-input" id="task-input" type="text" placeholder="Nayi task likho (jaise: Assignment submit karo)..." />
+        <select class="demo-select" id="task-priority">
+          <option value="normal">Normal</option>
+          <option value="high">High Priority</option>
+        </select>
+        <button class="demo-btn" onclick="addTask()">+ Add Task</button>
+      </div>
+
+      <div id="task-list-container">
+        <div class="task-item">
+          <input type="checkbox" class="task-checkbox" onchange="toggleTask(this)">
+          <span>Express.js routes samajhna</span>
+          <span class="badge badge-orange" style="margin-left:8px;font-size:0.65rem">HIGH</span>
+          <button class="task-delete" onclick="deleteTask(this)">✕</button>
+        </div>
+        <div class="task-item">
+          <input type="checkbox" class="task-checkbox" onchange="toggleTask(this)">
+          <span>Props aur State ka farq yaad karna</span>
+          <span class="badge badge-cyan" style="margin-left:8px;font-size:0.65rem">NORMAL</span>
+          <button class="task-delete" onclick="deleteTask(this)">✕</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; padding:10px; background:#020810; border:1px solid var(--border); border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color: var(--text-muted);">
+        <span style="color:var(--accent-cyan)">// Console — State log:</span>
+        <div id="state-log" style="color:var(--accent-green); margin-top:6px">[ ] Waiting for actions...</div>
+      </div>
+
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:0.78rem; color:var(--text-muted); font-family:'Space Mono',monospace;">
+          Total Tasks: <strong id="task-count" style="color:var(--accent-cyan)">2</strong> |
+          Completed: <strong id="done-count" style="color:var(--accent-green)">0</strong>
+        </span>
+        <button class="demo-btn demo-btn-danger" onclick="clearAll()" style="padding:6px 14px; font-size:0.75rem;">Clear All</button>
+      </div>
+    </div>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">💡</span>
+      <div class="alert-content">
+        <strong>Yahan Kya Ho Raha Hai?</strong>
+        Har "Add Task" click State update karta hai. State update hone se React automatically list re-render karta hai — bina page reload ke. Yahi Virtual DOM ki taaqat hai!
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== QUIZ ==================== -->
+  <section class="section" id="quiz">
+    <div class="section-header">
+      <div class="section-icon icon-purple">🧩</div>
+      <div>
+        <div class="section-title">Quiz — 5 MCQs</div>
+        <div class="section-subtitle">Apni understanding check karo</div>
+      </div>
+    </div>
+
+    <p class="prose mb-24">Har question mein sahi jawab click karo. Immediately feedback milega!</p>
+
+    <!-- Q1 -->
+    <div class="quiz-card" id="q1">
+      <div class="quiz-q"><span class="q-num">Q.1</span>REST mein nayi resource banane ke liye kaun sa HTTP method use hota hai?</div>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this,'q1',false)"><span class="quiz-option-key">A</span>GET</div>
+        <div class="quiz-option" onclick="answer(this,'q1',true)"><span class="quiz-option-key">B</span>POST</div>
+        <div class="quiz-option" onclick="answer(this,'q1',false)"><span class="quiz-option-key">C</span>DELETE</div>
+        <div class="quiz-option" onclick="answer(this,'q1',false)"><span class="quiz-option-key">D</span>PATCH</div>
+      </div>
+      <div class="quiz-feedback" id="q1-fb"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="quiz-card" id="q2">
+      <div class="quiz-q"><span class="q-num">Q.2</span>Express mein JSON body data padhne ke liye kaunsa middleware chahiye?</div>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this,'q2',false)"><span class="quiz-option-key">A</span>express.static()</div>
+        <div class="quiz-option" onclick="answer(this,'q2',false)"><span class="quiz-option-key">B</span>express.urlencoded()</div>
+        <div class="quiz-option" onclick="answer(this,'q2',true)"><span class="quiz-option-key">C</span>express.json()</div>
+        <div class="quiz-option" onclick="answer(this,'q2',false)"><span class="quiz-option-key">D</span>cors()</div>
+      </div>
+      <div class="quiz-feedback" id="q2-fb"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="quiz-card" id="q3">
+      <div class="quiz-q"><span class="q-num">Q.3</span>React mein kaunsa change trigger karta hai re-render?</div>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this,'q3',false)"><span class="quiz-option-key">A</span>Sirf Props badlena</div>
+        <div class="quiz-option" onclick="answer(this,'q3',true)"><span class="quiz-option-key">B</span>State update (setState / setter)</div>
+        <div class="quiz-option" onclick="answer(this,'q3',false)"><span class="quiz-option-key">C</span>console.log() call karna</div>
+        <div class="quiz-option" onclick="answer(this,'q3',false)"><span class="quiz-option-key">D</span>CSS file change karna</div>
+      </div>
+      <div class="quiz-feedback" id="q3-fb"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="quiz-card" id="q4">
+      <div class="quiz-q"><span class="q-num">Q.4</span><code>useEffect(() => { ... }, [])</code> kab run karta hai?</div>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this,'q4',false)"><span class="quiz-option-key">A</span>Har render pe</div>
+        <div class="quiz-option" onclick="answer(this,'q4',true)"><span class="quiz-option-key">B</span>Sirf pehle render ke baad ek baar</div>
+        <div class="quiz-option" onclick="answer(this,'q4',false)"><span class="quiz-option-key">C</span>Render se pehle</div>
+        <div class="quiz-option" onclick="answer(this,'q4',false)"><span class="quiz-option-key">D</span>Kabhi nahi</div>
+      </div>
+      <div class="quiz-feedback" id="q4-fb"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="quiz-card" id="q5">
+      <div class="quiz-q"><span class="q-num">Q.5</span>Virtual DOM React mein primarily kya karta hai?</div>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this,'q5',false)"><span class="quiz-option-key">A</span>Images store karta hai</div>
+        <div class="quiz-option" onclick="answer(this,'q5',false)"><span class="quiz-option-key">B</span>JavaScript avoid karta hai</div>
+        <div class="quiz-option" onclick="answer(this,'q5',true)"><span class="quiz-option-key">C</span>Real DOM changes minimize karta hai</div>
+        <div class="quiz-option" onclick="answer(this,'q5',false)"><span class="quiz-option-key">D</span>Backend replace karta hai</div>
+      </div>
+      <div class="quiz-feedback" id="q5-fb"></div>
+    </div>
+
+    <div class="quiz-score-bar">
+      <div>
+        <div class="score-display">Score: <span id="score-num">0</span>/5</div>
+        <div class="score-text">Questions answered: <span id="answered-num">0</span></div>
+      </div>
+      <button class="reset-btn" onclick="resetQuiz()">🔄 Quiz Reset Karo</button>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer>
+    <div class="footer-logo">📚 CSC337 — Advanced Web Technologies</div>
+    <p>
+      <strong>Lecture 12:</strong> MEAN Stack with ReactJS · 2 Hours<br>
+      Topics: REST API · Express · MongoDB · React Components · Hooks · Virtual DOM<br><br>
+      <strong>CLOs covered:</strong> CLO-3 · CLO-4 · CLO-5 · CLO-6
+    </p>
+  </footer>
+
+</main>
+
+<!-- ============================================
+     JAVASCRIPT
+============================================ -->
+<script>
+  // ============================================
+  // PROGRESS BAR — Scroll ke saath move kare
+  // ============================================
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (scrollTop / docHeight) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+
+    // Active nav link update
+    updateActiveNav();
+  });
+
+  // ============================================
+  // SCROLL ANIMATIONS — Sections fade in
+  // ============================================
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.section').forEach(sec => observer.observe(sec));
+
+  // ============================================
+  // SIDEBAR — Navigation
+  // ============================================
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // Mobile mein sidebar close karo
+    if (window.innerWidth < 900) toggleSidebar(true);
+  }
+
+  function updateActiveNav() {
+    const sections = ['hero','mean-intro','rest-api','express-mongo','react-basics','hooks','virtual-dom','live-demo','quiz'];
+    const links = document.querySelectorAll('.nav-link');
+    let current = 'hero';
+
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < 180) current = id;
+    });
+
+    const sectionToLink = {
+      'hero': 0, 'mean-intro': 1, 'rest-api': 2, 'express-mongo': 3,
+      'react-basics': 4, 'hooks': 5, 'virtual-dom': 6, 'live-demo': 7, 'quiz': 8
+    };
+
+    links.forEach((l, i) => {
+      l.classList.toggle('active', i === sectionToLink[current]);
+    });
+  }
+
+  // ============================================
+  // MOBILE SIDEBAR TOGGLE
+  // ============================================
+  function toggleSidebar(forceClose) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const isOpen = sidebar.classList.contains('open');
+
+    if (forceClose || isOpen) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    } else {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+    }
+  }
+
+  // ============================================
+  // CODE COPY BUTTON
+  // ============================================
+  function copyCode(btn) {
+    const content = btn.closest('.code-block').querySelector('.code-content').innerText;
+    navigator.clipboard.writeText(content).then(() => {
+      btn.textContent = 'Copied!';
+      btn.style.borderColor = 'var(--accent-green)';
+      btn.style.color = 'var(--accent-green)';
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 1800);
+    });
+  }
+
+  // ============================================
+  // LIVE DEMO — Task Manager
+  // ============================================
+  let taskCount = 2;
+
+  function addTask() {
+    const input = document.getElementById('task-input');
+    const priority = document.getElementById('task-priority').value;
+    const text = input.value.trim();
+
+    if (!text) {
+      input.style.borderColor = '#ff5f57';
+      setTimeout(() => input.style.borderColor = '', 1500);
+      return;
+    }
+
+    taskCount++;
+    const container = document.getElementById('task-list-container');
+    const div = document.createElement('div');
+    div.className = 'task-item';
+    div.innerHTML = `
+      <input type="checkbox" class="task-checkbox" onchange="toggleTask(this)">
+      <span>${text}</span>
+      <span class="badge ${priority === 'high' ? 'badge-orange' : 'badge-cyan'}" style="margin-left:8px;font-size:0.65rem">${priority.toUpperCase()}</span>
+      <button class="task-delete" onclick="deleteTask(this)">✕</button>
+    `;
+
+    // Animate in
+    div.style.opacity = '0';
+    div.style.transform = 'translateX(-10px)';
+    container.appendChild(div);
+    setTimeout(() => {
+      div.style.transition = 'all 0.3s ease';
+      div.style.opacity = '1';
+      div.style.transform = 'translateX(0)';
+    }, 10);
+
+    input.value = '';
+    updateCounts();
+    logState(`POST /api/tasks → { title: "${text}", done: false } → 201 Created`);
+  }
+
+  function toggleTask(cb) {
+    const item = cb.closest('.task-item');
+    item.classList.toggle('done', cb.checked);
+    updateCounts();
+    const title = item.querySelector('span').textContent;
+    logState(`PATCH /api/tasks/:id → { done: ${cb.checked} } → 200 OK`);
+  }
+
+  function deleteTask(btn) {
+    const item = btn.closest('.task-item');
+    item.style.transition = 'all 0.3s ease';
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(10px)';
+    setTimeout(() => { item.remove(); updateCounts(); }, 300);
+    logState(`DELETE /api/tasks/:id → 200 OK — Task removed from state`);
+  }
+
+  function clearAll() {
+    document.getElementById('task-list-container').innerHTML = '';
+    taskCount = 0;
+    updateCounts();
+    logState(`State cleared — [] — UI automatically updated`);
+  }
+
+  function updateCounts() {
+    const items = document.querySelectorAll('.task-item');
+    const done = document.querySelectorAll('.task-item.done');
+    document.getElementById('task-count').textContent = items.length;
+    document.getElementById('done-count').textContent = done.length;
+  }
+
+  function logState(msg) {
+    const log = document.getElementById('state-log');
+    const time = new Date().toLocaleTimeString('en-US', {hour12: false});
+    log.textContent = `[${time}] ${msg}`;
+  }
+
+  // ============================================
+  // QUIZ — Interactive MCQs
+  // ============================================
+  const quizAnswers = {};
+  let score = 0;
+  let answered = 0;
+
+  const feedbacks = {
+    q1: { correct: "Bilkul sahi! POST method nayi resource create karta hai aur 201 status code return karta hai.", wrong: "Nahi. POST create ke liye hota hai. GET sirf data read karta hai, DELETE remove karta hai, PATCH update ke liye hai." },
+    q2: { correct: "Ekdam sahi! express.json() middleware req.body ko parse karta hai. Iske bina body undefined hogi.", wrong: "Nahi. express.json() middleware zaroor chahiye JSON body padhne ke liye. Baki sab galat hain." },
+    q3: { correct: "Bilkul! State update hone se React component re-render hota hai — yahi React ka core mechanism hai.", wrong: "Galat. Sirf State update re-render trigger karta hai. Props change bhi kar sakta hai but parent ki wajah se. Console.log aur CSS ka koi asar nahi." },
+    q4: { correct: "Perfect! Empty array dependency matlab component mount hone ke baad sirf ek baar — componentDidMount jaisa.", wrong: "Nahi. Empty array [] dena matlab sirf ek baar chalega. Koi array nahi = har render pe. Specific value = jab woh value change ho." },
+    q5: { correct: "Bilkul sahi! Virtual DOM React ko efficient banata hai — sirf actual differences Real DOM mein apply karta hai.", wrong: "Galat. Virtual DOM ka kaam Real DOM changes minimize karna hai — diffing aur reconciliation se." }
+  };
+
+  function answer(el, qid, isCorrect) {
+    if (quizAnswers[qid] !== undefined) return; // Already answered
+
+    quizAnswers[qid] = isCorrect;
+    answered++;
+    if (isCorrect) score++;
+
+    const card = document.getElementById(qid);
+    const fb = document.getElementById(qid + '-fb');
+    const opts = card.querySelectorAll('.quiz-option');
+
+    // Mark selected
+    el.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+
+    // Reveal correct if wrong
+    if (!isCorrect) {
+      opts.forEach(opt => {
+        if (opt.onclick.toString().includes('true')) {
+          opt.classList.add('reveal-correct');
+        }
+      });
+    }
+
+    // Feedback
+    fb.textContent = (isCorrect ? '✅ ' : '❌ ') + feedbacks[qid][isCorrect ? 'correct' : 'wrong'];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+
+    // Card border
+    card.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    // Disable all options
+    opts.forEach(opt => { opt.style.pointerEvents = 'none'; });
+
+    // Update score
+    document.getElementById('score-num').textContent = score;
+    document.getElementById('answered-num').textContent = answered;
+  }
+
+  function resetQuiz() {
+    // Reset state
+    Object.keys(quizAnswers).forEach(k => delete quizAnswers[k]);
+    score = 0; answered = 0;
+
+    // Reset UI
+    document.querySelectorAll('.quiz-card').forEach(card => {
+      card.classList.remove('correct', 'wrong');
+    });
+
+    document.querySelectorAll('.quiz-option').forEach(opt => {
+      opt.classList.remove('selected-correct', 'selected-wrong', 'reveal-correct');
+      opt.style.pointerEvents = '';
+    });
+
+    document.querySelectorAll('.quiz-feedback').forEach(fb => {
+      fb.className = 'quiz-feedback';
+    });
+
+    document.getElementById('score-num').textContent = '0';
+    document.getElementById('answered-num').textContent = '0';
+  }
+
+  // Initial animation trigger
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.section').forEach((sec, i) => {
+      setTimeout(() => sec.classList.add('visible'), i * 50);
+    });
+  });
+</script>
+
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

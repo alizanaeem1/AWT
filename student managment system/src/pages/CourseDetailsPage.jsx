@@ -9,6 +9,7 @@ export default function CourseDetailsPage({ subject, onBack }) {
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState([]);
   const [files, setFiles] = useState([]);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
 
   useEffect(() => {
     if (!activeSemester || !subject?.id) return;
@@ -36,6 +37,24 @@ export default function CourseDetailsPage({ subject, onBack }) {
     if (!res.ok) return pushToast({ title: "Open failed", message: res.error || "Could not open file.", variant: "error" });
     pushToast({ title: "Successful", message: "File opened successfully.", variant: "success" });
   }
+
+  useEffect(() => {
+    if (assignments.length === 0) {
+      setSelectedAssignmentId(null);
+      return;
+    }
+    const hasExistingSelection = assignments.some((item) => Number(item.id) === Number(selectedAssignmentId));
+    if (!hasExistingSelection) {
+      setSelectedAssignmentId(assignments[0].id);
+    }
+  }, [assignments, selectedAssignmentId]);
+
+  const selectedAssignment =
+    selectedAssignmentId == null ? null : assignments.find((item) => Number(item.id) === Number(selectedAssignmentId)) || null;
+  const selectedAssignmentFiles =
+    selectedAssignment == null
+      ? []
+      : files.filter((file) => Number(file.assignmentId) === Number(selectedAssignment.id));
 
   if (!subject) {
     return (
@@ -85,16 +104,61 @@ export default function CourseDetailsPage({ subject, onBack }) {
               {assignments.map((item) => {
                 const due = parseISO(item.dueDate);
                 return (
-                  <article key={item.id} className="rounded-lg border border-white/10 bg-app-surface/70 p-3">
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedAssignmentId(item.id)}
+                    className={`block w-full rounded-lg border p-3 text-left transition ${
+                      Number(selectedAssignmentId) === Number(item.id)
+                        ? "border-indigo-400/60 bg-indigo-500/10"
+                        : "border-white/10 bg-app-surface/70 hover:border-indigo-400/40 hover:bg-app-surface"
+                    }`}
+                  >
                     <p className="text-sm font-semibold text-white">{item.title}</p>
                     <p className="mt-1 text-xs text-slate-400">
                       {item.type === "quiz" ? "Quiz" : "Assignment"} • {isValid(due) ? format(due, "dd MMM yyyy") : item.dueDate}
                     </p>
-                  </article>
+                  </button>
                 );
               })}
             </div>
           )}
+          {!loading && selectedAssignment ? (
+            <div className="mt-3 rounded-lg border border-indigo-400/30 bg-indigo-500/5 p-3">
+              <p className="text-sm font-semibold text-indigo-200">{selectedAssignment.title}</p>
+              <p className="mt-1 text-xs text-slate-300">
+                {selectedAssignment.type === "quiz" ? "Quiz" : "Assignment"} • Due{" "}
+                {isValid(parseISO(selectedAssignment.dueDate))
+                  ? format(parseISO(selectedAssignment.dueDate), "dd MMM yyyy")
+                  : selectedAssignment.dueDate}
+              </p>
+              {selectedAssignment.details ? (
+                <p className="mt-2 text-xs leading-relaxed text-slate-300">{selectedAssignment.details}</p>
+              ) : (
+                <p className="mt-2 text-xs text-slate-500">No additional details added.</p>
+              )}
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Attached Files</p>
+                {selectedAssignmentFiles.length === 0 ? (
+                  <p className="mt-1 text-xs text-slate-500">No files linked with this item.</p>
+                ) : (
+                  <div className="mt-2 space-y-1.5">
+                    {selectedAssignmentFiles.map((file) => (
+                      <button
+                        key={file.id}
+                        type="button"
+                        onClick={() => openFile(file.filePath)}
+                        className="block w-full rounded-md border border-white/10 bg-app-surface/70 p-2 text-left transition hover:border-indigo-400/40 hover:bg-app-surface"
+                      >
+                        <p className="truncate text-xs font-medium text-indigo-200">{file.fileName}</p>
+                        <p className="mt-0.5 truncate text-[11px] text-slate-400">{file.filePath}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </article>
 
         <article className="rounded-2xl border border-white/[0.06] bg-app-card p-4 shadow-card">

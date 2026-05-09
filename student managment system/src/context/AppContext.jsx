@@ -291,7 +291,7 @@ export function AppProvider({ children }) {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }
 
-  function pushNotification(payload) {
+  const pushNotification = useCallback((payload) => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const nextNotification = {
       id,
@@ -308,7 +308,7 @@ export function AppProvider({ children }) {
       }
       return [nextNotification, ...prev];
     });
-  }
+  }, []);
 
   useEffect(() => {
     if (!user?.id) {
@@ -341,6 +341,23 @@ export function AppProvider({ children }) {
       /* storage full or private mode */
     }
   }, [notifications, user?.id]);
+
+  /** Electron: main process mirrors desktop notifications → same inbox as Notifications page + bell. */
+  useEffect(() => {
+    if (!user?.id) return;
+    const register = desktopAPI?.onInboxMirrorFromMain;
+    if (typeof register !== "function") return;
+    const remove = register((detail) => {
+      if (!detail) return;
+      pushNotification({
+        title: detail.title || "Notification",
+        message: typeof detail.body === "string" ? detail.body : "",
+        kind: detail.kind || "general",
+        dedupeKey: detail.dedupeKey != null && detail.dedupeKey !== "" ? detail.dedupeKey : null
+      });
+    });
+    return typeof remove === "function" ? remove : undefined;
+  }, [user?.id, pushNotification]);
 
   function markNotificationsRead(kind = null) {
     setNotifications((prev) =>
@@ -407,6 +424,7 @@ export function AppProvider({ children }) {
       loadSemesters,
       refreshSemesters,
       pushToast,
+      pushNotification,
       bumpDataVersion,
       deleteSemester
     ]

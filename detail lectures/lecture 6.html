@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Web Dev & REST Principles — Lecture Notes</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ===========================
+       CSS VARIABLES & RESET
+    =========================== */
+    :root {
+      --bg-deep:    #070b14;
+      --bg-card:    #0d1526;
+      --bg-sidebar: #0a1020;
+      --border:     #1e2d4a;
+      --accent:     #38bdf8;
+      --accent2:    #818cf8;
+      --accent3:    #34d399;
+      --warn:       #fbbf24;
+      --danger:     #f87171;
+      --text:       #c8d8f0;
+      --text-muted: #5a7299;
+      --text-head:  #e8f0ff;
+      --glow:       rgba(56,189,248,0.18);
+      --sidebar-w:  260px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ===========================
+       PROGRESS BAR
+    =========================== */
+    #progress-bar {
+      position: fixed; top: 0; left: 0; z-index: 1000;
+      height: 3px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+      transition: width 0.1s linear;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    /* ===========================
+       SIDEBAR
+    =========================== */
+    #sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      z-index: 900;
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      padding: 28px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo .badge {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-logo h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-head);
+      line-height: 1.4;
+    }
+
+    .sidebar-logo p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .nav-section {
+      padding: 16px 12px 8px;
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px;
+      margin: 2px 8px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .nav-link .icon { font-size: 15px; flex-shrink: 0; }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: rgba(56,189,248,0.08);
+      color: var(--accent);
+      border-color: rgba(56,189,248,0.2);
+    }
+
+    .nav-link.active {
+      background: rgba(56,189,248,0.12);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Mobile sidebar toggle */
+    #sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 12px; left: 12px;
+      z-index: 950;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      width: 38px; height: 38px;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      align-items: center; justify-content: center;
+    }
+
+    /* ===========================
+       MAIN CONTENT
+    =========================== */
+    #main {
+      margin-left: var(--sidebar-w);
+      padding: 0;
+      position: relative; z-index: 1;
+      min-height: 100vh;
+    }
+
+    /* ===========================
+       HERO SECTION
+    =========================== */
+    #hero {
+      padding: 80px 60px 60px;
+      background: linear-gradient(135deg, #070b14 0%, #0d1a35 50%, #071220 100%);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    #hero::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: 30%;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(129,140,248,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.25);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.5px;
+      margin-bottom: 24px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .hero-tag::before { content: '●'; font-size: 8px; }
+
+    #hero h1 {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 700;
+      color: var(--text-head);
+      line-height: 1.2;
+      margin-bottom: 16px;
+      animation: fadeDown 0.7s ease 0.1s both;
+    }
+
+    #hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #hero p.lead {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.8;
+      animation: fadeDown 0.7s ease 0.2s both;
+    }
+
+    .hero-stats {
+      display: flex; gap: 32px; flex-wrap: wrap;
+      margin-top: 36px;
+      animation: fadeDown 0.7s ease 0.3s both;
+    }
+
+    .stat {
+      text-align: left;
+    }
+
+    .stat .num {
+      font-family: 'Space Mono', monospace;
+      font-size: 26px;
+      color: var(--accent);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ===========================
+       CONTENT SECTIONS
+    =========================== */
+    .section {
+      padding: 60px;
+      border-bottom: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-header {
+      display: flex; align-items: flex-start; gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .section-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      margin-top: 6px;
+    }
+
+    .section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-head);
+      line-height: 1.3;
+    }
+
+    .section h2 .emoji { margin-right: 10px; }
+
+    .section h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 28px 0 12px;
+    }
+
+    .section p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    /* ===========================
+       CARDS GRID
+    =========================== */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.25s ease;
+      cursor: default;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(56,189,248,0.12);
+    }
+
+    .card .card-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+
+    .card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-head);
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ===========================
+       CODE BLOCKS
+    =========================== */
+    .code-block {
+      background: #060a12;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: #a8d8f0;
+      overflow-x: auto;
+      margin: 16px 0;
+      line-height: 1.8;
+      position: relative;
+    }
+
+    .code-block .code-label {
+      position: absolute;
+      top: 10px; right: 14px;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .kw  { color: #818cf8; }   /* keywords */
+    .str { color: #34d399; }   /* strings */
+    .cm  { color: #4a6380; font-style: italic; } /* comments */
+    .fn  { color: #38bdf8; }   /* functions/tags */
+    .num { color: #fbbf24; }   /* numbers */
+    .attr{ color: #f472b6; }   /* attributes */
+
+    /* ===========================
+       TABLES
+    =========================== */
+    .table-wrap { overflow-x: auto; margin: 16px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      background: rgba(56,189,248,0.1);
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 2px solid rgba(56,189,248,0.2);
+    }
+
+    td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+    }
+
+    tr:hover td { background: rgba(56,189,248,0.03); }
+
+    /* ===========================
+       ALERTS
+    =========================== */
+    .alert {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .alert .alert-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+    .alert-tip {
+      background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.25);
+      color: #6ee7b7;
+    }
+
+    .alert-warn {
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.25);
+      color: #fde68a;
+    }
+
+    .alert-exam {
+      background: rgba(129,140,248,0.08);
+      border: 1px solid rgba(129,140,248,0.25);
+      color: #c7d2fe;
+    }
+
+    .alert-danger {
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.25);
+      color: #fca5a5;
+    }
+
+    /* ===========================
+       STEP LIST
+    =========================== */
+    .step-list { list-style: none; margin: 16px 0; }
+
+    .step-list li {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .step-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-weight: 700;
+    }
+
+    /* ===========================
+       LIVE DEMO
+    =========================== */
+    .demo-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin: 20px 0;
+    }
+
+    .demo-box h4 {
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .demo-row {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .demo-input {
+      flex: 1; min-width: 160px;
+      background: #060a12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .demo-input:focus { border-color: var(--accent); }
+
+    .demo-select {
+      background: #060a12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #0ea5e9);
+      color: #000;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(56,189,248,0.3); }
+
+    .btn-secondary {
+      background: rgba(56,189,248,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(56,189,248,0.25);
+    }
+
+    .btn-secondary:hover { background: rgba(56,189,248,0.18); }
+
+    .demo-output {
+      background: #060a12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      min-height: 60px;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+
+    /* ===========================
+       URI DEMO
+    =========================== */
+    .uri-good { color: var(--accent3); }
+    .uri-bad  { color: var(--danger); text-decoration: line-through; }
+
+    /* ===========================
+       QUIZ SECTION
+    =========================== */
+    #quiz .quiz-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .quiz-score-box {
+      background: rgba(52,211,153,0.1);
+      border: 1px solid rgba(52,211,153,0.25);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent3);
+    }
+
+    .q-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: border-color 0.3s;
+    }
+
+    .q-card.correct  { border-color: var(--accent3); background: rgba(52,211,153,0.04); }
+    .q-card.wrong    { border-color: var(--danger);  background: rgba(248,113,113,0.04); }
+
+    .q-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-head);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .q-num {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 8px; }
+
+    .option {
+      padding: 11px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text);
+      transition: all 0.2s;
+      background: #060a12;
+    }
+
+    .option:hover:not(.disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(56,189,248,0.06);
+    }
+
+    .option.correct-ans {
+      border-color: var(--accent3);
+      background: rgba(52,211,153,0.12);
+      color: var(--accent3);
+    }
+
+    .option.wrong-ans {
+      border-color: var(--danger);
+      background: rgba(248,113,113,0.12);
+      color: var(--danger);
+    }
+
+    .option.disabled { pointer-events: none; }
+
+    .q-feedback {
+      margin-top: 12px;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .q-feedback.show { display: block; }
+    .q-feedback.ok   { background: rgba(52,211,153,0.1); color: var(--accent3); }
+    .q-feedback.err  { background: rgba(248,113,113,0.1); color: var(--danger);  }
+
+    #quiz-result {
+      text-align: center;
+      padding: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: none;
+    }
+
+    #quiz-result.show { display: block; }
+
+    #quiz-result .big-score {
+      font-family: 'Space Mono', monospace;
+      font-size: 56px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent3), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ===========================
+       FOOTER
+    =========================== */
+    footer {
+      padding: 40px 60px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+
+    footer p { font-size: 13px; color: var(--text-muted); }
+
+    footer .footer-links {
+      display: flex; gap: 20px;
+    }
+
+    footer .footer-links a {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer .footer-links a:hover { color: var(--accent); }
+
+    /* ===========================
+       ANIMATIONS
+    =========================== */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===========================
+       RESPONSIVE / MOBILE
+    =========================== */
+    @media (max-width: 768px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+
+      #sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 40px rgba(0,0,0,0.6);
+      }
+
+      #sidebar-toggle { display: flex; }
+
+      #main { margin-left: 0; }
+
+      #hero, .section { padding: 48px 24px; }
+
+      footer { padding: 32px 24px; }
+
+      .hero-stats { gap: 20px; }
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 28px 0;
+    }
+
+    /* Highlight text */
+    .hl { color: var(--accent); font-weight: 600; }
+    .hl2{ color: var(--accent2); font-weight: 600; }
+    .hl3{ color: var(--accent3); font-weight: 600; }
+
+    /* Pill badges */
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 2px;
+    }
+
+    .pill-blue   { background: rgba(56,189,248,0.12); color: var(--accent);  border: 1px solid rgba(56,189,248,0.25); }
+    .pill-purple { background: rgba(129,140,248,0.12); color: var(--accent2); border: 1px solid rgba(129,140,248,0.25); }
+    .pill-green  { background: rgba(52,211,153,0.12); color: var(--accent3); border: 1px solid rgba(52,211,153,0.25); }
+    .pill-yellow { background: rgba(251,191,36,0.12);  color: var(--warn);    border: 1px solid rgba(251,191,36,0.25); }
+  </style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Mobile Sidebar Toggle -->
+<button id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+
+<!-- ========================
+     SIDEBAR
+======================== -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="badge">LECTURE 06</div>
+    <h2>Web Dev &amp; REST Principles</h2>
+    <p>2 Hour Theory Class</p>
+  </div>
+
+  <div class="nav-section">Topics</div>
+
+  <a class="nav-link active" onclick="scrollTo('hero')">
+    <span class="icon">🏠</span> Intro &amp; Overview
+  </a>
+  <a class="nav-link" onclick="scrollTo('views')">
+    <span class="icon">🔧</span> View Generators
+  </a>
+  <a class="nav-link" onclick="scrollTo('bootstrap')">
+    <span class="icon">🎨</span> Bootstrap Framework
+  </a>
+  <a class="nav-link" onclick="scrollTo('rest')">
+    <span class="icon">🌐</span> REST Principles
+  </a>
+  <a class="nav-link" onclick="scrollTo('stateless')">
+    <span class="icon">🔄</span> Statelessness
+  </a>
+  <a class="nav-link" onclick="scrollTo('idempotent')">
+    <span class="icon">♾️</span> Idempotent
+  </a>
+  <a class="nav-link" onclick="scrollTo('methods')">
+    <span class="icon">📡</span> HTTP Methods
+  </a>
+  <a class="nav-link" onclick="scrollTo('uri')">
+    <span class="icon">🔗</span> Resource &amp; URI
+  </a>
+  <a class="nav-link" onclick="scrollTo('demo')">
+    <span class="icon">⚡</span> Live Demo
+  </a>
+  <a class="nav-link" onclick="scrollTo('quiz')">
+    <span class="icon">🧠</span> Quiz
+  </a>
+
+  <div class="sidebar-footer">
+    Made with ❤️ for Students
+  </div>
+</nav>
+
+<!-- ========================
+     MAIN CONTENT
+======================== -->
+<main id="main">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-tag">Theory Class · 2 Hours · Lecture 06</div>
+    <h1>Application Development &amp;<br><span>REST Architecture</span></h1>
+    <p class="lead">
+      Is lecture mein hum seekhenge ke web applications kaise banate hain — View Generators se,
+      Bootstrap se UI kaise improve hoti hai, aur REST API ke core principles kya hain.
+      Sab kuch simple Roman Urdu mein, examples ke saath!
+    </p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="num">4</div>
+        <div class="label">Main Topics</div>
+      </div>
+      <div class="stat">
+        <div class="num">2h</div>
+        <div class="label">Duration</div>
+      </div>
+      <div class="stat">
+        <div class="num">10</div>
+        <div class="label">Quiz Questions</div>
+      </div>
+      <div class="stat">
+        <div class="num">MVC</div>
+        <div class="label">Architecture</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       PART 1: VIEW GENERATORS
+  ======================== -->
+  <section id="views" class="section">
+    <div class="section-header">
+      <div class="section-num">PART 01</div>
+      <h2><span class="emoji">🔧</span> View Generators</h2>
+    </div>
+
+    <h3>View kya hota hai?</h3>
+    <p>
+      Web development mein <span class="hl">View</span> us part ko kehte hain jo user ko data dikhata hai.
+      Ye <span class="hl2">MVC Architecture</span> ka ek hissa hai — jis mein teen cheezein hoti hain:
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">🗄️</div>
+        <h4>Model</h4>
+        <p>Data handle karta hai. Jaise student ka database — naam, roll number, department sab yahan store hota hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">👁️</div>
+        <h4>View</h4>
+        <p>Data ko screen par dikhata hai. Ye HTML page hota hai jo user directly dekhta hai browser mein.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚙️</div>
+        <h4>Controller</h4>
+        <p>Logic control karta hai — model se data leta hai aur view ko bhejta hai. Dono ke beech bridge hai.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">💡</span>
+      <div><strong>Easy Example:</strong> Socho university ka system hai — Model = Student database, View = Student list page jo browser mein dikh raha hai, Controller = wo code jo database se data uthata hai aur page par dikhata hai.</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>View Generator kya karta hai?</h3>
+    <p>
+      <span class="hl">View Generator</span> ek tool hai jo automatically UI files (HTML templates/views) banata hai,
+      model ke basis par. Matlab tumhe manually har form nahi banana parta — generator khud bana deta hai!
+    </p>
+
+    <ul class="step-list">
+      <li><span class="step-num">1</span><div>Tum model define karo — jaise <code>Student</code> with fields: id, name, email, department.</div></li>
+      <li><span class="step-num">2</span><div>View Generator command run karo.</div></li>
+      <li><span class="step-num">3</span><div>Automatically <strong>List View, Create Form, Edit Page, Delete Page</strong> sab ban jata hai!</div></li>
+      <li><span class="step-num">4</span><div>Is process ko <span class="hl">Scaffolding</span> kehte hain.</div></li>
+    </ul>
+
+    <h3>Frameworks jo View Generators support karte hain</h3>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin: 10px 0 20px;">
+      <span class="pill pill-blue">Django (Python)</span>
+      <span class="pill pill-purple">Laravel (PHP)</span>
+      <span class="pill pill-green">Ruby on Rails</span>
+      <span class="pill pill-yellow">ASP.NET Core</span>
+    </div>
+
+    <h3>View Generator ka Example — Django mein</h3>
+    <div class="code-block">
+      <span class="code-label">DJANGO · Python</span>
+<span class="cm"># Step 1: Model banao (models.py mein)</span>
+<span class="kw">class</span> <span class="fn">Student</span>(models.Model):
+    name       = models.CharField(max_length=<span class="num">100</span>)
+    email      = models.EmailField()
+    department = models.CharField(max_length=<span class="num">50</span>)
+
+<span class="cm"># Step 2: Terminal mein ye command likho</span>
+python manage.py startapp students
+<span class="cm"># Ya scaffolding ke liye:</span>
+python manage.py generate_views Student
+    </div>
+
+    <h3>Advantages — Kyun use karein?</h3>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h4>Fast Development</h4>
+        <p>20 forms manually banana vs ek command — obvious choice! Ghanton ka kaam minutes mein hota hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h4>Errors Kam</h4>
+        <p>Human errors reduce hote hain. Manually type karo toh galtiyan hoti hain — generator mein nahi.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎨</div>
+        <h4>Consistent Design</h4>
+        <p>Sare pages ek jaise dikhte hain — alag alag styles nahi. Professional look aata hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔧</div>
+        <h4>Easy Maintenance</h4>
+        <p>Code clean hota hai, ek jagah se change karo — sab jagah update ho jata hai.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">📝</span>
+      <div><strong>Exam Tip:</strong> Scaffolding ka matlab yaad rakhna — "View Generator se automatically CRUD pages (Create, Read, Update, Delete) banana". Ye definition zaroor aayegi!</div>
+    </div>
+  </section>
+
+  <!-- ========================
+       PART 2: BOOTSTRAP
+  ======================== -->
+  <section id="bootstrap" class="section">
+    <div class="section-header">
+      <div class="section-num">PART 02</div>
+      <h2><span class="emoji">🎨</span> Bootstrap Framework</h2>
+    </div>
+
+    <h3>Bootstrap kya hai?</h3>
+    <p>
+      <span class="hl">Bootstrap</span> ek free front-end framework hai jo professionally designed responsive websites
+      jaldi banane mein madad karta hai. Isme pehle se bane hue CSS styles, components aur ek powerful
+      <span class="hl2">Grid System</span> hota hai.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Without Bootstrap</th>
+            <th>With Bootstrap ✅</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Poora CSS khud likhna parta hai</td><td>Ready-made styles milti hain</td></tr>
+          <tr><td>Bahut time waste hota hai</td><td>Professional UI jaldi ban jata hai</td></tr>
+          <tr><td>Mobile responsive manually banana parta hai</td><td>Automatically mobile responsive</td></tr>
+          <tr><td>Cross-browser issues hote hain</td><td>Sab browsers mein same dikh ta hai</td></tr>
+          <tr><td>Buttons, forms khud design karo</td><td>Pre-built components available hain</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Bootstrap Grid System — 12 Columns!</h3>
+    <p>
+      Bootstrap ki sabse important cheez uska <span class="hl">12-column grid system</span> hai.
+      Page ko 12 equal parts mein divide karta hai. Tum choose kar sakte ho ke kitni columns kisi
+      element ko chahiye:
+    </p>
+
+    <div class="code-block">
+      <span class="code-label">HTML · Bootstrap Grid</span>
+<span class="cm">&lt;!-- Full width (12/12 columns) --&gt;</span>
+<span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"col-12"</span><span class="fn">&gt;</span>Full Width Section<span class="fn">&lt;/div&gt;</span>
+
+<span class="cm">&lt;!-- Half width (6/12 = 50%) --&gt;</span>
+<span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"col-6"</span><span class="fn">&gt;</span>Left Half<span class="fn">&lt;/div&gt;</span>
+<span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"col-6"</span><span class="fn">&gt;</span>Right Half<span class="fn">&lt;/div&gt;</span>
+
+<span class="cm">&lt;!-- One-third width (4/12 each) --&gt;</span>
+<span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"col-4"</span><span class="fn">&gt;</span>Column 1<span class="fn">&lt;/div&gt;</span>
+<span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"col-4"</span><span class="fn">&gt;</span>Column 2<span class="fn">&lt;/div&gt;</span>
+<span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"col-4"</span><span class="fn">&gt;</span>Column 3<span class="fn">&lt;/div&gt;</span>
+    </div>
+
+    <h3>Bootstrap Components — kya kya milta hai?</h3>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin: 10px 0 20px;">
+      <span class="pill pill-blue">Buttons</span>
+      <span class="pill pill-blue">Cards</span>
+      <span class="pill pill-purple">Navbar</span>
+      <span class="pill pill-purple">Forms</span>
+      <span class="pill pill-green">Tables</span>
+      <span class="pill pill-green">Alerts</span>
+      <span class="pill pill-yellow">Modals</span>
+      <span class="pill pill-yellow">Carousel</span>
+    </div>
+
+    <h3>Student Registration Form — Bootstrap Example</h3>
+    <div class="code-block">
+      <span class="code-label">HTML · Bootstrap Form</span>
+<span class="cm">&lt;!-- Bootstrap CDN link head mein add karo --&gt;</span>
+<span class="fn">&lt;link</span> <span class="attr">href</span>=<span class="str">"https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css"</span>
+      <span class="attr">rel</span>=<span class="str">"stylesheet"</span><span class="fn">&gt;</span>
+
+<span class="cm">&lt;!-- Registration Form --&gt;</span>
+<span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"container mt-5"</span><span class="fn">&gt;</span>
+  <span class="fn">&lt;div</span> <span class="attr">class</span>=<span class="str">"card p-4 shadow"</span><span class="fn">&gt;</span>
+    <span class="fn">&lt;h3</span> <span class="attr">class</span>=<span class="str">"mb-3"</span><span class="fn">&gt;</span>Student Registration<span class="fn">&lt;/h3&gt;</span>
+    <span class="fn">&lt;input</span> <span class="attr">type</span>=<span class="str">"text"</span> <span class="attr">class</span>=<span class="str">"form-control mb-2"</span>
+           <span class="attr">placeholder</span>=<span class="str">"Apna naam likho"</span><span class="fn">&gt;</span>
+    <span class="fn">&lt;input</span> <span class="attr">type</span>=<span class="str">"email"</span> <span class="attr">class</span>=<span class="str">"form-control mb-2"</span>
+           <span class="attr">placeholder</span>=<span class="str">"Email address"</span><span class="fn">&gt;</span>
+    <span class="fn">&lt;button</span> <span class="attr">class</span>=<span class="str">"btn btn-primary"</span><span class="fn">&gt;</span>Register<span class="fn">&lt;/button&gt;</span>
+  <span class="fn">&lt;/div&gt;</span>
+<span class="fn">&lt;/div&gt;</span>
+    </div>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Dhyan raho:</strong> Bootstrap sirf ek tool hai — ye logic nahi karta. Ye sirf look aur feel improve karta hai. Business logic ke liye Python/PHP/JS code khud likhna hoga!</div>
+    </div>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">💡</span>
+      <div><strong>Responsive ka matlab:</strong> Ek hi page automatically mobile par, tablet par aur desktop par sahi dikh e — alag alag design nahi banana parta. Bootstrap ye automatically kar deta hai <code>col-sm-</code>, <code>col-md-</code>, <code>col-lg-</code> classes se.</div>
+    </div>
+  </section>
+
+  <!-- ========================
+       PART 3: REST
+  ======================== -->
+  <section id="rest" class="section">
+    <div class="section-header">
+      <div class="section-num">PART 03</div>
+      <h2><span class="emoji">🌐</span> REST Architecture</h2>
+    </div>
+
+    <h3>REST kya hai?</h3>
+    <p>
+      <span class="hl">REST</span> ka full form hai <strong>Representational State Transfer</strong>.
+      Ye web services design karne ka ek architectural style hai — yani ek tarika hai APIs banane ka.
+      Isko <span class="hl2">Roy Fielding</span> ne apni 2000 ki PhD dissertation mein introduce kiya tha.
+    </p>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">💡</span>
+      <div><strong>Simple explanation:</strong> Jab tum koi app use karte ho — jaise food ordering app — aur wo backend se data mangta hai, toh us communication ka ek standard tarika chahiye. REST whi standard hai! Dono (client aur server) ek language mein baat karte hain.</div>
+    </div>
+
+    <h3>REST ke Main Principles</h3>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <h4>Stateless</h4>
+        <p>Server koi baat yaad nahi rakhta. Har request apna sara data saath lati hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">♾️</div>
+        <h4>Idempotent</h4>
+        <p>Same operation baar baar karo — same result milega. Koi side effects nahi.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📡</div>
+        <h4>HTTP Methods</h4>
+        <p>GET, POST, PUT, DELETE — har operation ke liye alag method use hota hai.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔗</div>
+        <h4>Resource-Based</h4>
+        <p>Har cheez ek resource hai. URI us resource ka address hai — nouns use karo, verbs nahi.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       STATELESSNESS
+  ======================== -->
+  <section id="stateless" class="section">
+    <div class="section-header">
+      <div class="section-num">PART 03-A</div>
+      <h2><span class="emoji">🔄</span> Statelessness</h2>
+    </div>
+
+    <h3>Stateless ka matlab?</h3>
+    <p>
+      <span class="hl">Stateless</span> ka matlab hai ke server <strong>koi bhi previous request yaad nahi rakhta</strong>.
+      Har baar client jo request bhejta hai, usmein sari zaruri information honi chahiye.
+      Server ek naye insaan ki tarah hai — pehchanta nahi!
+    </p>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">🏧</span>
+      <div>
+        <strong>Real Life Example — ATM Machine:</strong><br>
+        Socho tum ATM se paise nikalte ho. Agar tum card nahi dalte toh machine nahi pehchanti. Doosri bar phir card + PIN dena parta hai — machine ne pehli transaction "yaad" nahi rakhi. Yahi Statelessness hai!
+      </div>
+    </div>
+
+    <h3>Web API mein kaise kaam karta hai?</h3>
+
+    <div class="code-block">
+      <span class="code-label">HTTP · REST Request Example</span>
+<span class="cm"># Galat tarika — Server se expect karna ke yaad rakhe</span>
+GET /students/dashboard
+<span class="cm"># Server poochega: "Koun ho tum? Login kab kiya?"</span>
+
+<span class="cm"># Sahi tarika — Har request mein sari info bhejna</span>
+GET /students/dashboard
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+Content-Type: application/json
+
+<span class="cm"># Ab server sab samajh sakta hai — ek hi request mein!</span>
+    </div>
+
+    <h3>Stateless Benefits</h3>
+    <ul class="step-list">
+      <li><span class="step-num">✓</span><div><span class="hl3">Scalability:</span> Server par load kam hota hai — session store nahi karna parta.</div></li>
+      <li><span class="step-num">✓</span><div><span class="hl3">Reliability:</span> Ek server gir jaye toh doosra same request handle kar sakta hai.</div></li>
+      <li><span class="step-num">✓</span><div><span class="hl3">Simplicity:</span> Debugging aur testing aasaan hoti hai — har request self-contained hai.</div></li>
+    </ul>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Common Mistake:</strong> Log sochte hain ke "server session rakhta hai toh efficient hai" — lekin REST mein ye nahi hota! Stateless architecture zyada scalable hoti hai kyun ke har request independent hai.</div>
+    </div>
+  </section>
+
+  <!-- ========================
+       IDEMPOTENT
+  ======================== -->
+  <section id="idempotent" class="section">
+    <div class="section-header">
+      <div class="section-num">PART 03-B</div>
+      <h2><span class="emoji">♾️</span> Idempotent Operations</h2>
+    </div>
+
+    <h3>Idempotent kya hota hai?</h3>
+    <p>
+      <span class="hl">Idempotent</span> operation woh hai jo agar ek baar karo ya 100 baar karo —
+      <strong>result same rehta hai</strong>. Dobarah karne se koi naya effect nahi hota.
+    </p>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">💡</span>
+      <div>
+        <strong>Real Life Example — Light Switch:</strong><br>
+        Agar light off hai aur tum "turn off" karo — off hi rahegi. 10 baar karo — still off. Yahi Idempotent hai!<br><br>
+        <strong>REST Example:</strong> DELETE /students/5 — Student pehli bar delete hoga, doosri bar? Already deleted, same result!
+      </div>
+    </div>
+
+    <h3>Idempotent vs Non-Idempotent</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>HTTP Method</th>
+            <th>Idempotent?</th>
+            <th>Kyun?</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill-green">GET</span></td>
+            <td>✅ Haan</td>
+            <td>Sirf data parhta hai, change nahi karta</td>
+            <td>GET /students — baar baar same list milegi</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-blue">PUT</span></td>
+            <td>✅ Haan</td>
+            <td>Same data se update karo — same result</td>
+            <td>PUT /students/1 {name:"Ali"} — har bar Ali rahega</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-purple">DELETE</span></td>
+            <td>✅ Haan</td>
+            <td>Ek baar delete ho jaye, dobarah bhi deleted hi hai</td>
+            <td>DELETE /students/5 — student gone, phir bhi gone</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-yellow">POST</span></td>
+            <td>❌ Nahi</td>
+            <td>Har baar naya resource banata hai</td>
+            <td>POST /students — 3 baar karo, 3 duplicate students!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">📝</span>
+      <div><strong>Exam Tip:</strong> "POST idempotent nahi hai kyun ke har baar naya record create hota hai." Aur "GET safe bhi hai aur idempotent bhi hai — data change nahi karta." Yeh dono points zaroor yaad rakhna!</div>
+    </div>
+  </section>
+
+  <!-- ========================
+       HTTP METHODS
+  ======================== -->
+  <section id="methods" class="section">
+    <div class="section-header">
+      <div class="section-num">PART 03-C</div>
+      <h2><span class="emoji">📡</span> HTTP Methods — Sahi Choice</h2>
+    </div>
+
+    <h3>REST mein HTTP methods ka sahi use</h3>
+    <p>
+      REST architecture mein har operation ke liye ek specific HTTP method hoti hai.
+      Isko galat use karna bad API design hai!
+    </p>
+
+    <div class="cards-grid">
+      <div class="card" style="border-left: 3px solid #38bdf8;">
+        <div class="card-icon">📖</div>
+        <h4>GET — Data Parhna</h4>
+        <p>Koi bhi data retrieve karne ke liye. Safe aur idempotent. Server par koi change nahi hota.</p>
+        <div style="margin-top:10px;">
+          <code style="font-size:12px; color: var(--accent);">GET /students</code><br>
+          <code style="font-size:12px; color: var(--accent);">GET /students/10</code>
+        </div>
+      </div>
+      <div class="card" style="border-left: 3px solid #34d399;">
+        <div class="card-icon">➕</div>
+        <h4>POST — Naya Banao</h4>
+        <p>Naya resource create karne ke liye. Idempotent nahi — baar baar call karo, naye records bante hain.</p>
+        <div style="margin-top:10px;">
+          <code style="font-size:12px; color: var(--accent3);">POST /students</code><br>
+          <small style="color:var(--text-muted);">Body mein data bhejna hota hai</small>
+        </div>
+      </div>
+      <div class="card" style="border-left: 3px solid #818cf8;">
+        <div class="card-icon">✏️</div>
+        <h4>PUT — Update Karo</h4>
+        <p>Existing resource ko update karne ke liye. Poora resource replace ho jata hai. Idempotent hai.</p>
+        <div style="margin-top:10px;">
+          <code style="font-size:12px; color: var(--accent2);">PUT /students/10</code><br>
+          <small style="color:var(--text-muted);">Poora object bhejna hota hai</small>
+        </div>
+      </div>
+      <div class="card" style="border-left: 3px solid #f87171;">
+        <div class="card-icon">🗑️</div>
+        <h4>DELETE — Hatao</h4>
+        <p>Resource delete karne ke liye. Idempotent hai — ek baar delete, ya dobara call karo — deleted hi rahega.</p>
+        <div style="margin-top:10px;">
+          <code style="font-size:12px; color: var(--danger);">DELETE /students/10</code>
+        </div>
+      </div>
+    </div>
+
+    <h3>Online Store ka Practical Example</h3>
+    <div class="code-block">
+      <span class="code-label">REST · Online Store API</span>
+<span class="cm"># Products ko dekhna</span>
+<span class="kw">GET</span>    /products          <span class="cm">→ Sab products ki list</span>
+<span class="kw">GET</span>    /products/<span class="num">42</span>       <span class="cm">→ Product #42 ki detail</span>
+
+<span class="cm"># Naya product add karna</span>
+<span class="kw">POST</span>   /products          <span class="cm">→ Naya product create karo</span>
+
+<span class="cm"># Product update karna</span>
+<span class="kw">PUT</span>    /products/<span class="num">42</span>       <span class="cm">→ Product #42 update karo</span>
+
+<span class="cm"># Product delete karna</span>
+<span class="kw">DELETE</span> /products/<span class="num">42</span>       <span class="cm">→ Product #42 hata do</span>
+    </div>
+  </section>
+
+  <!-- ========================
+       RESOURCE & URI
+  ======================== -->
+  <section id="uri" class="section">
+    <div class="section-header">
+      <div class="section-num">PART 04</div>
+      <h2><span class="emoji">🔗</span> Resource &amp; URI Design</h2>
+    </div>
+
+    <h3>Resource kya hai?</h3>
+    <p>
+      REST mein koi bhi object ya data ek <span class="hl">Resource</span> hai.
+      Resources hamesha <span class="hl2">nouns</span> (ism) hote hain — verbs (fail) nahi!
+    </p>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin: 10px 0 20px;">
+      <span class="pill pill-green">✅ /students</span>
+      <span class="pill pill-green">✅ /courses</span>
+      <span class="pill pill-green">✅ /products</span>
+      <span class="pill pill-green">✅ /orders</span>
+    </div>
+
+    <h3>URI — Uniform Resource Identifier</h3>
+    <p>URI resource ka address hota hai — jaise ghar ka address hota hai, waise hi API ka address. Rules yaad rakho:</p>
+
+    <ul class="step-list">
+      <li><span class="step-num">1</span><div><span class="hl">Nouns use karo</span> — verbs nahi. Resource ka naam hona chahiye, action ka nahi.</div></li>
+      <li><span class="step-num">2</span><div><span class="hl">Plural form</span> — /student nahi, /students likho. Collections plural hote hain.</div></li>
+      <li><span class="step-num">3</span><div><span class="hl">Hierarchical structure</span> — /students/10/courses matlab student 10 ke courses.</div></li>
+      <li><span class="step-num">4</span><div><span class="hl">Lowercase</span> — URIs mein hamesha lowercase letters use karo.</div></li>
+    </ul>
+
+    <h3>Good vs Bad URI Design</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>❌ Galat (Bad)</th>
+            <th>✅ Sahi (Good)</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="uri-bad">/getStudents</td>
+            <td class="uri-good">/students</td>
+            <td>Verb (get) URI mein nahi — method GET hai</td>
+          </tr>
+          <tr>
+            <td class="uri-bad">/createStudent</td>
+            <td class="uri-good">POST /students</td>
+            <td>Action method bata deta hai — URI noun hona chahiye</td>
+          </tr>
+          <tr>
+            <td class="uri-bad">/deleteStudentById?id=5</td>
+            <td class="uri-good">DELETE /students/5</td>
+            <td>ID path mein hona chahiye, query string mein nahi</td>
+          </tr>
+          <tr>
+            <td class="uri-bad">/Student/GetAll</td>
+            <td class="uri-good">/students</td>
+            <td>Lowercase use karo, GetAll verb hai</td>
+          </tr>
+          <tr>
+            <td class="uri-bad">/api/student-courses-list</td>
+            <td class="uri-good">/students/10/courses</td>
+            <td>Hierarchical structure use karo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>University API — Complete Design</h3>
+    <div class="code-block">
+      <span class="code-label">REST · University API Design</span>
+<span class="cm"># Students resource</span>
+<span class="kw">GET</span>    /students              <span class="cm">→ Sab students ki list</span>
+<span class="kw">GET</span>    /students/<span class="num">1</span>           <span class="cm">→ Student ID=1 ki detail</span>
+<span class="kw">POST</span>   /students              <span class="cm">→ Naya student add karo</span>
+<span class="kw">PUT</span>    /students/<span class="num">1</span>           <span class="cm">→ Student ID=1 update karo</span>
+<span class="kw">DELETE</span> /students/<span class="num">1</span>           <span class="cm">→ Student ID=1 delete karo</span>
+
+<span class="cm"># Nested resources (hierarchical)</span>
+<span class="kw">GET</span>    /students/<span class="num">1</span>/courses    <span class="cm">→ Student 1 ke sab courses</span>
+<span class="kw">GET</span>    /courses/<span class="num">3</span>/students    <span class="cm">→ Course 3 mein enroll students</span>
+
+<span class="cm"># Courses resource</span>
+<span class="kw">GET</span>    /courses               <span class="cm">→ Sab courses</span>
+<span class="kw">POST</span>   /courses               <span class="cm">→ Naya course add karo</span>
+    </div>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">📝</span>
+      <div><strong>Exam Tip:</strong> "REST APIs mein URI mein hamesha nouns use karte hain, verbs nahi — kyun ke HTTP methods khud action define karte hain." Ye rule zaroor yaad rakhna!</div>
+    </div>
+  </section>
+
+  <!-- ========================
+       LIVE DEMO
+  ======================== -->
+  <section id="demo" class="section">
+    <div class="section-header">
+      <div class="section-num">LIVE DEMO</div>
+      <h2><span class="emoji">⚡</span> Interactive REST URI Builder</h2>
+    </div>
+
+    <p>Apna resource aur operation choose karo — ye tool tumhe sahi REST URI aur HTTP Method batayega!</p>
+
+    <div class="demo-box">
+      <h4>🔗 REST API URI Generator</h4>
+      <div class="demo-row">
+        <input type="text" class="demo-input" id="resource-input" placeholder="Resource name likho (e.g. students, products)" value="students"/>
+        <input type="text" id="resource-id" class="demo-input" placeholder="ID (optional, e.g. 42)" style="max-width:180px;"/>
+        <select class="demo-select" id="operation-select">
+          <option value="list">List All (GET)</option>
+          <option value="get">Get One (GET)</option>
+          <option value="create">Create New (POST)</option>
+          <option value="update">Update (PUT)</option>
+          <option value="delete">Delete (DELETE)</option>
+        </select>
+        <button class="btn btn-primary" onclick="buildURI()">Build URI ⚡</button>
+      </div>
+      <div class="demo-output" id="uri-output">
+        Upar se resource aur operation choose karo, phir "Build URI" dabao! 🚀
+      </div>
+    </div>
+
+    <div class="demo-box">
+      <h4>🔍 URI Validator — Sahi hai ya Galat?</h4>
+      <div class="demo-row">
+        <input type="text" class="demo-input" id="uri-check" placeholder="URI check karo, e.g. /getStudents ya /students"/>
+        <button class="btn btn-secondary" onclick="checkURI()">Check Karo</button>
+      </div>
+      <div class="demo-output" id="uri-result">
+        Koi bhi URI check karo — main bata deta hoon sahi hai ya galat! 🕵️
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       QUIZ
+  ======================== -->
+  <section id="quiz" class="section">
+    <div class="section-header">
+      <div class="section-num">QUIZ</div>
+      <h2><span class="emoji">🧠</span> Quiz Time!</h2>
+    </div>
+
+    <div class="quiz-header">
+      <p>Apna knowledge test karo — 10 questions, har question par click karo:</p>
+      <div class="quiz-score-box" id="score-display">Score: 0 / 10</div>
+    </div>
+
+    <!-- Quiz Questions -->
+    <div id="quiz-container"></div>
+
+    <div style="margin-top: 20px; display:flex; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="showResult()">Result Dekho 🏆</button>
+      <button class="btn btn-secondary" onclick="resetQuiz()">Reset Quiz 🔄</button>
+    </div>
+
+    <div id="quiz-result">
+      <div class="big-score" id="final-score">0/10</div>
+      <p style="margin-top:12px; font-size:16px; color:var(--text);" id="result-msg"></p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      <p style="font-size:14px; color:var(--text-head); margin-bottom:4px;">Web Dev &amp; REST Principles</p>
+      <p>Lecture 06 · Theory Class · 2 Hours · Made for Students ❤️</p>
+    </div>
+    <div class="footer-links">
+      <a onclick="scrollTo('hero')">Top par jao ↑</a>
+      <a onclick="scrollTo('quiz')">Quiz 🧠</a>
+    </div>
+  </footer>
+
+</main>
+
+<!-- ========================
+     JAVASCRIPT
+======================== -->
+<script>
+  /* ===========================
+     QUIZ DATA
+  =========================== */
+  const questions = [
+    {
+      q: "MVC mein 'V' kiska short form hai?",
+      opts: ["Variable", "View", "Virtual", "Version"],
+      ans: 1,
+      exp: "V = View — jo data user ko dikhata hai HTML pages ke zariye."
+    },
+    {
+      q: "View Generator se automatically kya ban jata hai?",
+      opts: ["Database tables", "CRUD pages (Create, Read, Update, Delete)", "Server configuration", "CSS files"],
+      ans: 1,
+      exp: "View Generators scaffolding karte hain — sab CRUD pages automatically ban jate hain model ke basis par."
+    },
+    {
+      q: "Bootstrap Grid System mein total kitne columns hote hain?",
+      opts: ["8", "10", "12", "16"],
+      ans: 2,
+      exp: "Bootstrap 12-column grid system use karta hai. 6 columns = half width, 4 = one-third, etc."
+    },
+    {
+      q: "REST mein 'Stateless' ka matlab kya hai?",
+      opts: [
+        "Server sab kuch yaad rakhta hai",
+        "Har request apni sari information saath lati hai — server yaad nahi rakhta",
+        "Client ko state maintain karni parti hai",
+        "Database mein state store hoti hai"
+      ],
+      ans: 1,
+      exp: "Stateless = Server koi previous request yaad nahi rakhta. Har request self-contained hoti hai."
+    },
+    {
+      q: "Kaunsa HTTP method idempotent NAHI hai?",
+      opts: ["GET", "PUT", "DELETE", "POST"],
+      ans: 3,
+      exp: "POST idempotent nahi — har baar ek naya resource create ho jata hai. Baaki teen idempotent hain."
+    },
+    {
+      q: "Naya student create karne ke liye kaunsa HTTP method use hoga?",
+      opts: ["GET", "PUT", "POST", "DELETE"],
+      ans: 2,
+      exp: "POST = Create. Naya resource banana ho toh POST use karte hain."
+    },
+    {
+      q: "REST mein URI design mein kya use karna chahiye?",
+      opts: ["Verbs (createStudent)", "Numbers only", "Nouns (students)", "Abbreviations"],
+      ans: 2,
+      exp: "REST URIs mein hamesha nouns use karte hain. HTTP method khud action batata hai!"
+    },
+    {
+      q: "Kaunsa URI design sahi (good) hai?",
+      opts: ["/getStudents", "/createNewStudent", "/students", "/deleteAllStudents"],
+      ans: 2,
+      exp: "/students sahi hai — noun hai, plural hai, hierarchical hai. Baqi mein verbs hain jo REST guideline ke khilaf hain."
+    },
+    {
+      q: "REST ka full form kya hai?",
+      opts: [
+        "Remote Execution Standard Transfer",
+        "Representational State Transfer",
+        "Reliable Server Transfer",
+        "Resource Entity State Transfer"
+      ],
+      ans: 1,
+      exp: "REST = Representational State Transfer — Roy Fielding ne 2000 mein introduce kiya."
+    },
+    {
+      q: "DELETE /students/5 ko 3 baar call karo — kya hoga?",
+      opts: [
+        "3 students delete honge",
+        "Error aayega",
+        "Same result — student already deleted, har baar same state",
+        "Student recover ho jayega"
+      ],
+      ans: 2,
+      exp: "DELETE idempotent hai — pehli bar delete hoga, baad mein same state rahegi. Ye REST ki guarantee hai!"
+    }
+  ];
+
+  let score = 0;
+  let answered = [];
+
+  /* ===========================
+     BUILD QUIZ
+  =========================== */
+  function buildQuiz() {
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = '';
+    score = 0;
+    answered = new Array(questions.length).fill(false);
+    updateScore();
+
+    questions.forEach((q, i) => {
+      const card = document.createElement('div');
+      card.className = 'q-card';
+      card.id = 'qcard-' + i;
+
+      const opts = q.opts.map((o, j) =>
+        `<div class="option" id="opt-${i}-${j}" onclick="answer(${i}, ${j})">${o}</div>`
+      ).join('');
+
+      card.innerHTML = `
+        <div class="q-num">Q${i + 1} of ${questions.length}</div>
+        <div class="q-text">${q.q}</div>
+        <div class="options">${opts}</div>
+        <div class="q-feedback" id="fb-${i}"></div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function answer(qIdx, optIdx) {
+    if (answered[qIdx]) return;
+    answered[qIdx] = true;
+
+    const q = questions[qIdx];
+    const card = document.getElementById('qcard-' + qIdx);
+    const fb = document.getElementById('fb-' + qIdx);
+
+    // Disable all options
+    q.opts.forEach((_, j) => {
+      const el = document.getElementById(`opt-${qIdx}-${j}`);
+      el.classList.add('disabled');
+    });
+
+    const chosen = document.getElementById(`opt-${qIdx}-${optIdx}`);
+    const correct = document.getElementById(`opt-${qIdx}-${q.ans}`);
+    correct.classList.add('correct-ans');
+
+    if (optIdx === q.ans) {
+      score++;
+      card.classList.add('correct');
+      fb.className = 'q-feedback show ok';
+      fb.innerHTML = '✅ Bilkul sahi! ' + q.exp;
+    } else {
+      chosen.classList.add('wrong-ans');
+      card.classList.add('wrong');
+      fb.className = 'q-feedback show err';
+      fb.innerHTML = '❌ Galat. ' + q.exp;
+    }
+
+    updateScore();
+  }
+
+  function updateScore() {
+    document.getElementById('score-display').textContent =
+      `Score: ${score} / ${questions.length}`;
+  }
+
+  function showResult() {
+    const result = document.getElementById('quiz-result');
+    result.classList.add('show');
+    document.getElementById('final-score').textContent = `${score}/${questions.length}`;
+
+    let msg = '';
+    if (score === 10)    msg = '🏆 Shaandaar! Poore marks! Tum expert ho gaye!';
+    else if (score >= 8) msg = '🎉 Bahut acha! Thodi si practice aur perfect ho jaoge!';
+    else if (score >= 6) msg = '👍 Theek hai! Concepts dobara padhne chahiye.';
+    else if (score >= 4) msg = '📚 Mehnat karo — dobara notes parho aur retry karo!';
+    else                  msg = '💪 Ghabrao mat! Har expert pehle student tha. Phir koshish karo!';
+
+    document.getElementById('result-msg').textContent = msg;
+    result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function resetQuiz() {
+    document.getElementById('quiz-result').classList.remove('show');
+    buildQuiz();
+  }
+
+  /* ===========================
+     URI BUILDER DEMO
+  =========================== */
+  function buildURI() {
+    const res   = document.getElementById('resource-input').value.trim().toLowerCase().replace(/\s+/g, '-') || 'resources';
+    const id    = document.getElementById('resource-id').value.trim();
+    const op    = document.getElementById('operation-select').value;
+    const out   = document.getElementById('uri-output');
+
+    const plural = res.endsWith('s') ? res : res + 's';
+    let method, uri, body = '', notes = '';
+
+    switch(op) {
+      case 'list':
+        method = 'GET'; uri = `/${plural}`;
+        notes = 'Sari list milegi. Idempotent ✅ — baar baar call karo, same list.';
+        break;
+      case 'get':
+        const gid = id || '1';
+        method = 'GET'; uri = `/${plural}/${gid}`;
+        notes = `ID ${gid} wala resource milega. Idempotent ✅`;
+        break;
+      case 'create':
+        method = 'POST'; uri = `/${plural}`;
+        body = `\nBody: { "${res.slice(0,-1) || res}_name": "value", ... }`;
+        notes = 'Naya resource banega. NOT Idempotent ❌ — baar baar call = duplicate records!';
+        break;
+      case 'update':
+        const uid = id || '1';
+        method = 'PUT'; uri = `/${plural}/${uid}`;
+        body = `\nBody: { poora updated object yahan }`;
+        notes = `ID ${uid} update hoga. Idempotent ✅ — same data baar baar bhejo, same result.`;
+        break;
+      case 'delete':
+        const did = id || '1';
+        method = 'DELETE'; uri = `/${plural}/${did}`;
+        notes = `ID ${did} delete hoga. Idempotent ✅ — baar baar call karo, still deleted.`;
+        break;
+    }
+
+    out.innerHTML = `<strong style="color:var(--accent)">${method}</strong> <span style="color:var(--accent3)">${uri}</span>${body}
+<span style="color:var(--text-muted); font-size:12px;">💡 ${notes}</span>`;
+  }
+
+  /* ===========================
+     URI VALIDATOR
+  =========================== */
+  function checkURI() {
+    const uri = document.getElementById('uri-check').value.trim();
+    const out = document.getElementById('uri-result');
+
+    if (!uri) {
+      out.innerHTML = '⚠️ Pehle URI likho!';
+      return;
+    }
+
+    const badPatterns = [
+      { re: /\/(get|fetch|retrieve)/i, msg: 'URI mein "get/fetch/retrieve" verb hai — HTTP method GET use karo, URI mein verb mat rakho.' },
+      { re: /\/(create|add|insert)/i,  msg: 'URI mein "create/add/insert" verb hai — HTTP method POST use karo.' },
+      { re: /\/(update|edit|modify)/i, msg: 'URI mein "update/edit/modify" verb hai — HTTP method PUT use karo.' },
+      { re: /\/(delete|remove|del)/i,  msg: 'URI mein "delete/remove" verb hai — HTTP method DELETE use karo.' },
+      { re: /[A-Z]/,                   msg: 'URIs mein uppercase letters mat use karo — lowercase best practice hai.' },
+      { re: /\?.*id=/i,                msg: 'ID query string mein nahi — path mein rakho: /resource/5' },
+    ];
+
+    for (const p of badPatterns) {
+      if (p.re.test(uri)) {
+        out.innerHTML = `<span style="color:var(--danger)">❌ Galat Design!</span>\n${p.msg}`;
+        return;
+      }
+    }
+
+    // Good patterns check
+    if (/^\/[a-z][a-z0-9-]*(\/[0-9]+)?(\/[a-z][a-z0-9-]*(\/[0-9]+)?)?$/.test(uri)) {
+      out.innerHTML = `<span style="color:var(--accent3)">✅ Sahi REST URI Design!</span>\nYe URI REST best practices follow karta hai — nouns, lowercase, hierarchical structure.`;
+    } else {
+      out.innerHTML = `<span style="color:var(--warn)">⚠️ Mostly theek hai</span>\nKoi bada issue nahi mila, lekin double check karo ke nouns use ho rahe hain.`;
+    }
+  }
+
+  /* ===========================
+     PROGRESS BAR
+  =========================== */
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const progress = (scrollTop / scrollHeight) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+  });
+
+  /* ===========================
+     SCROLL ANIMATIONS
+  =========================== */
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        // Update active sidebar link
+        const id = e.target.id;
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[onclick*="${id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+  /* ===========================
+     SIDEBAR NAVIGATION
+  =========================== */
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Close sidebar on mobile
+    if (window.innerWidth <= 768) {
+      document.getElementById('sidebar').classList.remove('open');
+    }
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  // Click outside to close sidebar on mobile
+  document.getElementById('main').addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      document.getElementById('sidebar').classList.remove('open');
+    }
+  });
+
+  /* ===========================
+     INIT
+  =========================== */
+  buildQuiz();
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

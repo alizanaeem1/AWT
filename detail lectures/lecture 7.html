@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REST API Seekhein — Complete Course</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS VARIABLES & RESET
+   ============================================================ */
+:root {
+  --bg-primary: #060912;
+  --bg-secondary: #0d1120;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2235;
+  --border: #1e2d4a;
+  --border-bright: #2a3f6a;
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-purple: #8b5cf6;
+  --accent-green: #10b981;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  --gradient-2: linear-gradient(135deg, #06b6d4, #3b82f6);
+  --gradient-3: linear-gradient(135deg, #10b981, #06b6d4);
+  --sidebar-width: 280px;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: var(--gradient-1);
+  z-index: 9999;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 10px #3b82f6aa;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo .logo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gradient-1);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.sidebar-logo h2 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.sidebar-logo p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.nav-section {
+  padding: 16px 0 8px;
+}
+
+.nav-section-title {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 24px;
+  margin-bottom: 6px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: rgba(59, 130, 246, 0.07);
+  border-left-color: var(--accent-blue);
+}
+
+.nav-link.active {
+  color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.1);
+  border-left-color: var(--accent-blue);
+  font-weight: 500;
+}
+
+.nav-link .nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.nav-link.active .nav-icon { opacity: 1; }
+
+/* ============================================================
+   MAIN LAYOUT
+   ============================================================ */
+.main-wrapper {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+}
+
+/* Mobile toggle */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 16px; right: 16px;
+  z-index: 200;
+  background: var(--bg-card);
+  border: 1px solid var(--border-bright);
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 80px 60px;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 60% 40%, rgba(59,130,246,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 20% 80%, rgba(139,92,246,0.08) 0%, transparent 50%);
+}
+
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+.hero-content {
+  position: relative;
+  max-width: 700px;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--accent-blue);
+  font-weight: 500;
+  margin-bottom: 24px;
+  animation: fadeInDown 0.6s ease;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  animation: fadeInUp 0.7s ease 0.1s both;
+}
+
+.hero h1 .gradient-text {
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin-bottom: 36px;
+  animation: fadeInUp 0.7s ease 0.2s both;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.7s ease 0.3s both;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  background: var(--gradient-2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ============================================================
+   SECTION STYLES
+   ============================================================ */
+section {
+  padding: 80px 60px;
+  border-top: 1px solid var(--border);
+}
+
+.section-header {
+  margin-bottom: 48px;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(139,92,246,0.1);
+  border: 1px solid rgba(139,92,246,0.25);
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--accent-purple);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.section-badge.cyan { background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.25); color: var(--accent-cyan); }
+.section-badge.green { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); color: var(--accent-green); }
+.section-badge.orange { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: var(--accent-orange); }
+.section-badge.red { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); color: var(--accent-red); }
+
+.section-header h2 {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.section-header p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 600px;
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease both;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient-1);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  border-color: var(--border-bright);
+  background: var(--bg-card-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.card:hover::before { transform: scaleX(1); }
+
+.card.cyan::before { background: var(--gradient-2); }
+.card.green::before { background: var(--gradient-3); }
+
+.card-icon {
+  width: 44px; height: 44px;
+  background: rgba(59,130,246,0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.card-icon.cyan { background: rgba(6,182,212,0.15); }
+.card-icon.green { background: rgba(16,185,129,0.15); }
+.card-icon.purple { background: rgba(139,92,246,0.15); }
+.card-icon.orange { background: rgba(245,158,11,0.15); }
+
+.card h3 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ============================================================
+   CODE BLOCKS
+   ============================================================ */
+.code-block {
+  background: #0a0f1a;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin: 24px 0;
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #0d1420;
+  border-bottom: 1px solid var(--border);
+}
+
+.code-header .file-name {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.code-header .dots {
+  display: flex;
+  gap: 6px;
+}
+
+.code-header .dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ef4444; }
+.dot-yellow { background: #f59e0b; }
+.dot-green { background: #10b981; }
+
+.code-block pre {
+  padding: 20px;
+  overflow-x: auto;
+  font-family: var(--font-code);
+  font-size: 13px;
+  line-height: 1.7;
+  color: #a9c5f0;
+}
+
+.code-block pre .comment { color: #4a5568; }
+.code-block pre .keyword { color: #8b5cf6; }
+.code-block pre .string { color: #10b981; }
+.code-block pre .function { color: #06b6d4; }
+.code-block pre .number { color: #f59e0b; }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  margin: 24px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: rgba(59,130,246,0.1);
+}
+
+th {
+  padding: 14px 20px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent-blue);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 13px 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td {
+  background: rgba(59,130,246,0.04);
+  color: var(--text-primary);
+}
+
+.method-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: var(--font-code);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-get { background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); }
+.badge-post { background: rgba(59,130,246,0.15); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.3); }
+.badge-put { background: rgba(245,158,11,0.15); color: var(--accent-orange); border: 1px solid rgba(245,158,11,0.3); }
+.badge-delete { background: rgba(239,68,68,0.15); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.3); }
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+.alert {
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin: 20px 0;
+  border-left: 4px solid;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.alert-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.alert-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.alert-body { font-size: 14px; line-height: 1.6; }
+
+.alert-tip { background: rgba(16,185,129,0.08); border-color: var(--accent-green); }
+.alert-tip .alert-title { color: var(--accent-green); }
+.alert-tip .alert-body { color: #6ee7b7; }
+
+.alert-warning { background: rgba(245,158,11,0.08); border-color: var(--accent-orange); }
+.alert-warning .alert-title { color: var(--accent-orange); }
+.alert-warning .alert-body { color: #fcd34d; }
+
+.alert-exam { background: rgba(139,92,246,0.08); border-color: var(--accent-purple); }
+.alert-exam .alert-title { color: var(--accent-purple); }
+.alert-exam .alert-body { color: #c4b5fd; }
+
+.alert-info { background: rgba(59,130,246,0.08); border-color: var(--accent-blue); }
+.alert-info .alert-title { color: var(--accent-blue); }
+.alert-info .alert-body { color: #93c5fd; }
+
+/* ============================================================
+   STEP LIST
+   ============================================================ */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  margin: 28px 0;
+}
+
+.step {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  padding-bottom: 28px;
+}
+
+.step:last-child { padding-bottom: 0; }
+
+.step-number {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--gradient-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.step-line {
+  position: absolute;
+  left: 18px; top: 36px; bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.step:last-child .step-line { display: none; }
+
+.step-content {
+  flex: 1;
+  padding-top: 6px;
+}
+
+.step-content h4 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.step-content p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   LIVE DEMO
+   ============================================================ */
+.demo-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin: 28px 0;
+}
+
+.demo-container h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.demo-container p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.demo-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.demo-input {
+  flex: 1;
+  min-width: 160px;
+  background: #0a0f1a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-code);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.demo-input:focus { border-color: var(--accent-blue); }
+.demo-input::placeholder { color: var(--text-muted); }
+
+.demo-btn {
+  padding: 12px 24px;
+  background: var(--gradient-1);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.demo-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59,130,246,0.4); }
+.demo-btn:active { transform: translateY(0); }
+
+.demo-select {
+  background: #0a0f1a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-code);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.demo-result {
+  background: #0a0f1a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  color: var(--accent-green);
+  line-height: 1.7;
+  min-height: 60px;
+  white-space: pre-wrap;
+}
+
+/* ============================================================
+   QUIZ SECTION
+   ============================================================ */
+.quiz-container {
+  max-width: 720px;
+}
+
+.quiz-question {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 20px;
+  transition: border-color 0.3s;
+}
+
+.quiz-question.correct { border-color: var(--accent-green); }
+.quiz-question.incorrect { border-color: var(--accent-red); }
+
+.quiz-q-num {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.quiz-q-text {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #0a0f1a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.quiz-option:hover:not(.disabled) {
+  border-color: var(--accent-blue);
+  color: var(--text-primary);
+  background: rgba(59,130,246,0.07);
+}
+
+.quiz-option.selected-correct {
+  border-color: var(--accent-green);
+  background: rgba(16,185,129,0.12);
+  color: var(--accent-green);
+}
+
+.quiz-option.selected-wrong {
+  border-color: var(--accent-red);
+  background: rgba(239,68,68,0.12);
+  color: var(--accent-red);
+}
+
+.quiz-option.show-correct {
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+  opacity: 0.5;
+}
+
+.quiz-option.disabled { cursor: not-allowed; }
+
+.option-letter {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.quiz-feedback {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: none;
+}
+
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct-fb { background: rgba(16,185,129,0.1); color: var(--accent-green); }
+.quiz-feedback.wrong-fb { background: rgba(239,68,68,0.1); color: var(--accent-red); }
+
+.quiz-score-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-bright);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-top: 20px;
+  display: none;
+}
+
+.quiz-score-box.show { display: block; }
+
+.score-num {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 800;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.score-label { color: var(--text-secondary); font-size: 15px; margin-top: 6px; }
+
+.quiz-restart-btn {
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: var(--gradient-1);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quiz-restart-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59,130,246,0.4); }
+
+/* ============================================================
+   DIVIDER & MISC
+   ============================================================ */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 40px 0;
+}
+
+.highlight-text {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.endpoint-path {
+  font-family: var(--font-code);
+  font-size: 13px;
+  color: var(--accent-cyan);
+  background: rgba(6,182,212,0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 48px 60px;
+  text-align: center;
+}
+
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+
+footer p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+footer .footer-topics {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+footer .footer-topic {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  :root { --sidebar-width: 0px; }
+
+  .sidebar {
+    transform: translateX(-280px);
+    width: 280px;
+  }
+
+  .sidebar.open { transform: translateX(0); }
+
+  .main-wrapper { margin-left: 0; }
+
+  .menu-toggle { display: block; }
+
+  section, .hero { padding: 60px 24px; }
+
+  .two-col { grid-template-columns: 1fr; }
+
+  footer { padding: 40px 24px; }
+}
+
+@media (max-width: 600px) {
+  .hero-stats { gap: 20px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .demo-form { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Mobile Menu Toggle -->
+<button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">☰</button>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">📡 REST API</div>
+    <h2>Complete Course</h2>
+    <p>Computer Science Students</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Shuru Karen</div>
+    <a href="#hero" class="nav-link active">
+      <span>🏠</span> Course Overview
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Lecture 1 — Design</div>
+    <a href="#what-is-api" class="nav-link">
+      <span>❓</span> API Kya Hai?
+    </a>
+    <a href="#rest-principles" class="nav-link">
+      <span>📋</span> REST Principles
+    </a>
+    <a href="#http-methods" class="nav-link">
+      <span>🔄</span> HTTP Methods
+    </a>
+    <a href="#endpoints" class="nav-link">
+      <span>🎯</span> Endpoints Design
+    </a>
+    <a href="#best-practices" class="nav-link">
+      <span>✅</span> Best Practices
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Lecture 2 — Implementation</div>
+    <a href="#implementation" class="nav-link">
+      <span>💻</span> Practical Code
+    </a>
+    <a href="#crud" class="nav-link">
+      <span>🛠</span> CRUD Operations
+    </a>
+    <a href="#live-demo" class="nav-link">
+      <span>⚡</span> Live Demo
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Lecture 3 — Security</div>
+    <a href="#security-overview" class="nav-link">
+      <span>🔐</span> Security Overview
+    </a>
+    <a href="#cors" class="nav-link">
+      <span>🌍</span> CORS
+    </a>
+    <a href="#xss-ddos" class="nav-link">
+      <span>⚠️</span> XSS & DDoS
+    </a>
+    <a href="#auth" class="nav-link">
+      <span>🔑</span> Auth & Authorization
+    </a>
+    <a href="#session" class="nav-link">
+      <span>🎫</span> Session Handling
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Test Karen</div>
+    <a href="#quiz" class="nav-link">
+      <span>🧠</span> Quiz
+    </a>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-wrapper">
+
+  <!-- ============================================================
+       HERO
+       ============================================================ -->
+  <section id="hero" class="hero" style="border-top:none;">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-tag">📡 Complete REST API Course</div>
+      <h1>REST API Seekhein<br><span class="gradient-text">Aasaan Urdu Mein</span></h1>
+      <p>Teen lectures ka poora course — API design, implementation, aur security — Roman Urdu mein step-by-step explain kiya gaya hai. Beginners ke liye bilkul perfect!</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-num">3</span>
+          <span class="stat-label">Lectures</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">6+</span>
+          <span class="stat-label">Ghante</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">15+</span>
+          <span class="stat-label">Topics</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">10</span>
+          <span class="stat-label">Quiz Sawal</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       LECTURE 1 — WHAT IS API
+       ============================================================ -->
+  <section id="what-is-api">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge">Lecture 1 — Basics</div>
+      <h2>API Aur REST Kya Hai?</h2>
+      <p>Sab se pehle samjhte hain ke API aur REST hote kya hain — real life examples ke saath!</p>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card animate-on-scroll">
+        <div class="card-icon">🍕</div>
+        <h3>API Kya Hai?</h3>
+        <p>API (Application Programming Interface) do software systems ke darmiyan communication ka zariya hai. Jaise Foodpanda app server se poochhta hai: "Restaurants dikhao!" — yeh kaam API karta hai.</p>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">🌐</div>
+        <h3>REST Kya Hai?</h3>
+        <p>REST (Representational State Transfer) ek style hai web APIs banane ka. Yeh HTTP protocol use karta hai. Simple, fast, aur widely used hai — almost har website ka backend REST API use karta hai.</p>
+      </div>
+      <div class="card animate-on-scroll">
+        <div class="card-icon purple">🏪</div>
+        <h3>Real Life Example</h3>
+        <p>Socho ek restaurant mein: <strong>Aap</strong> = Client (frontend). <strong>Waiter</strong> = API. <strong>Kitchen</strong> = Server (backend). Aap waiter ko order dete ho, waiter kitchen ko batata hai, aur khana wapas lata hai!</p>
+      </div>
+    </div>
+
+    <div class="alert alert-tip animate-on-scroll">
+      <span class="alert-icon">💡</span>
+      <div>
+        <div class="alert-title">Tip — Yaad Rakhein</div>
+        <div class="alert-body">Jab bhi mobile app koi data dikhaata hai (jaise Facebook posts, YouTube videos), peeche REST API kaam kar raha hota hai!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       REST PRINCIPLES
+       ============================================================ -->
+  <section id="rest-principles">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge cyan">REST Principles</div>
+      <h2>REST ke 6 Usool</h2>
+      <p>REST ki bunyaad 6 principles par hai. Inhe samajhna bahut zaroori hai!</p>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card animate-on-scroll">
+        <div class="card-icon">🔌</div>
+        <h3>1. Client-Server</h3>
+        <p>Frontend aur backend alag alag hote hain. Mobile app (client) alag, server alag. Dono apna kaam khud karte hain.</p>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">🏧</div>
+        <h3>2. Stateless</h3>
+        <p>Server kisi ki "yaad" nahi rakhta. Har request mein sab information hona chahiye. Jaise ATM — har baar card daalna parta hai!</p>
+      </div>
+      <div class="card animate-on-scroll">
+        <div class="card-icon purple">💾</div>
+        <h3>3. Cacheable</h3>
+        <p>Response ko cache mein store kar sakte hain. Performance behtar hoti hai. Server par load kam hota hai.</p>
+      </div>
+      <div class="card animate-on-scroll">
+        <div class="card-icon orange">📐</div>
+        <h3>4. Uniform Interface</h3>
+        <p>Standard URLs aur HTTP methods use honge. Consistent design — sab same tareeqe se kaam karega.</p>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">🧅</div>
+        <h3>5. Layered System</h3>
+        <p>Alag alag layers ho sakti hain — security layer, database layer, etc. Client ko nahi pata server ke andar kitni layers hain.</p>
+      </div>
+      <div class="card animate-on-scroll">
+        <div class="card-icon purple">📦</div>
+        <h3>6. Code on Demand (Optional)</h3>
+        <p>Server client ko executable code bhi bhej sakta hai (jaise JavaScript). Yeh optional hai.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-exam animate-on-scroll">
+      <span class="alert-icon">📝</span>
+      <div>
+        <div class="alert-title">Exam Tip — Important!</div>
+        <div class="alert-body">"Stateless" ka matlab hai: Server previous request ko yaad nahi rakhta. Har request independent hoti hai. Yeh concept bahut zyada exam mein aata hai!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HTTP METHODS
+       ============================================================ -->
+  <section id="http-methods">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge green">HTTP Methods</div>
+      <h2>HTTP Methods — CRUD ka Dil</h2>
+      <p>REST API mein yeh 4 methods sab kuch karte hain — Create, Read, Update, Delete!</p>
+    </div>
+
+    <div class="table-wrapper animate-on-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Kaam Kya Karta Hai?</th>
+            <th>Real Life Example</th>
+            <th>SQL Equivalent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="method-badge badge-get">GET</span></td>
+            <td>Data retrieve karta hai (sirf dekhna)</td>
+            <td>Product list dekhna, profile dekhna</td>
+            <td><code>SELECT</code></td>
+          </tr>
+          <tr>
+            <td><span class="method-badge badge-post">POST</span></td>
+            <td>Naya data create karta hai</td>
+            <td>User register karna, order dena</td>
+            <td><code>INSERT</code></td>
+          </tr>
+          <tr>
+            <td><span class="method-badge badge-put">PUT</span></td>
+            <td>Pura record update karta hai</td>
+            <td>Profile update karna, address badalna</td>
+            <td><code>UPDATE</code></td>
+          </tr>
+          <tr>
+            <td><span class="method-badge badge-delete">DELETE</span></td>
+            <td>Record delete karta hai</td>
+            <td>Account delete, post hatana</td>
+            <td><code>DELETE</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-warning animate-on-scroll">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <div class="alert-title">Common Galti — Login mein GET ya POST?</div>
+        <div class="alert-body">Login mein POST use hota hai — kyunki password request body mein securely bheja jaata hai. GET use karo toh password URL mein nazar aayega — bilkul unsafe!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ENDPOINTS DESIGN
+       ============================================================ -->
+  <section id="endpoints">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge">Case Study</div>
+      <h2>Endpoints Design — Online Bookstore</h2>
+      <p>Ek Online Bookstore ke liye REST API design karte hain — step by step!</p>
+    </div>
+
+    <div class="steps animate-on-scroll">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h4>Resources Identify Karo</h4>
+          <p>REST mein sab kuch "Resource" hota hai. Bookstore mein 3 resources hain: <strong>Users</strong>, <strong>Books</strong>, <strong>Orders</strong>. Har resource ka apna endpoint hoga.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h4>Nouns Use Karo, Verbs Nahi!</h4>
+          <p>❌ <code>/getBooks</code> — yeh galat hai! <br>✅ <code>/books</code> — yeh sahi hai! HTTP method batata hai kya karna hai, URL sirf resource ka naam hona chahiye.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h4>Plural Names Use Karo</h4>
+          <p>❌ <code>/book</code> — singular, galat! <br>✅ <code>/books</code> — plural, sahi! Standard practice yahi hai.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <h3 style="font-family:var(--font-display);font-size:20px;margin-bottom:20px;color:var(--text-primary);" class="animate-on-scroll">Books Resource ke Endpoints</h3>
+
+    <div class="table-wrapper animate-on-scroll">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Saari kitabein dekhna</td><td><span class="method-badge badge-get">GET</span></td><td><span class="endpoint-path">/books</span></td><td>Books ki puri list</td></tr>
+          <tr><td>Ek kitab dekhna</td><td><span class="method-badge badge-get">GET</span></td><td><span class="endpoint-path">/books/:id</span></td><td>ID se specific book</td></tr>
+          <tr><td>Nayi kitab add karna</td><td><span class="method-badge badge-post">POST</span></td><td><span class="endpoint-path">/books</span></td><td>Naya record create</td></tr>
+          <tr><td>Kitab update karna</td><td><span class="method-badge badge-put">PUT</span></td><td><span class="endpoint-path">/books/:id</span></td><td>Existing record update</td></tr>
+          <tr><td>Kitab delete karna</td><td><span class="method-badge badge-delete">DELETE</span></td><td><span class="endpoint-path">/books/:id</span></td><td>Record delete</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BEST PRACTICES + STATUS CODES
+       ============================================================ -->
+  <section id="best-practices">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge orange">Best Practices</div>
+      <h2>REST Design ke Zaroori Usool</h2>
+      <p>Ek professional API developer yeh rules hamesha follow karta hai!</p>
+    </div>
+
+    <div class="table-wrapper animate-on-scroll">
+      <table>
+        <thead>
+          <tr><th>Status Code</th><th>Matlab</th><th>Kab Use Karte Hain?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong style="color:var(--accent-green)">200 OK</strong></td><td>Sab theek hai</td><td>GET, PUT, DELETE successful</td></tr>
+          <tr><td><strong style="color:var(--accent-blue)">201 Created</strong></td><td>Resource ban gaya</td><td>POST successful</td></tr>
+          <tr><td><strong style="color:var(--accent-orange)">400 Bad Request</strong></td><td>Request galat hai</td><td>Validation fail, missing fields</td></tr>
+          <tr><td><strong style="color:var(--accent-orange)">401 Unauthorized</strong></td><td>Login nahi hai</td><td>Token nahi diya</td></tr>
+          <tr><td><strong style="color:var(--accent-red)">404 Not Found</strong></td><td>Resource nahi mila</td><td>ID galat hai</td></tr>
+          <tr><td><strong style="color:var(--accent-red)">500 Server Error</strong></td><td>Server kharab</td><td>Internal error</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-info animate-on-scroll">
+      <span class="alert-icon">📋</span>
+      <div>
+        <div class="alert-title">JSON Format Example</div>
+        <div class="alert-body">REST APIs JSON format mein data bhejte hain — yeh human readable aur machine readable dono hai!</div>
+      </div>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">response.json</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre>{
+  <span class="string">"id"</span>: <span class="number">1</span>,
+  <span class="string">"title"</span>: <span class="string">"Clean Code"</span>,
+  <span class="string">"author"</span>: <span class="string">"Robert C. Martin"</span>,
+  <span class="string">"price"</span>: <span class="number">500</span>,
+  <span class="string">"available"</span>: <span class="keyword">true</span>
+}</pre>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       IMPLEMENTATION
+       ============================================================ -->
+  <section id="implementation">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge cyan">Lecture 2 — Practical</div>
+      <h2>Node.js mein REST API Banana</h2>
+      <p>Ab step-by-step practical dekhte hain — Express.js se Student Management System banayenge!</p>
+    </div>
+
+    <div class="steps animate-on-scroll">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h4>Project Setup</h4>
+          <p>Naya Node.js project shuru karo aur Express install karo.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h4>Server Banao</h4>
+          <p>Express server setup karo port 3000 par. JSON middleware lagao.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h4>Routes Define Karo</h4>
+          <p>CRUD ke liye alag alag routes banao — GET, POST, PUT, DELETE.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h4>Postman se Test Karo</h4>
+          <p>Postman mein requests bhejo aur responses check karo.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">server.js — Setup</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre><span class="comment">// Step 1: npm init -y && npm install express</span>
+
+<span class="keyword">const</span> express = <span class="function">require</span>(<span class="string">'express'</span>);
+<span class="keyword">const</span> app = <span class="function">express</span>();
+
+<span class="comment">// JSON body parse karne ke liye</span>
+app.<span class="function">use</span>(express.<span class="function">json</span>());
+
+<span class="comment">// Dummy data (database ki jagah)</span>
+<span class="keyword">let</span> students = [
+  { <span class="string">id</span>: <span class="number">1</span>, <span class="string">name</span>: <span class="string">"Ali"</span>, <span class="string">email</span>: <span class="string">"ali@gmail.com"</span>, <span class="string">dept</span>: <span class="string">"CS"</span> },
+  { <span class="string">id</span>: <span class="number">2</span>, <span class="string">name</span>: <span class="string">"Sara"</span>, <span class="string">email</span>: <span class="string">"sara@gmail.com"</span>, <span class="string">dept</span>: <span class="string">"IT"</span> }
+];
+
+<span class="comment">// Server start karo</span>
+app.<span class="function">listen</span>(<span class="number">3000</span>, () => {
+  console.<span class="function">log</span>(<span class="string">"Server chal raha hai port 3000 par!"</span>);
+});</pre>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CRUD OPERATIONS
+       ============================================================ -->
+  <section id="crud">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge green">CRUD Operations</div>
+      <h2>Char CRUD Operations — Poora Code</h2>
+      <p>GET, POST, PUT, DELETE — charon ka complete implementation dekhte hain!</p>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">GET — Saare Students</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre><span class="comment">// GET /api/students — sab students dikhao</span>
+app.<span class="function">get</span>(<span class="string">'/api/students'</span>, (req, res) => {
+  res.<span class="function">json</span>(students);  <span class="comment">// 200 OK — data bhejo</span>
+});</pre>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">GET — Ek Student by ID</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre><span class="comment">// GET /api/students/1 — ID se student dhundho</span>
+app.<span class="function">get</span>(<span class="string">'/api/students/:id'</span>, (req, res) => {
+  <span class="keyword">const</span> student = students.<span class="function">find</span>(s => s.id == req.params.id);
+  
+  <span class="keyword">if</span> (!student) {
+    <span class="comment">// Student nahi mila toh 404 bhejo</span>
+    <span class="keyword">return</span> res.<span class="function">status</span>(<span class="number">404</span>).<span class="function">json</span>({ message: <span class="string">"Student nahi mila!"</span> });
+  }
+  
+  res.<span class="function">json</span>(student);  <span class="comment">// 200 OK</span>
+});</pre>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">POST — Naya Student Add Karo</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre><span class="comment">// POST /api/students — naya student banao</span>
+app.<span class="function">post</span>(<span class="string">'/api/students'</span>, (req, res) => {
+  <span class="keyword">const</span> newStudent = {
+    id: students.length + <span class="number">1</span>,  <span class="comment">// Auto ID</span>
+    ...req.body              <span class="comment">// Request se data</span>
+  };
+  
+  students.<span class="function">push</span>(newStudent);
+  res.<span class="function">status</span>(<span class="number">201</span>).<span class="function">json</span>(newStudent);  <span class="comment">// 201 Created!</span>
+});</pre>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">DELETE — Student Hatao</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre><span class="comment">// DELETE /api/students/1 — student hatao</span>
+app.<span class="function">delete</span>(<span class="string">'/api/students/:id'</span>, (req, res) => {
+  students = students.<span class="function">filter</span>(s => s.id != req.params.id);
+  res.<span class="function">json</span>({ message: <span class="string">"Student delete ho gaya!"</span> });
+});</pre>
+    </div>
+
+    <div class="alert alert-tip animate-on-scroll">
+      <span class="alert-icon">💡</span>
+      <div>
+        <div class="alert-title">Spread Operator (...) Kya Hai?</div>
+        <div class="alert-body"><code>...req.body</code> ka matlab hai: request body ki saari properties copy kar lo. Jaise <code>{ name: "Zaid", email: "z@gmail.com" }</code> — yeh sab new student mein aa jayega!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       LIVE DEMO
+       ============================================================ -->
+  <section id="live-demo">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge orange">Interactive Demo</div>
+      <h2>Live Demo — API Test Karo</h2>
+      <p>Yahan simulation karein ke REST API kaise kaam karta hai! Students add, delete, search karo.</p>
+    </div>
+
+    <div class="demo-container animate-on-scroll">
+      <h3>🎓 Student Management System</h3>
+      <p>Neeche student ka data daalo aur operations try karo!</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;" class="demo-fields">
+        <input class="demo-input" id="demo-name" placeholder="Student ka naam (e.g. Ahmad)" />
+        <input class="demo-input" id="demo-email" placeholder="Email (e.g. ahmad@uni.edu)" />
+        <input class="demo-input" id="demo-dept" placeholder="Department (e.g. CS)" />
+        <select class="demo-select" id="demo-action">
+          <option value="post">POST — Add Student</option>
+          <option value="get">GET — Saare Students</option>
+          <option value="getid">GET by ID — Dhundho</option>
+          <option value="delete">DELETE — Hatao</option>
+        </select>
+      </div>
+
+      <div id="demo-id-row" style="display:none;margin-bottom:16px;">
+        <input class="demo-input" id="demo-id" placeholder="Student ID daalo (e.g. 1)" style="width:200px;" />
+      </div>
+
+      <button class="demo-btn" onclick="runDemo()">▶ Request Bhejo</button>
+
+      <div style="margin-top:16px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-code);">RESPONSE:</div>
+        <div class="demo-result" id="demo-result">// Upar se action select karo aur Request Bhejo dabao!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECURITY OVERVIEW
+       ============================================================ -->
+  <section id="security-overview">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge red">Lecture 3 — Security</div>
+      <h2>REST API Security — Kyun Zaroori Hai?</h2>
+      <p>Ek unsecured API disaster ho sakta hai. Dekhte hain kya kya threats hain!</p>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card animate-on-scroll">
+        <div class="card-icon">💰</div>
+        <h3>Data Chori</h3>
+        <p>Bina security ke hackers user ka poora data chura sakte hain — naam, email, password, credit card sab kuch!</p>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">💥</div>
+        <h3>Server Down</h3>
+        <p>Attackers server ko itni requests bhej sakte hain ke woh crash ho jaye — yeh DDoS attack hai!</p>
+      </div>
+      <div class="card animate-on-scroll">
+        <div class="card-icon purple">🔓</div>
+        <h3>Unauthorized Access</h3>
+        <p>Bina authentication ke koi bhi admin panel access kar sakta hai — Bank API imagine karo bina security ke!</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warning animate-on-scroll">
+      <span class="alert-icon">🏦</span>
+      <div>
+        <div class="alert-title">Socho! Banking API Without Security</div>
+        <div class="alert-body">Agar bank ka API secured na ho toh koi bhi <code>GET /accounts/all</code> karke sabke accounts dekh sakta hai, ya <code>DELETE /accounts/1</code> karke account delete kar sakta hai!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CORS
+       ============================================================ -->
+  <section id="cors">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge">CORS</div>
+      <h2>CORS — Cross-Origin Resource Sharing</h2>
+      <p>Browser ek important security mechanism enforce karta hai — CORS!</p>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card animate-on-scroll">
+        <div class="card-icon orange">🏠</div>
+        <h3>CORS Kya Hai?</h3>
+        <p>Browser ek security rule follow karta hai: sirf same origin se requests allow karo. Alag domain se request aaye toh server ka permission lena parta hai!</p>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">🏫</div>
+        <h3>Real Life Example</h3>
+        <p>Hostel A ke students sirf Hostel A mein ghus sakte hain. Hostel B se koi aaye toh usse permission leni paregi. Browser same kaam karta hai different websites ke liye!</p>
+      </div>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">CORS Headers — Server Response</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre><span class="comment">// Server yeh headers bhejta hai CORS ke liye</span>
+Access-Control-Allow-Origin: https://mywebsite.com
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE
+Access-Control-Allow-Headers: Content-Type, Authorization
+
+<span class="comment">// Node.js mein CORS lagana</span>
+<span class="keyword">const</span> cors = <span class="function">require</span>(<span class="string">'cors'</span>);
+app.<span class="function">use</span>(<span class="function">cors</span>({
+  origin: <span class="string">'https://mywebsite.com'</span>  <span class="comment">// Sirf yeh domain allow</span>
+}));</pre>
+    </div>
+
+    <div class="alert alert-warning animate-on-scroll">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <div class="alert-title">Kabhi Mat Karo — * Use Nahi Karna Sensitive APIs Mein!</div>
+        <div class="alert-body"><code>Access-Control-Allow-Origin: *</code> matlab hai duniya ka koi bhi domain tumhara API access kar sakta hai. Banking ya health data ke liye yeh bahut dangerous hai!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       XSS & DDOS
+       ============================================================ -->
+  <section id="xss-ddos">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge red">Attacks</div>
+      <h2>XSS aur DDoS — Do Bade Khatra</h2>
+      <p>Yeh do attacks bahut common hain — samajhna aur bachna zaroori hai!</p>
+    </div>
+
+    <div class="two-col">
+      <div class="card animate-on-scroll" style="border-color:rgba(239,68,68,0.3);">
+        <div class="card-icon orange">💉</div>
+        <h3 style="color:var(--accent-orange)">XSS — Cross-Site Scripting</h3>
+        <p style="margin-bottom:14px;">Attacker website mein malicious script inject karta hai. Jaise comment box mein script likhna — aur woh sab visitors par run ho!</p>
+        <div style="background:#0a0f1a;border-radius:8px;padding:12px;font-family:var(--font-code);font-size:12px;color:var(--accent-red);">
+          &lt;script&gt;alert("Hacked!")&lt;/script&gt;
+        </div>
+      </div>
+      <div class="card cyan animate-on-scroll" style="border-color:rgba(6,182,212,0.3);">
+        <div class="card-icon cyan">🌊</div>
+        <h3 style="color:var(--accent-cyan)">DDoS — Distributed Denial of Service</h3>
+        <p>10,000 fake customers dukaan mein ghus aate hain — real customers nahi ghus sakte. Server pe itni requests bhejo ke woh crash ho jaye!</p>
+        <p style="margin-top:8px;font-size:13px;color:var(--text-muted);">Famous Example: 2016 Dyn attack — Twitter, Netflix, GitHub sab band ho gaye!</p>
+      </div>
+    </div>
+
+    <div class="cards-grid" style="margin-top:24px;">
+      <div class="card animate-on-scroll">
+        <div class="card-icon green">🛡</div>
+        <h3>XSS Prevention</h3>
+        <p>Input validate karo. Output encode karo. HTTPOnly cookies use karo. Content Security Policy (CSP) lagao.</p>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">🚦</div>
+        <h3>DDoS Protection</h3>
+        <p>Rate limiting lagao (har IP se X requests/minute). CAPTCHA use karo. API Gateway aur CDN use karo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       AUTHENTICATION
+       ============================================================ -->
+  <section id="auth">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge green">Auth</div>
+      <h2>Authentication vs Authorization</h2>
+      <p>Yeh dono alag alag hain — bahut log confuse karte hain!</p>
+    </div>
+
+    <div class="two-col">
+      <div class="card animate-on-scroll">
+        <div class="card-icon">🪪</div>
+        <h3>Authentication (AuthN)</h3>
+        <p><strong>"Tum kaun ho?"</strong><br><br>User ki identity verify karna. Username/password, OTP, biometrics — sab authentication ke tareeqe hain.</p>
+        <div style="margin-top:16px;padding:10px 14px;background:#0a0f1a;border-radius:8px;font-size:13px;color:var(--accent-blue);">
+          🎓 University mein ID card check = Authentication
+        </div>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">🔑</div>
+        <h3>Authorization (AuthZ)</h3>
+        <p><strong>"Tum kya kar sakte ho?"</strong><br><br>User login hai — magar kya access hai usse? Student admin panel nahi dekh sakta, teacher marks upload kar sakta hai.</p>
+        <div style="margin-top:16px;padding:10px 14px;background:#0a0f1a;border-radius:8px;font-size:13px;color:var(--accent-cyan);">
+          🔓 Lab mein access milna = Authorization
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3 style="font-family:var(--font-display);font-size:22px;margin-bottom:20px;" class="animate-on-scroll">JWT — JSON Web Token</h3>
+
+    <div class="cards-grid">
+      <div class="card animate-on-scroll">
+        <div class="card-icon purple">🎫</div>
+        <h3>JWT Kya Hai?</h3>
+        <p>JWT ek compact token hai authentication ke liye. Teen parts hote hain: <strong>Header</strong>, <strong>Payload</strong>, <strong>Signature</strong> — dots se alag kiye hue.</p>
+      </div>
+      <div class="card animate-on-scroll">
+        <div class="card-icon orange">🔄</div>
+        <h3>JWT Flow</h3>
+        <p>1. User login karta hai. 2. Server JWT generate karta hai. 3. Client token store karta hai. 4. Har request mein token header mein bhejta hai.</p>
+      </div>
+      <div class="card cyan animate-on-scroll">
+        <div class="card-icon cyan">🌐</div>
+        <h3>OAuth 2.0</h3>
+        <p>"Login with Google" — yeh OAuth hai! Google, Facebook, Microsoft sab yahi use karte hain. User ka password doosre app ko nahi dena parta.</p>
+      </div>
+    </div>
+
+    <div class="code-block animate-on-scroll">
+      <div class="code-header">
+        <span class="file-name">JWT — Request Header Example</span>
+        <div class="dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+      </div>
+      <pre><span class="comment">// Har request mein yeh header bhejo</span>
+Authorization: <span class="string">Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</span>
+
+<span class="comment">// Node.js mein JWT verify karna</span>
+<span class="keyword">const</span> jwt = <span class="function">require</span>(<span class="string">'jsonwebtoken'</span>);
+
+<span class="keyword">const</span> token = req.headers[<span class="string">'authorization'</span>].<span class="function">split</span>(<span class="string">' '</span>)[<span class="number">1</span>];
+<span class="keyword">const</span> decoded = jwt.<span class="function">verify</span>(token, <span class="string">'SECRET_KEY'</span>);
+<span class="comment">// decoded.userId se user identify karo</span></pre>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SESSION HANDLING
+       ============================================================ -->
+  <section id="session">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge cyan">Sessions</div>
+      <h2>Session Handling in REST</h2>
+      <p>REST stateless hai — toh login kaise yaad rakhein? Yahi challenge hai!</p>
+    </div>
+
+    <div class="two-col">
+      <div class="card animate-on-scroll" style="border-color:rgba(239,68,68,0.2);">
+        <div class="card-icon orange">🏛</div>
+        <h3>Traditional Approach (❌ REST ke liye)</h3>
+        <p>Server session store karta hai. Client ke paas sirf Session ID hoti hai cookie mein.</p>
+        <div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.08);border-radius:8px;font-size:13px;color:#fca5a5;">
+          ❌ Scalable nahi. Microservices mein problem.<br>❌ Multiple servers mein kaam nahi karta.
+        </div>
+      </div>
+      <div class="card cyan animate-on-scroll" style="border-color:rgba(16,185,129,0.3);">
+        <div class="card-icon cyan">🎫</div>
+        <h3>Token-Based (✅ Recommended)</h3>
+        <p>Server JWT issue karta hai. Client token store karta hai (localStorage/cookie). Har request mein token bhejo.</p>
+        <div style="margin-top:12px;padding:10px;background:rgba(16,185,129,0.08);border-radius:8px;font-size:13px;color:#6ee7b7;">
+          ✅ Stateless — REST ke liye perfect.<br>✅ Mobile apps ke saath kaam karta hai.
+        </div>
+      </div>
+    </div>
+
+    <div class="steps animate-on-scroll" style="margin-top:32px;">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-line"></div>
+        <div class="step-content"><h4>User Login Karta Hai</h4><p>Email + password server ko bhejta hai — POST /api/login</p></div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-line"></div>
+        <div class="step-content"><h4>Server Verify Karta Hai</h4><p>Credentials check karta hai database mein</p></div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-line"></div>
+        <div class="step-content"><h4>JWT Token Milta Hai</h4><p>Server JWT generate karke client ko bhejta hai</p></div>
+      </div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-line"></div>
+        <div class="step-content"><h4>Client Token Store Karta Hai</h4><p>Browser ya mobile mein token save hota hai</p></div>
+      </div>
+      <div class="step">
+        <div class="step-number">5</div>
+        <div class="step-line"></div>
+        <div class="step-content"><h4>Har Request Mein Token</h4><p>Authorization header mein Bearer token bhejta hai</p></div>
+      </div>
+      <div class="step">
+        <div class="step-number">6</div>
+        <div class="step-line"></div>
+        <div class="step-content"><h4>Server Verify Karke Access Deta Hai</h4><p>Token valid hai toh resource milta hai — warna 401 Unauthorized!</p></div>
+      </div>
+    </div>
+
+    <div class="alert alert-exam animate-on-scroll">
+      <span class="alert-icon">📝</span>
+      <div>
+        <div class="alert-title">Exam Tip — Security Best Practices</div>
+        <div class="alert-body">HTTPS use karo. HttpOnly cookies. Short token expiry. Refresh tokens. Compromised tokens revoke karo. Yeh 5 points yaad rakhna!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUIZ
+       ============================================================ -->
+  <section id="quiz">
+    <div class="section-header animate-on-scroll">
+      <div class="section-badge orange">Quiz — Test Karo</div>
+      <h2>Apna Knowledge Test Karo! 🧠</h2>
+      <p>10 sawal — correct option par click karo aur dekho kitna seekha!</p>
+    </div>
+
+    <div class="quiz-container" id="quizContainer">
+      <!-- Quiz questions will be rendered by JS -->
+    </div>
+
+    <div class="quiz-score-box" id="scoreBox">
+      <div class="score-num" id="scoreNum">0/10</div>
+      <div class="score-label" id="scoreMsg">Aapka score!</div>
+      <button class="quiz-restart-btn" onclick="restartQuiz()">🔄 Dobara Karo</button>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer>
+    <div class="footer-logo">REST API Course 📡</div>
+    <div class="footer-topics">
+      <span class="footer-topic">🎨 REST Design</span>
+      <span class="footer-topic">💻 Node.js Implementation</span>
+      <span class="footer-topic">🔐 API Security</span>
+      <span class="footer-topic">🔑 JWT Auth</span>
+      <span class="footer-topic">🌍 CORS</span>
+      <span class="footer-topic">🛡 XSS & DDoS</span>
+    </div>
+    <p>Yeh course Computer Science students ke liye banaya gaya hai — Roman Urdu mein.</p>
+    <p style="margin-top:8px;font-size:12px;color:var(--text-muted);">References: Roy Fielding (2000) · RFC 2616 · RFC 7519 (JWT) · OAuth 2.0 IETF Standard</p>
+  </footer>
+
+</div> <!-- end main-wrapper -->
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+// ============================================================
+// PROGRESS BAR
+// ============================================================
+window.addEventListener('scroll', () => {
+  const scrollTop = document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  const progress = (scrollTop / scrollHeight) * 100;
+  document.getElementById('progress-bar').style.width = progress + '%';
+});
+
+// ============================================================
+// SIDEBAR ACTIVE LINK
+// ============================================================
+const sections = document.querySelectorAll('section');
+const navLinks = document.querySelectorAll('.nav-link');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => link.classList.remove('active'));
+      const id = entry.target.getAttribute('id');
+      const activeLink = document.querySelector(`.nav-link[href="#${id}"]`);
+      if (activeLink) activeLink.classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+
+sections.forEach(sec => observer.observe(sec));
+
+// ============================================================
+// SCROLL ANIMATIONS
+// ============================================================
+const animateObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => {
+        entry.target.classList.add('visible');
+      }, 80);
+      animateObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.animate-on-scroll').forEach(el => animateObserver.observe(el));
+
+// ============================================================
+// MOBILE SIDEBAR TOGGLE
+// ============================================================
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+document.getElementById('sidebar').querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 900) {
+      document.getElementById('sidebar').classList.remove('open');
+    }
+  });
+});
+
+// ============================================================
+// LIVE DEMO
+// ============================================================
+let demoStudents = [
+  { id: 1, name: "Ali", email: "ali@gmail.com", dept: "CS" },
+  { id: 2, name: "Sara", email: "sara@gmail.com", dept: "IT" },
+  { id: 3, name: "Hassan", email: "hassan@gmail.com", dept: "SE" }
+];
+let nextId = 4;
+
+document.getElementById('demo-action').addEventListener('change', function() {
+  const idRow = document.getElementById('demo-id-row');
+  idRow.style.display = (this.value === 'getid' || this.value === 'delete') ? 'block' : 'none';
+});
+
+function runDemo() {
+  const action = document.getElementById('demo-action').value;
+  const name = document.getElementById('demo-name').value.trim();
+  const email = document.getElementById('demo-email').value.trim();
+  const dept = document.getElementById('demo-dept').value.trim();
+  const id = parseInt(document.getElementById('demo-id').value);
+  const resultEl = document.getElementById('demo-result');
+
+  if (action === 'get') {
+    resultEl.style.color = 'var(--accent-green)';
+    resultEl.textContent = 'GET /api/students — 200 OK\n\n' + JSON.stringify(demoStudents, null, 2);
+
+  } else if (action === 'post') {
+    if (!name || !email) {
+      resultEl.style.color = 'var(--accent-red)';
+      resultEl.textContent = '400 Bad Request\n{ "message": "Naam aur email zaroor daalo!" }';
+      return;
+    }
+    const newS = { id: nextId++, name, email, dept: dept || 'Unknown' };
+    demoStudents.push(newS);
+    resultEl.style.color = 'var(--accent-blue)';
+    resultEl.textContent = 'POST /api/students — 201 Created\n\n' + JSON.stringify(newS, null, 2);
+
+  } else if (action === 'getid') {
+    const found = demoStudents.find(s => s.id === id);
+    if (!found) {
+      resultEl.style.color = 'var(--accent-red)';
+      resultEl.textContent = `GET /api/students/${id} — 404 Not Found\n\n{ "message": "Student ID ${id} nahi mila!" }`;
+    } else {
+      resultEl.style.color = 'var(--accent-green)';
+      resultEl.textContent = `GET /api/students/${id} — 200 OK\n\n` + JSON.stringify(found, null, 2);
+    }
+
+  } else if (action === 'delete') {
+    const exists = demoStudents.find(s => s.id === id);
+    if (!exists) {
+      resultEl.style.color = 'var(--accent-red)';
+      resultEl.textContent = `DELETE /api/students/${id} — 404 Not Found\n\n{ "message": "Student nahi mila!" }`;
+    } else {
+      demoStudents = demoStudents.filter(s => s.id !== id);
+      resultEl.style.color = 'var(--accent-orange)';
+      resultEl.textContent = `DELETE /api/students/${id} — 200 OK\n\n{ "message": "Student successfully delete ho gaya!" }`;
+    }
+  }
+}
+
+// ============================================================
+// QUIZ
+// ============================================================
+const quizData = [
+  {
+    q: "REST mein 'Stateless' ka kya matlab hai?",
+    options: [
+      "Server sab kuch yaad rakhta hai",
+      "Har request mein poori info honi chahiye",
+      "Sirf GET requests allowed hain",
+      "Database use nahi hoti"
+    ],
+    correct: 1,
+    explanation: "✅ Sahi! Stateless matlab: server previous request yaad nahi rakhta. Har request apni complete information saath laati hai — jaise ATM mein har baar card dalna parta hai!"
+  },
+  {
+    q: "Naya user register karne ke liye kaunsa HTTP method use hoga?",
+    options: ["GET", "DELETE", "POST", "PUT"],
+    correct: 2,
+    explanation: "✅ Bilkul sahi! POST naya resource CREATE karne ke liye use hota hai. GET sirf data retrieve karta hai."
+  },
+  {
+    q: "Yeh endpoint sahi hai ya galat? /getAllBooks",
+    options: [
+      "Bilkul sahi hai",
+      "Galat — verb use nahi karte",
+      "Sahi hai kyunki descriptive hai",
+      "Sirf PHP mein galat hai"
+    ],
+    correct: 1,
+    explanation: "✅ Haan, galat hai! REST mein URLs mein nouns use karte hain, verbs nahi. Sahi endpoint: /books aur HTTP method GET batata hai ke 'get' karna hai."
+  },
+  {
+    q: "Resource successfully CREATE hone par kaunsa status code bhejenge?",
+    options: ["200 OK", "404 Not Found", "201 Created", "500 Server Error"],
+    correct: 2,
+    explanation: "✅ 201 Created! POST successful hone par 201 bhejte hain. 200 sirf retrieve/update ke liye hai."
+  },
+  {
+    q: "CORS browser mein kyun exist karta hai?",
+    options: [
+      "Pages ko faster banane ke liye",
+      "Different domain se unauthorized requests rokne ke liye",
+      "Images compress karne ke liye",
+      "Cookies delete karne ke liye"
+    ],
+    correct: 1,
+    explanation: "✅ Correct! CORS Same-Origin Policy enforce karta hai. Alag domain se request aaye toh server ka explicit permission chahiye. Yeh browser-side security feature hai."
+  },
+  {
+    q: "XSS attack mein attacker kya karta hai?",
+    options: [
+      "Server ko bahut requests se overwhelm karta hai",
+      "Website mein malicious script inject karta hai",
+      "Password brute force karta hai",
+      "Database delete karta hai"
+    ],
+    correct: 1,
+    explanation: "✅ Bilkul! XSS = Cross-Site Scripting. Attacker comment box ya form mein script likhta hai jo doosre users ke browser mein run hoti hai — cookie theft, session hijacking, etc."
+  },
+  {
+    q: "Authentication aur Authorization mein kya farq hai?",
+    options: [
+      "Dono ek hi cheez hain",
+      "Authentication = kaun ho, Authorization = kya kar sakte ho",
+      "Authentication = kya kar sakte ho, Authorization = kaun ho",
+      "Sirf authentication zaroori hai"
+    ],
+    correct: 1,
+    explanation: "✅ Perfect! AuthN = Identity verify karna (kaun ho?). AuthZ = Permissions check karna (kya access hai?). University example: ID card = AuthN, Lab access = AuthZ."
+  },
+  {
+    q: "JWT mein kitne parts hote hain?",
+    options: ["2 — Header aur Payload", "3 — Header, Payload, Signature", "4 — Header, Body, Token, Sign", "1 — Sirf encrypted string"],
+    correct: 1,
+    explanation: "✅ Theek! JWT = Header.Payload.Signature — teen parts, dots se alag kiye hue. Header algorithm batata hai, Payload data, Signature verify karta hai."
+  },
+  {
+    q: "REST API mein session handling ke liye kaunsa approach best hai?",
+    options: [
+      "Server-side sessions",
+      "Cookies hi kaafi hain",
+      "Token-based (JWT)",
+      "Session bilkul nahi chahiye"
+    ],
+    correct: 2,
+    explanation: "✅ JWT token-based best hai! Stateless hai, scalable hai, mobile apps ke saath kaam karta hai. Traditional server sessions REST principles ke against hain."
+  },
+  {
+    q: "DDoS attack se bachne ke liye kaunsa tareeqa use karte hain?",
+    options: [
+      "Sirf HTTPS use karo",
+      "Password strong rakhna",
+      "Rate limiting, CAPTCHA, API Gateway",
+      "JWT tokens use karna"
+    ],
+    correct: 2,
+    explanation: "✅ Bilkul! Rate limiting (har IP se limited requests), CAPTCHA bots rokta hai, API Gateway traffic filter karta hai, CDN distributed load handle karta hai."
+  }
+];
+
+let quizAnswered = new Array(quizData.length).fill(false);
+let quizScore = 0;
+
+function renderQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = '';
+  quizAnswered = new Array(quizData.length).fill(false);
+  quizScore = 0;
+  document.getElementById('scoreBox').classList.remove('show');
+
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-question';
+    div.id = `q-${qi}`;
+
+    const letters = ['A', 'B', 'C', 'D'];
+    let optionsHTML = q.options.map((opt, oi) => `
+      <div class="quiz-option" onclick="selectAnswer(${qi}, ${oi})">
+        <span class="option-letter">${letters[oi]}</span>
+        ${opt}
+      </div>
+    `).join('');
+
+    div.innerHTML = `
+      <div class="quiz-q-num">Sawal ${qi + 1} / ${quizData.length}</div>
+      <div class="quiz-q-text">${q.q}</div>
+      <div class="quiz-options" id="opts-${qi}">${optionsHTML}</div>
+      <div class="quiz-feedback" id="fb-${qi}"></div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function selectAnswer(qi, oi) {
+  if (quizAnswered[qi]) return;
+  quizAnswered[qi] = true;
+
+  const q = quizData[qi];
+  const optsEl = document.getElementById(`opts-${qi}`);
+  const fbEl = document.getElementById(`fb-${qi}`);
+  const opts = optsEl.querySelectorAll('.quiz-option');
+
+  opts.forEach(o => o.classList.add('disabled'));
+
+  if (oi === q.correct) {
+    opts[oi].classList.add('selected-correct');
+    document.getElementById(`q-${qi}`).classList.add('correct');
+    fbEl.className = 'quiz-feedback correct-fb show';
+    fbEl.textContent = q.explanation;
+    quizScore++;
+  } else {
+    opts[oi].classList.add('selected-wrong');
+    opts[q.correct].classList.add('show-correct');
+    document.getElementById(`q-${qi}`).classList.add('incorrect');
+    fbEl.className = 'quiz-feedback wrong-fb show';
+    fbEl.textContent = '❌ Galat! ' + q.explanation.replace('✅ ', '');
+  }
+
+  if (quizAnswered.every(Boolean)) {
+    setTimeout(showScore, 500);
+  }
+}
+
+function showScore() {
+  const scoreBox = document.getElementById('scoreBox');
+  scoreBox.classList.add('show');
+  document.getElementById('scoreNum').textContent = `${quizScore}/${quizData.length}`;
+
+  let msg = '';
+  if (quizScore === 10) msg = '🏆 Shabash! Poora 10/10 — Aap Expert Hain!';
+  else if (quizScore >= 7) msg = '🌟 Bohot Acha! Thoda aur practice karo!';
+  else if (quizScore >= 5) msg = '👍 Theek Tha! Notes dobara padho.';
+  else msg = '📚 Mehnat karo! Phir se try karo!';
+  document.getElementById('scoreMsg').textContent = msg;
+  scoreBox.scrollIntoView({ behavior: 'smooth' });
+}
+
+function restartQuiz() { renderQuiz(); }
+
+// Initialize quiz on load
+renderQuiz();
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

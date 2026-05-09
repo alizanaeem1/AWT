@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JWT in REST APIs — Lecture 08</title>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700;800&family=Mulish:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ================================================
+   DESIGN: Cyber-Security Theme — Deep teal/gold
+   Typography: Oxanium (display) + Mulish (body)
+================================================ */
+:root {
+  --bg0: #03080f;
+  --bg1: #060f1c;
+  --bg2: #091525;
+  --bg3: #0e1e35;
+  --bg4: #122540;
+  --gold: #f0b429;
+  --gold-dim: #c89020;
+  --teal: #00c9a7;
+  --teal-dim: #00997f;
+  --blue: #4da6ff;
+  --red: #ff5a5a;
+  --green: #43e97b;
+  --purple: #b67fff;
+  --text1: #dde8f5;
+  --text2: #7fa8cc;
+  --text3: #3d6080;
+  --border: rgba(0, 201, 167, 0.13);
+  --border-gold: rgba(240, 180, 41, 0.2);
+  --sidebar-w: 265px;
+  --glow-teal: 0 0 24px rgba(0,201,167,0.2);
+  --glow-gold: 0 0 24px rgba(240,180,41,0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Mulish', sans-serif;
+  background: var(--bg0);
+  color: var(--text1);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg0); }
+::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+/* ============ PROGRESS BAR ============ */
+#prog {
+  position: fixed; top: 0; left: 0;
+  height: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  z-index: 9999;
+  box-shadow: 0 0 10px rgba(0,201,167,0.5);
+  transition: width 0.1s linear;
+}
+
+/* ============ LAYOUT ============ */
+.wrap { display: flex; min-height: 100vh; }
+
+/* ============ SIDEBAR ============ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; height: 100vh;
+  overflow-y: auto; z-index: 100;
+  display: flex; flex-direction: column;
+  transition: transform .3s ease;
+}
+.sb-head {
+  padding: 26px 18px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.sb-brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 6px;
+}
+.sb-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--teal), var(--blue));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: var(--glow-teal);
+}
+.sb-course {
+  font-family: 'Oxanium', sans-serif;
+  font-size: 12px; font-weight: 700;
+  color: var(--teal); letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.sb-sub { font-size: 11px; color: var(--text3); }
+
+.sb-nav { padding: 14px 10px; flex: 1; }
+.nav-grp { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--text3); padding: 12px 8px 5px; font-weight: 700; }
+
+.nlink {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  text-decoration: none; color: var(--text2);
+  font-size: 13px; font-weight: 600;
+  transition: all .2s; margin-bottom: 2px;
+  border: 1px solid transparent;
+  font-family: 'Mulish', sans-serif;
+}
+.nlink:hover { background: rgba(0,201,167,.08); color: var(--teal); border-color: var(--border); }
+.nlink.active {
+  background: rgba(0,201,167,.12); color: var(--teal);
+  border-color: rgba(0,201,167,.28);
+  box-shadow: inset 3px 0 0 var(--teal);
+}
+.ni { font-size: 14px; width: 18px; text-align: center; }
+
+.burger {
+  display: none; position: fixed;
+  top: 14px; left: 14px; z-index: 200;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--teal); padding: 10px;
+  border-radius: 8px; cursor: pointer; font-size: 18px;
+}
+
+/* ============ MAIN ============ */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1; padding: 0 44px 100px;
+  max-width: calc(100% - var(--sidebar-w));
+}
+
+/* ============ HERO ============ */
+.hero {
+  min-height: 88vh;
+  display: flex; align-items: center;
+  position: relative; overflow: hidden;
+  padding: 80px 0 60px;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 55% 60% at 75% 40%, rgba(0,201,167,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 15% 70%, rgba(240,180,41,.05) 0%, transparent 55%);
+}
+/* Hex grid pattern */
+.hero-hex {
+  position: absolute; inset: 0; opacity: .4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'%3E%3Cpath d='M28 66L0 50V16L28 0l28 16v34L28 66zm0-2l26-15V18L28 2 2 18v30L28 64z' fill='none' stroke='rgba(0%2C201%2C167%2C0.06)' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 56px 100px;
+}
+.hero-content { position: relative; z-index: 1; max-width: 720px; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(240,180,41,.1); border: 1px solid rgba(240,180,41,.3);
+  border-radius: 50px; padding: 6px 16px;
+  font-size: 11px; color: var(--gold);
+  font-family: 'Oxanium', sans-serif; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 24px;
+  animation: fadeDown .6s ease both;
+}
+.hero-title {
+  font-family: 'Oxanium', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 800; line-height: 1.1;
+  margin-bottom: 18px;
+  animation: fadeUp .7s ease .1s both;
+}
+.grad-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, #ffdd85 50%, var(--teal) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-desc {
+  font-size: 1rem; color: var(--text2);
+  line-height: 1.8; margin-bottom: 36px; max-width: 580px;
+  animation: fadeUp .7s ease .2s both;
+}
+.hero-pills {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  animation: fadeUp .7s ease .3s both;
+}
+.pill {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 50px; padding: 7px 16px;
+  font-size: 12px; font-weight: 600; color: var(--text2);
+}
+.pill-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ============ SECTIONS ============ */
+section { padding: 68px 0; border-bottom: 1px solid rgba(0,201,167,.07); }
+.sec-hd { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 38px; }
+.sec-tag {
+  font-family: 'Oxanium', monospace; font-size: 10px;
+  color: var(--gold); background: rgba(240,180,41,.1);
+  border: 1px solid rgba(240,180,41,.25);
+  padding: 4px 10px; border-radius: 4px;
+  letter-spacing: 1px; white-space: nowrap; margin-top: 6px;
+}
+.sec-title {
+  font-family: 'Oxanium', sans-serif;
+  font-size: 1.75rem; font-weight: 800;
+  margin-bottom: 7px; line-height: 1.2;
+}
+.sec-sub { font-size: .88rem; color: var(--text2); }
+
+/* ============ PROSE ============ */
+.prose {
+  font-size: .9rem; color: var(--text2);
+  line-height: 1.85; margin: 14px 0;
+}
+.prose strong { color: var(--text1); font-weight: 700; }
+code {
+  font-family: 'Oxanium', monospace; font-size: .78em;
+  background: rgba(0,201,167,.1); border: 1px solid rgba(0,201,167,.2);
+  color: var(--teal); padding: 2px 7px; border-radius: 4px;
+}
+h3.sh {
+  font-family: 'Oxanium', sans-serif; font-size: 1rem; font-weight: 700;
+  margin: 28px 0 12px; color: var(--text1);
+  display: flex; align-items: center; gap: 10px;
+}
+h3.sh::before {
+  content: ''; display: inline-block; width: 3px; height: 16px;
+  background: var(--gold); border-radius: 2px; flex-shrink: 0;
+}
+
+/* ============ CARDS ============ */
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 18px; margin: 22px 0; }
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 22px;
+  transition: all .3s; position: relative; overflow: hidden;
+}
+.card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  opacity: 0; transition: opacity .3s;
+}
+.card:hover { background: var(--bg3); border-color: rgba(0,201,167,.3); transform: translateY(-4px); box-shadow: var(--glow-teal); }
+.card:hover::after { opacity: 1; }
+.c-icon { font-size: 26px; margin-bottom: 12px; display: block; }
+.c-title { font-family: 'Oxanium', sans-serif; font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
+.c-body { font-size: .85rem; color: var(--text2); line-height: 1.7; }
+
+/* ============ CODE BLOCKS ============ */
+.cblock {
+  background: #020913; border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 12px; margin: 18px 0; overflow: hidden;
+}
+.chead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 16px; background: rgba(0,201,167,.05);
+  border-bottom: 1px solid var(--border);
+}
+.clang {
+  font-family: 'Oxanium', monospace; font-size: 10px;
+  color: var(--teal); letter-spacing: 1.5px; text-transform: uppercase;
+}
+.cdots { display: flex; gap: 5px; }
+.cdots span { width: 9px; height: 9px; border-radius: 50%; }
+.cdots span:nth-child(1) { background: #ff5f57; }
+.cdots span:nth-child(2) { background: #febc2e; }
+.cdots span:nth-child(3) { background: #28c840; }
+.cbody { padding: 18px; overflow-x: auto; }
+pre {
+  font-family: 'Oxanium', monospace; font-size: .78rem;
+  line-height: 1.8; color: #8ecfff; white-space: pre;
+}
+.kw { color: #c792ea; }
+.fn { color: #82aaff; }
+.str { color: #c3e88d; }
+.cm { color: #4a6a80; }
+.num { color: #f78c6c; }
+.prop { color: var(--gold); }
+
+/* ============ ALERTS ============ */
+.alert {
+  border-radius: 10px; padding: 15px 18px;
+  margin: 18px 0; display: flex; gap: 13px;
+  align-items: flex-start; border: 1px solid;
+  font-size: .875rem; line-height: 1.65;
+}
+.a-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.a-title { font-weight: 800; margin-bottom: 4px; font-size: .8rem; letter-spacing: .5px; font-family: 'Oxanium', sans-serif; }
+
+.a-tip    { background: rgba(67,233,123,.07); border-color: rgba(67,233,123,.28); color: #9df5bd; }
+.a-tip .a-title { color: var(--green); }
+.a-warn   { background: rgba(240,180,41,.07); border-color: rgba(240,180,41,.28); color: #fce9a0; }
+.a-warn .a-title { color: var(--gold); }
+.a-exam   { background: rgba(182,127,255,.07); border-color: rgba(182,127,255,.28); color: #d8bcff; }
+.a-exam .a-title { color: var(--purple); }
+.a-danger { background: rgba(255,90,90,.07); border-color: rgba(255,90,90,.28); color: #ffc5c5; }
+.a-danger .a-title { color: var(--red); }
+
+/* ============ TABLES ============ */
+.twrap { overflow-x: auto; margin: 20px 0; border-radius: 12px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+thead { background: rgba(0,201,167,.07); }
+th { padding: 13px 16px; text-align: left; color: var(--teal); font-weight: 700;
+  font-size: .78rem; letter-spacing: .5px; border-bottom: 1px solid var(--border);
+  font-family: 'Oxanium', sans-serif; }
+td { padding: 12px 16px; color: var(--text2); border-bottom: 1px solid rgba(0,201,167,.04); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(0,201,167,.03); }
+td:first-child { color: var(--text1); font-weight: 600; }
+
+/* ============ JWT VISUAL ============ */
+.jwt-visual {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px; margin: 22px 0;
+}
+.jwt-parts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px; }
+.jp {
+  flex: 1; min-width: 130px;
+  border-radius: 10px; padding: 16px;
+  text-align: center; border: 1px solid;
+  cursor: pointer; transition: transform .2s;
+}
+.jp:hover { transform: translateY(-3px); }
+.jp-header { background: rgba(77,166,255,.12); border-color: rgba(77,166,255,.3); }
+.jp-payload { background: rgba(240,180,41,.1); border-color: rgba(240,180,41,.3); }
+.jp-sig { background: rgba(0,201,167,.1); border-color: rgba(0,201,167,.3); }
+.jp-label { font-family: 'Oxanium', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.jp-header .jp-label { color: var(--blue); }
+.jp-payload .jp-label { color: var(--gold); }
+.jp-sig .jp-label { color: var(--teal); }
+.jp-val { font-family: 'Oxanium', monospace; font-size: 9px; color: var(--text3); word-break: break-all; line-height: 1.5; }
+.jwt-dot { font-size: 24px; font-weight: 900; display: flex; align-items: center; color: var(--text3); }
+
+/* ============ FLOW ============ */
+.flow { display: flex; flex-direction: column; gap: 3px; margin: 20px 0; }
+.flow-step {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 12px 16px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: .85rem;
+}
+.flow-step:hover { border-color: rgba(0,201,167,.25); }
+.flow-n {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: rgba(0,201,167,.1); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Oxanium', monospace; font-size: 11px; color: var(--teal);
+}
+.flow-arr { text-align: center; color: var(--teal); opacity: .4; font-size: 12px; padding: 2px 0 2px 20px; }
+.flow-step strong { color: var(--text1); }
+
+/* ============ DEMO ============ */
+.dbox {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px; margin: 20px 0;
+}
+.dbox-title {
+  font-family: 'Oxanium', sans-serif; font-size: .9rem; font-weight: 700;
+  color: var(--teal); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.drow { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.dinput {
+  flex: 1; min-width: 160px;
+  background: var(--bg0); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 14px;
+  color: var(--text1); font-family: 'Mulish', sans-serif; font-size: .875rem;
+  outline: none; transition: border-color .2s;
+}
+.dinput:focus { border-color: var(--teal); }
+.dsel {
+  background: var(--bg0); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 14px; color: var(--text1);
+  font-family: 'Mulish', sans-serif; font-size: .875rem; cursor: pointer; outline: none;
+}
+.btn {
+  background: linear-gradient(135deg, var(--teal), var(--blue));
+  border: none; border-radius: 8px; padding: 10px 22px;
+  color: #000; font-weight: 800; font-size: .875rem;
+  cursor: pointer; transition: all .2s; font-family: 'Oxanium', sans-serif;
+  letter-spacing: .5px;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: var(--glow-teal); }
+.dres {
+  background: var(--bg0); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px;
+  font-family: 'Oxanium', monospace; font-size: .78rem;
+  color: var(--green); min-height: 70px; white-space: pre-wrap; line-height: 1.7;
+}
+
+/* ============ QUIZ ============ */
+.qcard {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px; margin: 18px 0;
+}
+.qq {
+  font-size: .97rem; font-weight: 600; margin-bottom: 18px; line-height: 1.5;
+}
+.qq span {
+  font-family: 'Oxanium', monospace; font-size: 11px; color: var(--gold);
+  background: rgba(240,180,41,.1); padding: 2px 8px; border-radius: 4px; margin-right: 8px;
+}
+.qopts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.qopt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 15px; border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer; transition: all .2s;
+  font-size: .875rem; background: var(--bg0);
+}
+.qopt:hover { border-color: var(--blue); background: rgba(77,166,255,.06); }
+.qopt.correct { border-color: var(--green) !important; background: rgba(67,233,123,.1) !important; color: #9df5bd !important; }
+.qopt.wrong   { border-color: var(--red) !important; background: rgba(255,90,90,.08) !important; color: #ffc5c5 !important; }
+.oletter {
+  width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+  background: rgba(240,180,41,.1); border: 1px solid rgba(240,180,41,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Oxanium', monospace; font-size: 11px; color: var(--gold);
+}
+.qfb { display: none; padding: 11px 14px; border-radius: 8px; font-size: .82rem; font-weight: 700; margin-top: 4px; }
+.score-wrap {
+  background: var(--bg2); border: 1px solid var(--border-gold);
+  border-radius: 14px; padding: 32px; text-align: center; margin-top: 24px;
+}
+.score-num {
+  font-family: 'Oxanium', sans-serif; font-size: 3.5rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--teal), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============ REVEAL ANIMATION ============ */
+.rev { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease; }
+.rev.on { opacity: 1; transform: translateY(0); }
+.rd1 { transition-delay: .1s; }
+.rd2 { transition-delay: .2s; }
+.rd3 { transition-delay: .3s; }
+
+/* ============ FOOTER ============ */
+footer {
+  background: var(--bg1); border-top: 1px solid var(--border);
+  padding: 40px; text-align: center;
+}
+.ft { font-family: 'Oxanium', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--teal); margin-bottom: 6px; }
+.fs { font-size: .83rem; color: var(--text3); }
+
+/* ============ OVERLAY ============ */
+.ovl { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 90; backdrop-filter: blur(4px); }
+.ovl.show { display: block; }
+
+/* ============ KEYFRAMES ============ */
+@keyframes fadeDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeUp   { from { opacity:0; transform:translateY(26px); } to { opacity:1; transform:translateY(0); } }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); box-shadow: 20px 0 60px rgba(0,0,0,.6); }
+  .burger { display: block; }
+  .main { margin-left: 0; max-width: 100%; padding: 60px 18px 80px; }
+  .hero { min-height: 60vh; }
+  .cgrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  pre { font-size: .7rem; }
+  .sec-title { font-size: 1.35rem; }
+  .jwt-parts { flex-direction: column; }
+  .jwt-dot { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div id="prog"></div>
+
+<!-- Hamburger -->
+<button class="burger" id="burger">☰</button>
+<div class="ovl" id="ovl"></div>
+
+<div class="wrap">
+
+<!-- ========== SIDEBAR ========== -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div class="sb-brand">
+      <div class="sb-icon">🔐</div>
+      <div class="sb-course">CSC337</div>
+    </div>
+    <div class="sb-sub">Lecture 08 — JWT in REST APIs</div>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-grp">Shuruwat</div>
+    <a class="nlink active" href="#hero"><span class="ni">🏠</span>Home</a>
+    <a class="nlink" href="#auth"><span class="ni">🔑</span>Authentication kya hai?</a>
+
+    <div class="nav-grp">JWT Basics</div>
+    <a class="nlink" href="#jwt-intro"><span class="ni">📜</span>JWT kya hai?</a>
+    <a class="nlink" href="#structure"><span class="ni">🧩</span>JWT Structure</a>
+
+    <div class="nav-grp">Kaam Kaise Karta Hai</div>
+    <a class="nlink" href="#flow"><span class="ni">🔄</span>JWT Auth Flow</a>
+    <a class="nlink" href="#security"><span class="ni">🛡️</span>Security & Best Practices</a>
+
+    <div class="nav-grp">Practice</div>
+    <a class="nlink" href="#demo"><span class="ni">🧪</span>Live Demo</a>
+    <a class="nlink" href="#quiz"><span class="ni">❓</span>Quiz</a>
+  </div>
+</nav>
+
+<!-- ========== MAIN ========== -->
+<main class="main">
+
+<!-- HERO -->
+<section id="hero" class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-hex"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🔐 CSC337 — Lecture 08 — 2 Hours</div>
+    <h1 class="hero-title">
+      JWT in<br>
+      <span class="grad-gold">REST APIs</span>
+    </h1>
+    <p class="hero-desc">
+      Is lecture mein hum seekhenge ke JSON Web Token (JWT) kya hota hai, yeh kaise kaam karta hai, aur REST APIs mein secure authentication ke liye isko kaise use karte hain — sab kuch Roman Urdu mein, bilkul simple aur step-by-step!
+    </p>
+    <div class="hero-pills">
+      <div class="pill"><span class="pill-dot" style="background:var(--teal)"></span>Authentication</div>
+      <div class="pill"><span class="pill-dot" style="background:var(--gold)"></span>JWT Structure</div>
+      <div class="pill"><span class="pill-dot" style="background:var(--blue)"></span>Stateless Auth</div>
+      <div class="pill"><span class="pill-dot" style="background:var(--purple)"></span>Security Best Practices</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SECTION 1: AUTH ========== -->
+<section id="auth">
+  <div class="sec-hd rev">
+    <div class="sec-tag">01</div>
+    <div>
+      <h2 class="sec-title">Authentication vs Authorization — <span class="grad-gold">Fark samjho</span></h2>
+      <p class="sec-sub">Yeh do alag cheezein hain — confuse mat ho!</p>
+    </div>
+  </div>
+
+  <p class="prose rev">Pehle in do concepts ko clearly samajh lo. Bahut log inhe ek hi cheez samajhte hain — lekin yeh bilkul alag hain!</p>
+
+  <div class="cgrid">
+    <div class="card rev rd1">
+      <span class="c-icon">🔑</span>
+      <div class="c-title">Authentication — "Tum kaun ho?"</div>
+      <div class="c-body">Yeh verify karta hai ke user wahi hai jo woh kehta hai. Jaise Facebook pe login karna — username aur password dena. Server confirm karta hai ke "haan, yeh banda registered hai."</div>
+    </div>
+    <div class="card rev rd2">
+      <span class="c-icon">🔓</span>
+      <div class="c-title">Authorization — "Tum kya kar sakte ho?"</div>
+      <div class="c-body">Yeh decide karta hai ke logged-in user ko kya access hai. Admin sab kuch delete kar sakta hai, lekin normal user sirf apni posts dekh sakta hai.</div>
+    </div>
+    <div class="card rev rd3">
+      <span class="c-icon">🏨</span>
+      <div class="c-title">Real Life Analogy</div>
+      <div class="c-body">Hotel mein check-in karo (Authentication). Tumhara room card sirf tumhara room kholega, manager ka room nahi (Authorization). Dono alag processes hain!</div>
+    </div>
+  </div>
+
+  <div class="twrap rev">
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>Authentication</th><th>Authorization</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Sawaal</td><td>Tum kaun ho?</td><td>Tum kya kar sakte ho?</td></tr>
+        <tr><td>Kab hota hai</td><td>Login ke waqt</td><td>Login ke baad, har request pe</td></tr>
+        <tr><td>Example</td><td>Username + Password</td><td>Admin vs User permissions</td></tr>
+        <tr><td>JWT ka role</td><td>Token generate hota hai</td><td>Token mein role/permissions hoti hai</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sh rev">Session-based Auth — Purana tarika aur uski problems</h3>
+  <p class="prose rev">Pehle <strong>session-based authentication</strong> use hoti thi — server har logged-in user ka data apni memory mein rakhta tha. Yeh chhoti apps ke liye theek tha, lekin...</p>
+
+  <div class="alert a-warn rev">
+    <span class="a-icon">⚠️</span>
+    <div>
+      <div class="a-title">PROBLEM — Session ki Limitations</div>
+      Jab lakhon users hon, server ki memory full ho jaati hai. Agar multiple servers hain (load balancing), toh ek server dusre server ki session nahi jaanta. Yeh <strong>distributed systems</strong> mein kaam nahi karta!
+    </div>
+  </div>
+</section>
+
+<!-- ========== SECTION 2: JWT INTRO ========== -->
+<section id="jwt-intro">
+  <div class="sec-hd rev">
+    <div class="sec-tag">02</div>
+    <div>
+      <h2 class="sec-title">JWT kya hai? — <span class="grad-gold">Movie Ticket Analogy</span></h2>
+      <p class="sec-sub">JSON Web Token — compact, secure, stateless</p>
+    </div>
+  </div>
+
+  <p class="prose rev">
+    <strong>JWT (JSON Web Token)</strong> ek special token hai jo client aur server ke beech mein secure information bhejne ka kaam karta hai. Yeh <strong>digitally signed</strong> hota hai — matlab koi isko secretly change nahi kar sakta.
+  </p>
+
+  <div class="cgrid">
+    <div class="card rev rd1">
+      <span class="c-icon">🎟️</span>
+      <div class="c-title">Movie Ticket Analogy</div>
+      <div class="c-body">JWT bilkul movie ticket jaisi hai. Ticket kharido (login karo) → ticket dekho aur andar jao (token bhejo) → cinema ko baar baar verify karne ki zaroorat nahi! Ticket khud proof hai.</div>
+    </div>
+    <div class="card rev rd2">
+      <span class="c-icon">📦</span>
+      <div class="c-title">Self-Contained hai</div>
+      <div class="c-body">JWT ke andar user ki sari zaroorat ki info hoti hai — ID, role, expiry time. Server ko database check karne ki zaroorat nahi. Token khud sab kuch bata deta hai!</div>
+    </div>
+    <div class="card rev rd3">
+      <span class="c-icon">🌐</span>
+      <div class="c-title">Stateless hai</div>
+      <div class="c-body">Server kuch bhi store nahi karta. Har request ke saath token aata hai, server sirf verify karta hai. Yahi wajah hai ke yeh large distributed systems mein perfect hai.</div>
+    </div>
+  </div>
+
+  <h3 class="sh rev">REST APIs mein JWT kyun use karte hain?</h3>
+  <div class="cgrid">
+    <div class="card rev rd1">
+      <span class="c-icon">⚖️</span>
+      <div class="c-title">Stateless = REST ke saath Perfect</div>
+      <div class="c-body">REST APIs by design stateless hoti hain — yani server koi state nahi rakhta. JWT bhi stateless hai, toh dono ek saath perfect kaam karte hain!</div>
+    </div>
+    <div class="card rev rd2">
+      <span class="c-icon">📈</span>
+      <div class="c-title">Scalability</div>
+      <div class="c-body">Ek server pe login karo, doosre server pe bhi kaam karta hai. Server ke paas session store nahi hoti. Jitne servers chaaho add karo — sab kaam karega!</div>
+    </div>
+    <div class="card rev rd3">
+      <span class="c-icon">🔗</span>
+      <div class="c-title">Cross-Domain kaam karta hai</div>
+      <div class="c-body">Cookies sirf usi domain pe kaam karti hain. JWT kisi bhi domain pe bhej sakte ho Authorization header mein. Mobile apps, web apps, sab ke liye!</div>
+    </div>
+  </div>
+
+  <div class="alert a-exam rev">
+    <span class="a-icon">🎓</span>
+    <div>
+      <div class="a-title">EXAM TIP</div>
+      JWT ko <strong>3 words</strong> mein yaad karo: <strong>Compact</strong> (chhota size), <strong>Self-contained</strong> (khud mein sari info), <strong>Stateless</strong> (server kuch store nahi karta). Exam mein yahi poochha jaata hai!
+    </div>
+  </div>
+</section>
+
+<!-- ========== SECTION 3: STRUCTURE ========== -->
+<section id="structure">
+  <div class="sec-hd rev">
+    <div class="sec-tag">03</div>
+    <div>
+      <h2 class="sec-title">JWT Structure — <span class="grad-gold">3 Parts</span></h2>
+      <p class="sec-sub">Header.Payload.Signature — teen hisson ka secret</p>
+    </div>
+  </div>
+
+  <p class="prose rev">
+    JWT ke <strong>3 parts</strong> hote hain, ek dot (<code>.</code>) se alag hote hain. Har part <strong>Base64</strong> encoded hota hai. Neeche yeh visual dekho:
+  </p>
+
+  <!-- JWT Visual -->
+  <div class="jwt-visual rev">
+    <div class="jwt-parts">
+      <div class="jp jp-header">
+        <div class="jp-label">🔵 Header</div>
+        <div class="jp-val">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</div>
+      </div>
+      <div class="jwt-dot">.</div>
+      <div class="jp jp-payload">
+        <div class="jp-label">🟡 Payload</div>
+        <div class="jp-val">eyJ1c2VySWQiOjEwMSwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzEyMzQ1Njc4fQ</div>
+      </div>
+      <div class="jwt-dot">.</div>
+      <div class="jp jp-sig">
+        <div class="jp-label">🟢 Signature</div>
+        <div class="jp-val">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</div>
+      </div>
+    </div>
+    <p style="font-size:.82rem; color:var(--text3); text-align:center;">Upar diye token ke 3 parts hain — click karke dekho! Yeh ek actual JWT ka format hai.</p>
+  </div>
+
+  <h3 class="sh rev">Part 1: Header</h3>
+  <p class="prose rev">Header mein sirf do cheezein hoti hain — token ka type (<code>JWT</code>) aur jo algorithm use ho raha hai signature banane ke liye.</p>
+  <div class="cblock rev">
+    <div class="chead"><span class="clang">JSON — Header</span><div class="cdots"><span></span><span></span><span></span></div></div>
+    <div class="cbody">
+<pre>{
+  <span class="prop">"alg"</span>: <span class="str">"HS256"</span>,   <span class="cm">// HMAC SHA-256 algorithm</span>
+  <span class="prop">"typ"</span>: <span class="str">"JWT"</span>     <span class="cm">// Token type</span>
+}
+
+<span class="cm">// Phir yeh Base64 encode hota hai:</span>
+<span class="cm">// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span></pre>
+    </div>
+  </div>
+
+  <h3 class="sh rev">Part 2: Payload (Claims)</h3>
+  <p class="prose rev">Payload mein actual data hota hai — <strong>claims</strong>. User ki ID, role, aur expiry time. Yeh <strong>public info</strong> hai — koi bhi Base64 decode karke padh sakta hai, isliye yahan sensitive data mat rakho!</p>
+  <div class="cblock rev">
+    <div class="chead"><span class="clang">JSON — Payload</span><div class="cdots"><span></span><span></span><span></span></div></div>
+    <div class="cbody">
+<pre>{
+  <span class="prop">"userId"</span>: <span class="num">101</span>,          <span class="cm">// User ki ID</span>
+  <span class="prop">"role"</span>: <span class="str">"admin"</span>,        <span class="cm">// User ka role</span>
+  <span class="prop">"exp"</span>: <span class="num">1712345678</span>,      <span class="cm">// Expiry timestamp</span>
+  <span class="prop">"iat"</span>: <span class="num">1712259278</span>       <span class="cm">// Issued at (kab bana)</span>
+}
+
+<span class="cm">// ⚠️ YAAD RAKHO: Payload Base64 encoded hai, encrypted NAHI!</span>
+<span class="cm">// Password, credit card — yahan BILKUL mat rakho!</span></pre>
+    </div>
+  </div>
+
+  <div class="alert a-danger rev">
+    <span class="a-icon">🚨</span>
+    <div>
+      <div class="a-title">SECURITY WARNING — Payload Readable Hai!</div>
+      JWT ka Payload <strong>encrypted nahi hota</strong> — sirf Base64 encode hota hai. Koi bhi isko decode kar sakta hai aur andar ki info parh sakta hai. Isliye <strong>kabhi bhi password, credit card number, ya private info</strong> payload mein mat rakho!
+    </div>
+  </div>
+
+  <h3 class="sh rev">Part 3: Signature</h3>
+  <p class="prose rev">Signature sabse important part hai. Yeh ensure karta hai ke token ke saath koi tamper nahi hua. Agar koi ek letter bhi change kare, signature invalid ho jaata hai!</p>
+  <div class="cblock rev">
+    <div class="chead"><span class="clang">Signature Formula</span><div class="cdots"><span></span><span></span><span></span></div></div>
+    <div class="cbody">
+<pre><span class="cm">// Signature aise banta hai:</span>
+<span class="fn">HMACSHA256</span>(
+  <span class="fn">Base64Encode</span>(header) + <span class="str">"."</span> + <span class="fn">Base64Encode</span>(payload),
+  <span class="str">"mera-secret-key-jo-sirf-server-ko-pata-hai"</span>
+)
+
+<span class="cm">// Agar koi payload change kare → signature match nahi karega</span>
+<span class="cm">// Server foran detect kar leta hai ke token fake hai!</span></pre>
+    </div>
+  </div>
+
+  <div class="twrap rev">
+    <table>
+      <thead>
+        <tr><th>Part</th><th>Andar kya hai</th><th>Encoded?</th><th>Secret?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Header</td><td>Algorithm + Type</td><td>Base64</td><td>Nahi</td></tr>
+        <tr><td>Payload</td><td>User data / Claims</td><td>Base64</td><td>Nahi (visible hai!)</td></tr>
+        <tr><td>Signature</td><td>Verification hash</td><td>Haan</td><td>Haan (secret key se)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ========== SECTION 4: FLOW ========== -->
+<section id="flow">
+  <div class="sec-hd rev">
+    <div class="sec-tag">04</div>
+    <div>
+      <h2 class="sec-title">JWT Auth Flow — <span class="grad-gold">Step by Step</span></h2>
+      <p class="sec-sub">Login se le kar protected route tak — poora safar</p>
+    </div>
+  </div>
+
+  <p class="prose rev">Ab samjhenge ke JWT actually REST API mein <strong>kaise kaam karta hai</strong> — login se shuru hokar har request pe verification tak.</p>
+
+  <div class="flow rev">
+    <div class="flow-step"><div class="flow-n">1</div><div>👤 <strong>User login karta hai</strong> — <code>POST /login</code> ke saath username aur password bhejta hai</div></div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-step"><div class="flow-n">2</div><div>🔍 <strong>Server credentials verify karta hai</strong> — database mein check karta hai ke user exist karta hai aur password sahi hai</div></div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-step"><div class="flow-n">3</div><div>🏭 <strong>Server JWT generate karta hai</strong> — secret key se sign karta hai aur client ko bhejta hai</div></div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-step"><div class="flow-n">4</div><div>💾 <strong>Client token store karta hai</strong> — LocalStorage ya Cookies mein rakha jaata hai</div></div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-step"><div class="flow-n">5</div><div>📡 <strong>Client protected route pe request karta hai</strong> — Authorization header mein token bhejta hai: <code>Bearer &lt;token&gt;</code></div></div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-step"><div class="flow-n">6</div><div>✅ <strong>Server token validate karta hai</strong> — signature check, expiry check, phir data return karta hai</div></div>
+  </div>
+
+  <h3 class="sh rev">Code Example — Node.js mein JWT</h3>
+  <div class="cblock rev">
+    <div class="chead"><span class="clang">JavaScript — Login + Token Generate</span><div class="cdots"><span></span><span></span><span></span></div></div>
+    <div class="cbody">
+<pre><span class="kw">const</span> jwt = <span class="fn">require</span>(<span class="str">'jsonwebtoken'</span>);
+
+<span class="cm">// Step 1: Login route</span>
+<span class="var">app</span>.<span class="fn">post</span>(<span class="str">'/login'</span>, (<span class="var">req</span>, <span class="var">res</span>) => {
+  <span class="kw">const</span> { username, password } = req.body;
+
+  <span class="cm">// Step 2: Credentials verify karo (database se)</span>
+  <span class="kw">const</span> user = <span class="fn">findUser</span>(username, password);
+  <span class="kw">if</span> (!user) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">send</span>(<span class="str">'Wrong credentials!'</span>);
+
+  <span class="cm">// Step 3: JWT generate karo</span>
+  <span class="kw">const</span> token = jwt.<span class="fn">sign</span>(
+    { userId: user.id, role: user.role },  <span class="cm">// payload</span>
+    <span class="str">'mera-secret-key'</span>,                      <span class="cm">// secret</span>
+    { expiresIn: <span class="str">'24h'</span> }                   <span class="cm">// expiry</span>
+  );
+
+  res.<span class="fn">json</span>({ token }); <span class="cm">// token client ko bhejo</span>
+});</pre>
+    </div>
+  </div>
+
+  <div class="cblock rev">
+    <div class="chead"><span class="clang">JavaScript — Token Verify (Middleware)</span><div class="cdots"><span></span><span></span><span></span></div></div>
+    <div class="cbody">
+<pre><span class="cm">// Middleware jo har protected route se pehle chalega</span>
+<span class="kw">const</span> <span class="fn">verifyToken</span> = (<span class="var">req</span>, <span class="var">res</span>, <span class="var">next</span>) => {
+  <span class="kw">const</span> authHeader = req.headers[<span class="str">'authorization'</span>];
+  <span class="kw">const</span> token = authHeader && authHeader.<span class="fn">split</span>(<span class="str">' '</span>)[<span class="num">1</span>]; <span class="cm">// "Bearer TOKEN"</span>
+
+  <span class="kw">if</span> (!token) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">send</span>(<span class="str">'Token nahi mila!'</span>);
+
+  <span class="kw">try</span> {
+    <span class="kw">const</span> decoded = jwt.<span class="fn">verify</span>(token, <span class="str">'mera-secret-key'</span>);
+    req.user = decoded; <span class="cm">// user info aage bhejo</span>
+    <span class="fn">next</span>(); <span class="cm">// sahi hai, aage jao</span>
+  } <span class="kw">catch</span> (err) {
+    res.<span class="fn">status</span>(<span class="num">403</span>).<span class="fn">send</span>(<span class="str">'Token invalid ya expire ho gaya!'</span>);
+  }
+};
+
+<span class="cm">// Protected route pe middleware use karo</span>
+<span class="var">app</span>.<span class="fn">get</span>(<span class="str">'/dashboard'</span>, verifyToken, (<span class="var">req</span>, <span class="var">res</span>) => {
+  res.<span class="fn">json</span>({ message: <span class="str">`Welcome, User ${req.user.userId}!`</span> });
+});</pre>
+    </div>
+  </div>
+
+  <div class="alert a-tip rev">
+    <span class="a-icon">💡</span>
+    <div>
+      <div class="a-title">TIP — University ID Card</div>
+      JWT ko <strong>University ID card</strong> samjho. Pehle admission liya (register), ID card mili (token). Library mein ID dikhao (token bhejo), woh check karte hain ke valid hai (verify). Har dafa naya register nahi karna padta!
+    </div>
+  </div>
+</section>
+
+<!-- ========== SECTION 5: SECURITY ========== -->
+<section id="security">
+  <div class="sec-hd rev">
+    <div class="sec-tag">05</div>
+    <div>
+      <h2 class="sec-title">Security & Best Practices — <span class="grad-gold">Safe Raho</span></h2>
+      <p class="sec-sub">Advantages, limitations aur security tips</p>
+    </div>
+  </div>
+
+  <div class="cgrid">
+    <div class="card rev rd1">
+      <span class="c-icon">✅</span>
+      <div class="c-title">Advantages of JWT</div>
+      <div class="c-body">
+        <strong style="color:var(--green)">Stateless</strong> — server kuch store nahi karta<br>
+        <strong style="color:var(--green)">Scalable</strong> — multiple servers pe kaam karta hai<br>
+        <strong style="color:var(--green)">Fast</strong> — database hit nahi hoti har request pe<br>
+        <strong style="color:var(--green)">Cross-domain</strong> — mobile, web sab jagah
+      </div>
+    </div>
+    <div class="card rev rd2">
+      <span class="c-icon">❌</span>
+      <div class="c-title">Limitations of JWT</div>
+      <div class="c-body">
+        <strong style="color:var(--red)">Revoke nahi kar sakte</strong> — token expire hone se pehle band nahi hota<br>
+        <strong style="color:var(--red)">Size bada ho sakta hai</strong> — har request mein bhejni padti hai<br>
+        <strong style="color:var(--red)">Security risk</strong> — galat jagah store kiya toh problem
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sh rev">🛡️ 5 Security Best Practices</h3>
+
+  <div class="flow rev">
+    <div class="flow-step">
+      <div class="flow-n">1</div>
+      <div>🔒 <strong>HTTPS use karo hamesha</strong> — HTTP pe token bheja toh koi bhi beech mein pakad sakta hai (Man-in-the-Middle Attack)</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-n">2</div>
+      <div>⏳ <strong>Expiry time daal</strong> — Token hamesha expire hona chahiye. <code>{ expiresIn: '1h' }</code> — zyada lamba time nahi rakhna</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-n">3</div>
+      <div>🔑 <strong>Strong secret key use karo</strong> — <code>"abc123"</code> nahi chalega! Long, random secret key use karo aur isko environment variable mein rakho</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-n">4</div>
+      <div>🚫 <strong>Sensitive data payload mein mat rakho</strong> — Password, SSN, credit card — yeh sab readable hain. Sirf user ID aur role rakho</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-n">5</div>
+      <div>🔄 <strong>Refresh Tokens use karo</strong> — Short-lived access token + long-lived refresh token. Security aur convenience dono milen</div>
+    </div>
+  </div>
+
+  <h3 class="sh rev">Token Store kahaan karein?</h3>
+  <div class="twrap rev">
+    <table>
+      <thead>
+        <tr><th>Storage</th><th>Kya hai</th><th>Advantage</th><th>Disadvantage</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>LocalStorage</td><td>Browser ka storage</td><td>Easy to use, persistent</td><td>XSS attack ka risk</td></tr>
+        <tr><td>SessionStorage</td><td>Tab close pe clear</td><td>Safer than localStorage</td><td>Tab close pe logout</td></tr>
+        <tr><td>HttpOnly Cookie</td><td>JS access nahi kar sakta</td><td>XSS se safe</td><td>CSRF attack ka risk</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert a-exam rev">
+    <span class="a-icon">🎓</span>
+    <div>
+      <div class="a-title">EXAM TIP — Revocation Problem</div>
+      Exam mein JWT ki <strong>sabse badi limitation</strong> yeh hai: ek baar token issue ho jaaye, <strong>expire hone se pehle usse revoke nahi kar sakte</strong> (jab tak server-side blacklist na rakho). Yahi wajah hai ke tokens ka expiry time chhota rakhte hain aur Refresh Token pattern use karte hain.
+    </div>
+  </div>
+</section>
+
+<!-- ========== SECTION 6: DEMO ========== -->
+<section id="demo">
+  <div class="sec-hd rev">
+    <div class="sec-tag">06</div>
+    <div>
+      <h2 class="sec-title">Live Demo — <span class="grad-gold">Try Karo!</span></h2>
+      <p class="sec-sub">JWT concepts ko interactively explore karo</p>
+    </div>
+  </div>
+
+  <!-- Demo 1: JWT Decoder -->
+  <div class="dbox rev">
+    <div class="dbox-title">🔍 JWT Decoder — Token ke parts dekhna</div>
+    <p class="prose" style="margin-bottom:14px;">Neeche sample JWT pehle se di gayi hai. Decode karo aur dekho andar kya hai!</p>
+    <div class="drow">
+      <input class="dinput" id="jwtInput" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMSwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzEyMzQ1Njc4fQ.signature" placeholder="JWT token yahan paste karo...">
+      <button class="btn" onclick="decodeJWT()">Decode ▶</button>
+    </div>
+    <div class="dres" id="jwtResult">🕐 Decode button dabao...</div>
+  </div>
+
+  <!-- Demo 2: Token Validator Simulator -->
+  <div class="dbox rev">
+    <div class="dbox-title">🛡️ Token Validator — Authentication Flow Simulate karo</div>
+    <div class="drow">
+      <input class="dinput" id="simUser" placeholder="Username (e.g., Ali)">
+      <input class="dinput" id="simPass" placeholder="Password (e.g., 1234)" type="password">
+      <button class="btn" onclick="simulateLogin()">Login karo ▶</button>
+    </div>
+    <div class="dres" id="simResult">🕐 Login karo...</div>
+  </div>
+</section>
+
+<!-- ========== SECTION 7: QUIZ ========== -->
+<section id="quiz">
+  <div class="sec-hd rev">
+    <div class="sec-tag">07</div>
+    <div>
+      <h2 class="sec-title">Quiz — <span class="grad-gold">Apne Aap Ko Test Karo</span></h2>
+      <p class="sec-sub">10 questions — JWT ke baare mein kitna sikha?</p>
+    </div>
+  </div>
+
+  <div id="qbox"></div>
+
+  <div class="score-wrap" id="scoreSec" style="display:none;">
+    <div style="font-size:.82rem;color:var(--text3);margin-bottom:8px;font-family:'Oxanium',sans-serif;letter-spacing:2px;">AAPKA SCORE</div>
+    <div class="score-num" id="scoreNum">0/10</div>
+    <div style="font-size:.9rem;color:var(--text2);margin-top:10px;" id="scoreMsg"></div>
+    <button class="btn" style="margin-top:20px;" onclick="resetQuiz()">Dobara Do 🔄</button>
+  </div>
+</section>
+
+<footer>
+  <div class="ft">🔐 CSC337 — JWT in REST APIs</div>
+  <div class="fs">Lecture 08 &nbsp;•&nbsp; 2 Hours &nbsp;•&nbsp; Stay Secure, Stay Curious! 🚀</div>
+</footer>
+
+</main>
+</div>
+
+<script>
+/* ============ PROGRESS BAR ============ */
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  const pct = (window.scrollY / (d.scrollHeight - d.clientHeight)) * 100;
+  document.getElementById('prog').style.width = pct + '%';
+});
+
+/* ============ SIDEBAR MOBILE ============ */
+const burger = document.getElementById('burger');
+const sidebar = document.getElementById('sidebar');
+const ovl = document.getElementById('ovl');
+
+burger.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+  ovl.classList.toggle('show');
+});
+ovl.addEventListener('click', () => {
+  sidebar.classList.remove('open');
+  ovl.classList.remove('show');
+});
+
+/* ============ ACTIVE NAV ============ */
+const secs = document.querySelectorAll('section[id]');
+const links = document.querySelectorAll('.nlink');
+
+new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      links.forEach(l => {
+        l.classList.remove('active');
+        if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+      });
+    }
+  });
+}, { rootMargin: '-40% 0px -55% 0px' }).observe ? secs.forEach(s =>
+  new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.remove('active');
+          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+        });
+      }
+    });
+  }, { rootMargin: '-35% 0px -55% 0px' }).observe(s)
+) : null;
+
+/* ============ REVEAL ON SCROLL ============ */
+const revObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('on');
+      revObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.rev').forEach(el => revObs.observe(el));
+
+/* ============ DEMO: JWT DECODER ============ */
+function decodeJWT() {
+  const token = document.getElementById('jwtInput').value.trim();
+  const res = document.getElementById('jwtResult');
+
+  if (!token || !token.includes('.')) {
+    res.textContent = '❌ Valid JWT format nahi hai! Format: header.payload.signature';
+    res.style.color = '#ff5a5a';
+    return;
+  }
+
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    res.textContent = '❌ JWT ke exactly 3 parts hone chahiye (dot se alag)!';
+    res.style.color = '#ff5a5a';
+    return;
+  }
+
+  res.style.color = '#43e97b';
+
+  try {
+    const decodeB64 = (str) => {
+      try {
+        const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
+        return JSON.parse(atob(padded));
+      } catch { return null; }
+    };
+
+    const header = decodeB64(parts[0]);
+    const payload = decodeB64(parts[1]);
+
+    let out = '✅ JWT Successfully Decode Ho Gaya!\n\n';
+
+    out += '🔵 HEADER:\n';
+    if (header) {
+      out += `   Algorithm: ${header.alg || 'N/A'}\n`;
+      out += `   Type: ${header.typ || 'N/A'}\n`;
+    } else {
+      out += `   (Raw) ${parts[0]}\n`;
+    }
+
+    out += '\n🟡 PAYLOAD (Claims):\n';
+    if (payload) {
+      Object.entries(payload).forEach(([k, v]) => {
+        let label = k;
+        if (k === 'exp') { label = 'Expiry'; v = new Date(v * 1000).toLocaleString(); }
+        if (k === 'iat') { label = 'Issued At'; v = new Date(v * 1000).toLocaleString(); }
+        if (k === 'userId') label = 'User ID';
+        if (k === 'role') label = 'Role';
+        out += `   ${label}: ${v}\n`;
+      });
+    } else {
+      out += `   (Raw) ${parts[1]}\n`;
+    }
+
+    out += '\n🟢 SIGNATURE:\n';
+    out += `   ${parts[2].substring(0, 30)}...\n`;
+    out += `   ⚠️ Signature verify sirf server kar sakta hai (secret key chahiye)`;
+
+    res.textContent = out;
+  } catch (e) {
+    res.textContent = '❌ Decode mein problem aayi. Check karo token valid hai!';
+    res.style.color = '#ff5a5a';
+  }
+}
+
+/* ============ DEMO: LOGIN SIMULATOR ============ */
+const fakeUsers = [
+  { username: 'Ali', password: '1234', role: 'admin', id: 101 },
+  { username: 'Sara', password: 'pass', role: 'user', id: 102 },
+  { username: 'Ahmed', password: 'abc', role: 'moderator', id: 103 }
+];
+
+let simToken = null;
+
+function simulateLogin() {
+  const u = document.getElementById('simUser').value.trim();
+  const p = document.getElementById('simPass').value.trim();
+  const res = document.getElementById('simResult');
+
+  if (!u || !p) {
+    res.textContent = '❌ Username aur password dono bharo!';
+    res.style.color = '#ff5a5a';
+    return;
+  }
+
+  const user = fakeUsers.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+
+  if (!user) {
+    res.style.color = '#ff5a5a';
+    res.textContent = `❌ Wrong credentials!\n\nTip: Yeh try karo:\n  Ali / 1234  (admin)\n  Sara / pass  (user)\n  Ahmed / abc  (moderator)`;
+    return;
+  }
+
+  // Simulate token
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({
+    userId: user.id, role: user.role,
+    username: user.username,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600
+  }));
+  simToken = `${header}.${payload}.simulated_signature_hash`;
+
+  res.style.color = '#43e97b';
+  res.textContent =
+    `✅ Login Successful!\n\n` +
+    `👤 User: ${user.username} (ID: ${user.id})\n` +
+    `🎭 Role: ${user.role}\n` +
+    `⏰ Token valid for: 1 hour\n\n` +
+    `📦 JWT Token Generated:\n${simToken.substring(0, 80)}...\n\n` +
+    `📡 Ab client is token ko store karega aur\n` +
+    `   har request mein bhejega:\n\n` +
+    `   Authorization: Bearer ${simToken.substring(0, 40)}...`;
+}
+
+/* ============ QUIZ ============ */
+const qs = [
+  { q: "Authentication aur Authorization mein kya fark hai?", opts: ["Dono ek hi hain", "Auth = kaun hai, Authz = kya kar sakta hai", "Auth = permissions, Authz = identity", "Dono server pe hote hain"], ans: 1 },
+  { q: "JWT ke kitne parts hote hain?", opts: ["2", "3", "4", "5"], ans: 1 },
+  { q: "JWT ka Payload kya hota hai?", opts: ["Encrypted secret data", "Algorithm name", "User claims (data) Base64 encoded", "Server ka IP address"], ans: 2 },
+  { q: "JWT Stateless kyu hai?", opts: ["Server kuch bhi store nahi karta", "Token bahut chhota hota hai", "Sirf GET requests pe kaam karta hai", "Database mein save hota hai"], ans: 0 },
+  { q: "Client JWT token request mein kahan bhejta hai?", opts: ["Request body mein", "URL mein", "Authorization header mein (Bearer token)", "Cookie mein hamesha"], ans: 2 },
+  { q: "JWT Signature kisliye hoti hai?", opts: ["Token encrypt karne ke liye", "Token ke size reduce karne ke liye", "Ensure karna ke token tamper nahi hua", "Payload ko hide karne ke liye"], ans: 2 },
+  { q: "Payload mein kya NAHI rakhna chahiye?", opts: ["User ID", "User role", "Password aur sensitive info", "Expiry time"], ans: 2 },
+  { q: "JWT ki sabse badi limitation kya hai?", opts: ["Bohat slow hai", "Expire hone se pehle revoke karna mushkil hai", "Sirf ek server pe kaam karta hai", "Sirf mobile apps mein use hota hai"], ans: 1 },
+  { q: "REST APIs mein JWT kyun use karte hain?", opts: ["Kyunke REST APIs state rakhti hain", "Kyunke JWT bhi stateless hai aur REST ke saath match karta hai", "Kyunke JWT sab kuch encrypt karta hai", "Kyunke database ki zaroorat nahi hoti"], ans: 1 },
+  { q: "jsonwebtoken library mein token banane ka function kaunsa hai?", opts: ["jwt.create()", "jwt.sign()", "jwt.generate()", "jwt.make()"], ans: 1 }
+];
+
+let ans = new Array(qs.length).fill(null);
+let done = new Array(qs.length).fill(false);
+
+function buildQuiz() {
+  const box = document.getElementById('qbox');
+  box.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+
+  qs.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'qcard rev';
+    card.innerHTML = `
+      <div class="qq"><span>Q${qi + 1}</span>${q.q}</div>
+      <div class="qopts" id="qo-${qi}">
+        ${q.opts.map((o, oi) => `
+          <div class="qopt" id="qo-${qi}-${oi}" onclick="pick(${qi},${oi})">
+            <span class="oletter">${letters[oi]}</span>${o}
+          </div>`).join('')}
+      </div>
+      <div class="qfb" id="qf-${qi}"></div>`;
+    box.appendChild(card);
+    revObs.observe(card);
+  });
+}
+
+function pick(qi, oi) {
+  if (done[qi]) return;
+  done[qi] = true;
+  ans[qi] = oi;
+
+  const correct = qs[qi].ans;
+  document.querySelectorAll(`#qo-${qi} .qopt`).forEach((el, idx) => {
+    if (idx === correct) el.classList.add('correct');
+    else if (idx === oi && oi !== correct) el.classList.add('wrong');
+  });
+
+  const fb = document.getElementById(`qf-${qi}`);
+  fb.style.display = 'block';
+  if (oi === correct) {
+    fb.style.cssText = 'display:block;background:rgba(67,233,123,.1);border:1px solid rgba(67,233,123,.3);color:#9df5bd;padding:11px 14px;border-radius:8px;font-size:.82rem;font-weight:700;margin-top:4px;';
+    fb.textContent = '✅ Bilkul sahi! Shabash!';
+  } else {
+    fb.style.cssText = 'display:block;background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.28);color:#ffc5c5;padding:11px 14px;border-radius:8px;font-size:.82rem;font-weight:700;margin-top:4px;';
+    fb.textContent = `❌ Galat! Sahi jawab: ${['A','B','C','D'][correct]} — ${qs[qi].opts[correct]}`;
+  }
+
+  if (done.every(d => d)) {
+    const score = ans.reduce((a, v, i) => a + (v === qs[i].ans ? 1 : 0), 0);
+    const sec = document.getElementById('scoreSec');
+    sec.style.display = 'block';
+    document.getElementById('scoreNum').textContent = `${score}/10`;
+    const msgs = ['📚 Notes dobara parho — hosla mat haro!','👍 Accha attempt! Thodi aur practice karo.','🎉 Bahut acha! JWT samajh aa gaya!','🏆 Perfect! Aap JWT expert hain!'];
+    document.getElementById('scoreMsg').textContent = msgs[Math.floor(score / 3)];
+    sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function resetQuiz() {
+  ans = new Array(qs.length).fill(null);
+  done = new Array(qs.length).fill(false);
+  document.getElementById('scoreSec').style.display = 'none';
+  buildQuiz();
+  document.getElementById('qbox').scrollIntoView({ behavior: 'smooth' });
+}
+
+buildQuiz();
+</script>
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>

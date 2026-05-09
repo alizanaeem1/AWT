@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Stack Dev Course — Roman Urdu</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --bg-primary: #050b18;
+  --bg-secondary: #0a1628;
+  --bg-card: #0f1f3d;
+  --bg-sidebar: #070e1f;
+  --accent-cyan: #00e5ff;
+  --accent-green: #00ff9d;
+  --accent-orange: #ff6b35;
+  --accent-purple: #a855f7;
+  --accent-yellow: #ffd600;
+  --text-primary: #e8f4fd;
+  --text-secondary: #8baac8;
+  --text-muted: #4a6080;
+  --border: #1a2e4a;
+  --border-glow: rgba(0,229,255,0.3);
+  --sidebar-width: 270px;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 3px; }
+
+/* ===== PROGRESS BAR ===== */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green), var(--accent-purple));
+  z-index: 9999;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 10px var(--accent-cyan);
+}
+
+/* ===== SIDEBAR ===== */
+#sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 0 0 2rem 0;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+.sidebar-logo .logo-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  color: #000;
+  font-weight: 800;
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+.sidebar-logo h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+.sidebar-logo p {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+.nav-section-title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  padding: 0.8rem 1.5rem 0.4rem;
+  text-transform: uppercase;
+}
+
+#sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 1.5rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+#sidebar a:hover, #sidebar a.active {
+  color: var(--accent-cyan);
+  background: rgba(0,229,255,0.06);
+  border-left-color: var(--accent-cyan);
+}
+#sidebar a .nav-icon { font-size: 1rem; opacity: 0.8; }
+
+/* ===== HAMBURGER ===== */
+#hamburger {
+  display: none;
+  position: fixed;
+  top: 1rem; right: 1rem;
+  z-index: 2000;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--accent-cyan);
+}
+
+/* ===== MAIN CONTENT ===== */
+#main {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+}
+
+/* ===== HERO SECTION ===== */
+#hero {
+  padding: 5rem 3rem 4rem;
+  background: radial-gradient(ellipse at top left, rgba(0,229,255,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at bottom right, rgba(168,85,247,0.08) 0%, transparent 60%),
+              var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+#hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: radial-gradient(rgba(0,229,255,0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0,229,255,0.1);
+  border: 1px solid rgba(0,229,255,0.3);
+  border-radius: 30px;
+  padding: 6px 18px;
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+  animation: fadeInDown 0.8s ease;
+}
+#hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+  animation: fadeInUp 0.8s ease 0.2s both;
+}
+#hero h1 .highlight {
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#hero p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.8s ease 0.4s both;
+}
+.hero-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease 0.6s both;
+}
+.stat-item {
+  text-align: center;
+}
+.stat-item .num {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+.stat-item .label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ===== SECTIONS ===== */
+.section {
+  padding: 3.5rem 3rem;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease;
+}
+.section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.section-number {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.85rem; color: #000; flex-shrink: 0;
+}
+.section-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.section-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+/* ===== CARDS ===== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.2rem;
+  margin: 1.5rem 0;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+.card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,229,255,0.1);
+}
+.card:hover::before { transform: scaleX(1); }
+.card-icon { font-size: 2rem; margin-bottom: 0.8rem; display: block; }
+.card h3 { font-size: 1rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 0.5rem; }
+.card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+
+/* ===== CODE BLOCKS ===== */
+.code-block {
+  background: #010c18;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+.code-header {
+  background: var(--bg-card);
+  padding: 0.7rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.code-lang {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.code-dots { display: flex; gap: 6px; }
+.code-dots span {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.code-dots span:nth-child(1) { background: #ff5f57; }
+.code-dots span:nth-child(2) { background: #febc2e; }
+.code-dots span:nth-child(3) { background: #28c840; }
+.code-block pre {
+  padding: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  color: #a8d8ea;
+}
+.code-block pre .kw { color: #c792ea; }
+.code-block pre .str { color: #c3e88d; }
+.code-block pre .cm { color: #546e7a; font-style: italic; }
+.code-block pre .tag { color: #f07178; }
+.code-block pre .attr { color: #ffcb6b; }
+.code-block pre .val { color: #c3e88d; }
+.code-block pre .fn { color: #82aaff; }
+.code-block pre .num { color: #f78c6c; }
+
+/* ===== ALERTS ===== */
+.alert {
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 1.2rem 0;
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  font-size: 0.88rem;
+}
+.alert-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+.alert-body strong { display: block; font-weight: 700; margin-bottom: 0.2rem; }
+.alert-tip { background: rgba(0,255,157,0.08); border: 1px solid rgba(0,255,157,0.25); }
+.alert-tip .alert-icon, .alert-tip strong { color: var(--accent-green); }
+.alert-warning { background: rgba(255,107,53,0.08); border: 1px solid rgba(255,107,53,0.3); }
+.alert-warning .alert-icon, .alert-warning strong { color: var(--accent-orange); }
+.alert-exam { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.3); }
+.alert-exam .alert-icon, .alert-exam strong { color: var(--accent-purple); }
+.alert-info { background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2); }
+.alert-info .alert-icon, .alert-info strong { color: var(--accent-cyan); }
+
+/* ===== TABLES ===== */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--bg-card); }
+th {
+  padding: 0.9rem 1.2rem;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+td {
+  padding: 0.85rem 1.2rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
+}
+tr:hover td { background: rgba(0,229,255,0.03); }
+td strong { color: var(--text-primary); font-weight: 600; }
+
+/* ===== TIMELINE ===== */
+.timeline { position: relative; padding-left: 2rem; margin: 1.5rem 0; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-purple));
+}
+.tl-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 1.2rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+.tl-item:hover {
+  border-color: var(--border-glow);
+  transform: translateX(6px);
+}
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: -1.7rem; top: 1.4rem;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  border: 3px solid var(--bg-primary);
+  box-shadow: 0 0 10px var(--accent-cyan);
+}
+.tl-item h4 { font-size: 0.95rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 0.3rem; }
+.tl-item p { font-size: 0.83rem; color: var(--text-secondary); }
+
+/* ===== LIVE DEMO ===== */
+.demo-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.8rem;
+  margin: 1.5rem 0;
+}
+.demo-box h4 { font-weight: 700; color: var(--accent-cyan); margin-bottom: 1rem; font-size: 0.95rem; }
+.demo-input {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+  transition: border-color 0.2s;
+}
+.demo-input:focus { outline: none; border-color: var(--accent-cyan); }
+.demo-btn {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.demo-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,229,255,0.3); }
+.demo-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.83rem;
+  color: var(--accent-green);
+  min-height: 40px;
+  white-space: pre-wrap;
+}
+
+/* ===== QUIZ SECTION ===== */
+.quiz-question {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin: 1.2rem 0;
+  transition: border-color 0.3s;
+}
+.quiz-question.correct { border-color: var(--accent-green); background: rgba(0,255,157,0.05); }
+.quiz-question.wrong { border-color: var(--accent-orange); background: rgba(255,107,53,0.05); }
+.quiz-q-text { font-weight: 600; font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-primary); }
+.quiz-q-num {
+  display: inline-block;
+  background: rgba(0,229,255,0.15);
+  color: var(--accent-cyan);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  margin-bottom: 0.5rem;
+}
+.quiz-options { display: flex; flex-direction: column; gap: 0.6rem; }
+.quiz-option {
+  padding: 0.7rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: var(--font-body);
+}
+.quiz-option:hover { border-color: var(--accent-cyan); color: var(--text-primary); }
+.quiz-option.correct { background: rgba(0,255,157,0.15); border-color: var(--accent-green); color: var(--accent-green); }
+.quiz-option.wrong { background: rgba(255,107,53,0.12); border-color: var(--accent-orange); color: var(--accent-orange); }
+.quiz-option.reveal { background: rgba(0,255,157,0.08); border-color: rgba(0,255,157,0.4); color: var(--accent-green); }
+.quiz-feedback {
+  margin-top: 0.8rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: none;
+}
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct { background: rgba(0,255,157,0.1); color: var(--accent-green); }
+.quiz-feedback.wrong { background: rgba(255,107,53,0.1); color: var(--accent-orange); }
+
+/* ===== SCORE BOARD ===== */
+.score-board {
+  background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(168,85,247,0.1));
+  border: 1px solid var(--border-glow);
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  display: none;
+}
+.score-board.show { display: block; }
+.score-num { font-size: 3rem; font-weight: 800; color: var(--accent-cyan); }
+.score-label { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.3rem; }
+
+/* ===== FOOTER ===== */
+footer {
+  padding: 3rem;
+  background: var(--bg-sidebar);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+footer .footer-logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+footer .footer-logo span { color: var(--accent-cyan); }
+footer p { color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1rem; }
+footer .footer-tags { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+footer .tag {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ===== INLINE STYLES ===== */
+.text-cyan { color: var(--accent-cyan); }
+.text-green { color: var(--accent-green); }
+.text-orange { color: var(--accent-orange); }
+.text-purple { color: var(--accent-purple); }
+.text-yellow { color: var(--accent-yellow); }
+.mt1 { margin-top: 1rem; }
+.mt2 { margin-top: 2rem; }
+.mb1 { margin-bottom: 1rem; }
+p.body { font-size: 0.92rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 0.8rem; }
+h4.subhead { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 1.5rem 0 0.5rem; }
+ul.fancy-list { list-style: none; padding: 0; margin: 0.8rem 0; }
+ul.fancy-list li {
+  padding: 0.4rem 0 0.4rem 1.5rem;
+  position: relative;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+ul.fancy-list li::before {
+  content: '→';
+  position: absolute; left: 0;
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+/* ===== TECH RACE VISUAL ===== */
+.race-bar { margin: 0.6rem 0; }
+.race-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+.race-track {
+  height: 28px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.race-fill {
+  height: 100%;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #000;
+  transition: width 1.5s ease;
+  width: 0%;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(0,229,255,0); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  #hamburger { display: block; }
+  #hero { padding: 4rem 1.5rem 2.5rem; }
+  .section { padding: 2.5rem 1.5rem; }
+  .hero-stats { gap: 1rem; }
+  footer { padding: 2rem 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Hamburger Button -->
+<button id="hamburger" onclick="toggleSidebar()">☰</button>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">COURSE</div>
+    <h2>Full Stack Dev</h2>
+    <p>Roman Urdu me Sikho</p>
+  </div>
+
+  <div class="nav-section-title">Shuru Karo</div>
+  <a href="#hero" class="active"><span class="nav-icon">🏠</span> Course Home</a>
+  <a href="#roadmap"><span class="nav-icon">🗺️</span> Course Roadmap</a>
+
+  <div class="nav-section-title">Course Topics</div>
+  <a href="#importance"><span class="nav-icon">⭐</span> Course Importance</a>
+  <a href="#fullstack"><span class="nav-icon">🌐</span> Full Stack Concepts</a>
+  <a href="#tech-race"><span class="nav-icon">🚀</span> Technological Race</a>
+
+  <div class="nav-section-title">Practice</div>
+  <a href="#demo"><span class="nav-icon">⚡</span> Live Demo</a>
+  <a href="#quiz"><span class="nav-icon">🎯</span> Quiz</a>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main id="main">
+
+  <!-- ===== HERO SECTION ===== -->
+  <section id="hero">
+    <div class="hero-badge">✦ Roman Urdu Course — Beginners ke liye</div>
+    <h1>Bano ek <span class="highlight">Full Stack</span><br>Developer! 🚀</h1>
+    <p>Is course me hum seekhenge ke Full Stack Development kya hai, kyun zaroori hai, aur aaj ki technology ki race me aap kaise aage reh sakte ho — bilkul simple Urdu me.</p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="num">4</span>
+        <span class="label">Main Topics</span>
+      </div>
+      <div class="stat-item">
+        <span class="num">10+</span>
+        <span class="label">Concepts</span>
+      </div>
+      <div class="stat-item">
+        <span class="num">5</span>
+        <span class="label">Quiz Questions</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 1: COURSE ROADMAP ===== -->
+  <section id="roadmap" class="section">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">Course Roadmap</div>
+        <div class="section-subtitle">Step by step safar — kahan se shuru karo, kahan tak jana hai</div>
+      </div>
+    </div>
+
+    <p class="body">Ek roadmap basically ek <strong class="text-cyan">map ki tarah hota hai</strong> — jaise Google Maps batata hai ke Karachi se Lahore kaise jana hai, usi tarah Course Roadmap batata hai ke programming seekhna kahan se shuru karo aur kahan tak jana hai.</p>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">💡</span>
+      <div class="alert-body"><strong>Teacher's Tip</strong>Roadmap ko dekh ke ghabrana mat! Ek ek step karo — ek mahine mein ek section complete karo aur tum 6 mahine mein ready ho jao ge.</div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <h4>🏁 Phase 1 — Buniyad (HTML + CSS) · 4–6 Hafta</h4>
+        <p>Websites ki structure aur design banana seekho. Yeh sab se pehla qadam hai — jaise ghar banane se pehle neev (foundation) bichana.</p>
+      </div>
+      <div class="tl-item">
+        <h4>⚡ Phase 2 — JavaScript Seekho · 6–8 Hafta</h4>
+        <p>Website ko "zinda" banao — buttons click honge, forms submit honge, animations chalenge. JS hai woh magic jo website ko interactive banata hai.</p>
+      </div>
+      <div class="tl-item">
+        <h4>⚛️ Phase 3 — React.js Framework · 8–10 Hafta</h4>
+        <p>Ek powerful JavaScript library jo badi badi companies use karti hain — Facebook, Instagram, Airbnb. Isse dynamic web apps banate hain.</p>
+      </div>
+      <div class="tl-item">
+        <h4>🖥️ Phase 4 — Backend (Node.js + Express) · 8 Hafta</h4>
+        <p>Website ke "peeche wala hissa" — server, database se baat karna, login system banana. Yahan data save hota hai.</p>
+      </div>
+      <div class="tl-item">
+        <h4>🗄️ Phase 5 — Database (MongoDB / SQL) · 4 Hafta</h4>
+        <p>Data store karna seekhna — jaise bank mein paisa rakha jata hai, waise website mein users ka data store hota hai.</p>
+      </div>
+      <div class="tl-item">
+        <h4>🚀 Phase 6 — Deployment aur Portfolio · 2 Hafta</h4>
+        <p>Apna project internet par upload karo. Portfolio banao. Jobs ke liye apply karo. Yeh aakhri magar sab se exciting step hai!</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>Technology</th>
+            <th>Duration</th>
+            <th>Mushkil Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td>HTML + CSS</td><td>4–6 Hafta</td><td class="text-green">Easy ⭐</td></tr>
+          <tr><td><strong>2</strong></td><td>JavaScript</td><td>6–8 Hafta</td><td class="text-yellow">Medium ⭐⭐</td></tr>
+          <tr><td><strong>3</strong></td><td>React.js</td><td>8–10 Hafta</td><td class="text-orange">Hard ⭐⭐⭐</td></tr>
+          <tr><td><strong>4</strong></td><td>Node + Express</td><td>8 Hafta</td><td class="text-orange">Hard ⭐⭐⭐</td></tr>
+          <tr><td><strong>5</strong></td><td>Database</td><td>4 Hafta</td><td class="text-yellow">Medium ⭐⭐</td></tr>
+          <tr><td><strong>6</strong></td><td>Deployment</td><td>2 Hafta</td><td class="text-green">Easy ⭐</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 2: IMPORTANCE ===== -->
+  <section id="importance" class="section">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">Course ki Ahmiyat</div>
+        <div class="section-subtitle">Kyun yeh seekhna zaroori hai? Kya faida hoga?</div>
+      </div>
+    </div>
+
+    <p class="body">Dosto, aaj ke zamane mein jo banda <strong class="text-cyan">computers aur programming</strong> nahi janta, woh peeche reh jata hai. Jaise 50 saal pehle jo padhna likhna nahi janta tha, woh mushkil mein rehta tha — usi tarah aaj coding jaanna zaroori hai.</p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">💰</span>
+        <h3>Achi Salary</h3>
+        <p>Pakistan mein ek Junior Developer ki salary 80,000 se 1,50,000 tak hoti hai. Senior level par 3–5 lakh bhi milte hain!</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌍</span>
+        <h3>Remote Work</h3>
+        <p>Ghar baith kar America, UK, ya kisi bhi country ke liye kaam karo aur Dollar ya Pound mein salary lo — bina bahar gaye!</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🔒</span>
+        <h3>Job Security</h3>
+        <p>2030 tak duniya mein 85 million IT jobs ki demand hogi. Ek developer ki job kabhi nahi jati — hamesha demand rehti hai.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🏗️</span>
+        <h3>Apna Business</h3>
+        <p>Coding aati hai toh apna startup ya freelancing kar sako ge — kissi par depend nahi karna padega jobs ke liye.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🧠</span>
+        <h3>Problem Solving</h3>
+        <p>Programming seekhne se dimag sharp hota hai. Tum real life problems bhi better solve karte ho — logical thinking improve hoti hai.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌐</span>
+        <h3>Global Opportunity</h3>
+        <p>Upwork, Fiverr, Toptal — in platforms par Pakistan se baith kar puri duniya ko services do aur foreign exchange kamao.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body"><strong>Zaroori Baat!</strong>Sirf videos dekh kar developer nahi bante! Roz 1-2 ghante code likho, projects banao, aur galtiyan karo — tabhi seekhoge. Galti karna zaroori hai!</div>
+    </div>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">🎓</span>
+      <div class="alert-body"><strong>Exam Tip</strong>Interview mein aksar puchha jata hai: "Full Stack Developer kya hota hai?" — Jawab yaad karo: "Jo shakhs front-end (website design) aur back-end (server/database) dono sambhal sake, usse Full Stack Developer kehte hain."</div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 3: FULL STACK CONCEPTS ===== -->
+  <section id="fullstack" class="section">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">Full Stack Development</div>
+        <div class="section-subtitle">Front-end, Back-end, aur Database — teeno concepts detail mein</div>
+      </div>
+    </div>
+
+    <p class="body">Full Stack matlab <strong class="text-green">"poori technology stack"</strong> — yaani website banane ke liye jitni cheezein chahiye, woh sab seekhna. Isko teeno hisson mein samjhte hain:</p>
+
+    <!-- HTML -->
+    <h4 class="subhead">🔤 1. HTML — Website ki Haddi (Structure)</h4>
+    <p class="body">HTML ka matlab hai <strong>HyperText Markup Language</strong>. Yeh website ki dha (skeleton) banata hai. Jaise insaan ki body mein haddi hoti hai, waise website mein HTML hota hai.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">HTML</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><span class="cm">&lt;!-- Yeh hai basic HTML structure --&gt;</span>
+<span class="tag">&lt;html&gt;</span>
+  <span class="tag">&lt;head&gt;</span>
+    <span class="tag">&lt;title&gt;</span>Meri Pehli Website<span class="tag">&lt;/title&gt;</span>
+  <span class="tag">&lt;/head&gt;</span>
+  <span class="tag">&lt;body&gt;</span>
+    <span class="tag">&lt;h1&gt;</span>Assalam o Alaikum!<span class="tag">&lt;/h1&gt;</span>
+    <span class="tag">&lt;p&gt;</span>Main ek developer ban raha hoon.<span class="tag">&lt;/p&gt;</span>
+    <span class="tag">&lt;button&gt;</span>Click Karo Mujhe<span class="tag">&lt;/button&gt;</span>
+  <span class="tag">&lt;/body&gt;</span>
+<span class="tag">&lt;/html&gt;</span></pre>
+    </div>
+
+    <!-- CSS -->
+    <h4 class="subhead">🎨 2. CSS — Website ki Kapde (Design)</h4>
+    <p class="body">CSS ka matlab hai <strong>Cascading Style Sheets</strong>. Isse website ko sundar banate hain — rang, font, size, animations sab CSS se hoti hain.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">CSS</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><span class="cm">/* Button ko design karo */</span>
+<span class="tag">button</span> {
+  <span class="attr">background-color</span>: <span class="val">#00e5ff</span>;
+  <span class="attr">color</span>: <span class="val">black</span>;
+  <span class="attr">padding</span>: <span class="val">12px 24px</span>;
+  <span class="attr">border-radius</span>: <span class="val">8px</span>;
+  <span class="attr">font-size</span>: <span class="val">16px</span>;
+  <span class="attr">cursor</span>: <span class="val">pointer</span>;
+}
+
+<span class="cm">/* Hover effect — mouse lane par rang badlo */</span>
+<span class="tag">button:hover</span> {
+  <span class="attr">background-color</span>: <span class="val">#00ff9d</span>;
+  <span class="attr">transform</span>: <span class="val">scale(1.05)</span>;
+}</pre>
+    </div>
+
+    <!-- JavaScript -->
+    <h4 class="subhead">⚡ 3. JavaScript — Website ki Jaan (Interactivity)</h4>
+    <p class="body">JavaScript (JS) website ko <strong>interactive</strong> banata hai — button click karo toh kuch ho, form bharo toh data save ho, timer lage, animations chaley. Bina JS ke website ek dead photo ki tarah hoti hai.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">JAVASCRIPT</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><span class="cm">// Naam puchho aur greet karo</span>
+<span class="kw">function</span> <span class="fn">greetKaro</span>() {
+  <span class="kw">let</span> naam = document.<span class="fn">getElementById</span>(<span class="str">'naam'</span>).value;
+  
+  <span class="kw">if</span> (naam === <span class="str">''</span>) {
+    <span class="fn">alert</span>(<span class="str">'Pehle apna naam likho!'</span>);
+    <span class="kw">return</span>;
+  }
+  
+  document.<span class="fn">getElementById</span>(<span class="str">'result'</span>).innerText = 
+    <span class="str">`Assalam o Alaikum, </span>${naam}<span class="str">! 👋`</span>;
+}
+
+<span class="cm">// Simple calculation example</span>
+<span class="kw">let</span> num1 = <span class="num">10</span>;
+<span class="kw">let</span> num2 = <span class="num">20</span>;
+console.<span class="fn">log</span>(<span class="str">"Sum hai: "</span> + (num1 + num2)); <span class="cm">// 30</span></pre>
+    </div>
+
+    <!-- Node.js -->
+    <h4 class="subhead">🖥️ 4. Node.js — Back-end (Server side)</h4>
+    <p class="body">Node.js se hum <strong>server</strong> banate hain — woh computer jo 24/7 online rehta hai aur users ki requests handle karta hai. Jaise restaurant mein waiter hota hai jo orders leta hai.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">NODE.JS</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><span class="cm">// Simple web server banao</span>
+<span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> app = <span class="fn">express</span>();
+
+<span class="cm">// Jab koi home page khole</span>
+app.<span class="fn">get</span>(<span class="str">'/'</span>, (req, res) => {
+  res.<span class="fn">send</span>(<span class="str">'Mera server chal raha hai! 🚀'</span>);
+});
+
+<span class="cm">// Server start karo port 3000 par</span>
+app.<span class="fn">listen</span>(<span class="num">3000</span>, () => {
+  console.<span class="fn">log</span>(<span class="str">'Server ready hai!'</span>);
+});</pre>
+    </div>
+
+    <!-- Comparison Table -->
+    <h4 class="subhead">📊 Front-end vs Back-end — Farq kya hai?</h4>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Front-end (Agla Hissa)</th><th>Back-end (Peeche Wala)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Kya hai?</strong></td><td>Jo user dekhe woh</td><td>Jo peeche kaam kare</td></tr>
+          <tr><td><strong>Languages</strong></td><td>HTML, CSS, JavaScript</td><td>Node.js, Python, PHP</td></tr>
+          <tr><td><strong>Example</strong></td><td>Website ka design, buttons</td><td>Login system, database</td></tr>
+          <tr><td><strong>Misaal</strong></td><td>Restaurant ki seating area</td><td>Restaurant ka kitchen</td></tr>
+          <tr><td><strong>Tools</strong></td><td>React, Vue, Angular</td><td>Express, Django, Laravel</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ️</span>
+      <div class="alert-body"><strong>Yaad Rakho</strong>"Full Stack Developer" woh hota hai jo dono — Front-end aur Back-end — dono sambhal sakta ho. Yahi is course ka goal hai!</div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 4: TECHNOLOGICAL RACE ===== -->
+  <section id="tech-race" class="section">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">Technological Race</div>
+        <div class="section-subtitle">Duniya kahan ja rahi hai — aur tum kahan ho?</div>
+      </div>
+    </div>
+
+    <p class="body">Dosto, duniya mein ek <strong class="text-orange">Technology Race</strong> chal rahi hai. Jis mulk ke log zyada tech-savvy hain, woh aage nikhal rahe hain. Pakistan ko bhi is race mein shamil hona hai — aur yeh sirf tum jaise naujawanon se mumkin hai.</p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">🤖</span>
+        <h3>AI ka Daur</h3>
+        <p>Artificial Intelligence (AI) har field mein aa rahi hai — doctors, lawyers, teachers sab AI use kar rahe hain. Agar tum AI tools use karna seekh lo, tum 10 guna zyada kaam kar sakte ho.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">☁️</span>
+        <h3>Cloud Computing</h3>
+        <p>Aaj har company ka data "cloud" par hai — AWS, Google Cloud, Azure. Yeh ek booming industry hai jahan jobs ki bahut demand hai.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">📱</span>
+        <h3>Mobile First</h3>
+        <p>Duniya mein 6 billion se zyada log smartphones use karte hain. Mobile apps banane wale developers ki salary bahut zyada hai.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🔐</span>
+        <h3>Cyber Security</h3>
+        <p>Jitna technology badh rahi hai, utna cyber attacks bhi badh rahe hain. Security experts ki demand har saal 25–30% badh rahi hai.</p>
+      </div>
+    </div>
+
+    <h4 class="subhead">📈 Pakistan vs World — Technology Jobs Growth</h4>
+    <p class="body" style="margin-bottom:1.2rem">Dekho kaise duniya mein alag alag fields mein jobs badh rahi hain (2020–2030 tak):</p>
+
+    <div id="race-bars">
+      <div class="race-bar">
+        <div class="race-label"><span>🌐 Web Development</span><span>+27%</span></div>
+        <div class="race-track"><div class="race-fill" data-width="82%" style="background: linear-gradient(90deg,#00e5ff,#00ff9d);">82%</div></div>
+      </div>
+      <div class="race-bar">
+        <div class="race-label"><span>🤖 AI / Machine Learning</span><span>+40%</span></div>
+        <div class="race-track"><div class="race-fill" data-width="95%" style="background: linear-gradient(90deg,#a855f7,#00e5ff);">95%</div></div>
+      </div>
+      <div class="race-bar">
+        <div class="race-label"><span>🔐 Cyber Security</span><span>+33%</span></div>
+        <div class="race-track"><div class="race-fill" data-width="88%" style="background: linear-gradient(90deg,#ff6b35,#ffd600);">88%</div></div>
+      </div>
+      <div class="race-bar">
+        <div class="race-label"><span>☁️ Cloud Computing</span><span>+35%</span></div>
+        <div class="race-track"><div class="race-fill" data-width="90%" style="background: linear-gradient(90deg,#00ff9d,#a855f7);">90%</div></div>
+      </div>
+      <div class="race-bar">
+        <div class="race-label"><span>📱 Mobile Apps</span><span>+22%</span></div>
+        <div class="race-track"><div class="race-fill" data-width="72%" style="background: linear-gradient(90deg,#ffd600,#ff6b35);">72%</div></div>
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body"><strong>Socho!</strong>2030 tak AI aur automation bahut si traditional jobs khatam kar degi — accountants, data entry operators, graphic designers sab ko AI compete karega. Lekin jo log TECHNOLOGY BANATE HAIN, unhe koi nahi haata sakta!</div>
+    </div>
+
+    <h4 class="subhead">🇵🇰 Pakistan ka IT Sector</h4>
+    <ul class="fancy-list">
+      <li>Pakistan ka IT export 2024 mein $2.6 Billion se zyada tha</li>
+      <li>Freelancing mein Pakistan duniya mein top 5 countries mein hai</li>
+      <li>Fiverr aur Upwork par Pakistani developers lakhs kama rahe hain ghar baith kar</li>
+      <li>Government "Digital Pakistan" initiative launch kar chuki hai</li>
+      <li>NAVTTC, PITB, DigiSkills free courses de rahe hain — fayda uthao!</li>
+    </ul>
+
+    <div class="alert alert-exam">
+      <span class="alert-icon">🎓</span>
+      <div class="alert-body"><strong>Exam Tip</strong>"Technological Race" ka matlab hai woh competition jis mein mulk aur companies ek doosre se aage nikalne ki koshish karte hain naye naye technology develop kar ke. Jaise pehle space race thi, ab AI race chal rahi hai.</div>
+    </div>
+  </section>
+
+  <!-- ===== LIVE DEMO SECTION ===== -->
+  <section id="demo" class="section">
+    <div class="section-header">
+      <div class="section-number">⚡</div>
+      <div>
+        <div class="section-title">Live Demo</div>
+        <div class="section-subtitle">Code ko action mein dekho — khud try karo!</div>
+      </div>
+    </div>
+
+    <!-- Demo 1: Greeting -->
+    <div class="demo-box">
+      <h4>👋 Demo 1: Greeting Generator</h4>
+      <p class="body" style="margin-bottom:1rem;">Apna naam likho aur button dabao — JavaScript se greet hoga!</p>
+      <input type="text" class="demo-input" id="naam-input" placeholder="Yahan apna naam likho...">
+      <button class="demo-btn" onclick="greetDemo()">Greet Karo! 🎉</button>
+      <div class="demo-result" id="greet-result">Naam likho aur button dabao...</div>
+    </div>
+
+    <!-- Demo 2: Calculator -->
+    <div class="demo-box">
+      <h4>🧮 Demo 2: Simple Calculator</h4>
+      <p class="body" style="margin-bottom:1rem;">Do numbers likho — JavaScript unka sum, minus, multiply dikhayega!</p>
+      <input type="number" class="demo-input" id="num1" placeholder="Pehla number...">
+      <input type="number" class="demo-input" id="num2" placeholder="Doosra number...">
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+        <button class="demo-btn" onclick="calcDemo('+')">➕ Jodo</button>
+        <button class="demo-btn" onclick="calcDemo('-')">➖ Ghata</button>
+        <button class="demo-btn" onclick="calcDemo('*')">✖️ Guna</button>
+        <button class="demo-btn" onclick="calcDemo('/')">➗ Taqseem</button>
+      </div>
+      <div class="demo-result" id="calc-result">Numbers likho aur operation select karo...</div>
+    </div>
+
+    <!-- Demo 3: Color Mixer -->
+    <div class="demo-box">
+      <h4>🎨 Demo 3: CSS Color Preview</h4>
+      <p class="body" style="margin-bottom:1rem;">Hex color code likho (jaise #ff6b35) aur dekho kaisa dikhta hai!</p>
+      <input type="text" class="demo-input" id="color-input" placeholder="#00e5ff ya red ya blue...">
+      <button class="demo-btn" onclick="colorDemo()">Color Dekho 🎨</button>
+      <div class="demo-result" id="color-result" style="height:60px; transition: background 0.5s;">Background badlegi...</div>
+    </div>
+  </section>
+
+  <!-- ===== QUIZ SECTION ===== -->
+  <section id="quiz" class="section">
+    <div class="section-header">
+      <div class="section-number">🎯</div>
+      <div>
+        <div class="section-title">Quick Quiz</div>
+        <div class="section-subtitle">Test karo apna knowledge — kuch seekha ya nahi?</div>
+      </div>
+    </div>
+
+    <p class="body">Har sawaal ka jawab do — sahi par green, galat par red dikhega. Sab karne ke baad apna score dekho!</p>
+
+    <!-- Q1 -->
+    <div class="quiz-question" id="q1">
+      <div class="quiz-q-num">Question 1 / 5</div>
+      <div class="quiz-q-text">Full Stack Developer kise kehte hain?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="checkAnswer(this,'q1',false)">A) Sirf Front-end Developer</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q1',true)">B) Jo Front-end aur Back-end dono sambhale</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q1',false)">C) Sirf Database Manager</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q1',false)">D) Graphic Designer</button>
+      </div>
+      <div class="quiz-feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="quiz-question" id="q2">
+      <div class="quiz-q-num">Question 2 / 5</div>
+      <div class="quiz-q-text">HTML ka poora naam kya hai?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="checkAnswer(this,'q2',false)">A) High Text Markup Language</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q2',false)">B) Hyper Transfer Markup Language</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q2',true)">C) HyperText Markup Language</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q2',false)">D) Home Tool Markup Language</button>
+      </div>
+      <div class="quiz-feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="quiz-question" id="q3">
+      <div class="quiz-q-num">Question 3 / 5</div>
+      <div class="quiz-q-text">Website ka design (rang, font, layout) kaunsi language se hota hai?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="checkAnswer(this,'q3',false)">A) HTML</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q3',true)">B) CSS</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q3',false)">C) JavaScript</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q3',false)">D) Python</button>
+      </div>
+      <div class="quiz-feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="quiz-question" id="q4">
+      <div class="quiz-q-num">Question 4 / 5</div>
+      <div class="quiz-q-text">Node.js kaunse side ka kaam karta hai?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="checkAnswer(this,'q4',false)">A) Front-end (Design)</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q4',true)">B) Back-end (Server)</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q4',false)">C) Database</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q4',false)">D) Testing</button>
+      </div>
+      <div class="quiz-feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="quiz-question" id="q5">
+      <div class="quiz-q-num">Question 5 / 5</div>
+      <div class="quiz-q-text">CSS ka matlab kya hai?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="checkAnswer(this,'q5',false)">A) Cascading Script Syntax</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q5',true)">B) Cascading Style Sheets</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q5',false)">C) Computer Style Sheets</button>
+        <button class="quiz-option" onclick="checkAnswer(this,'q5',false)">D) Creative Style Syntax</button>
+      </div>
+      <div class="quiz-feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Score Board -->
+    <div class="score-board" id="score-board">
+      <div class="score-num" id="score-num">0/5</div>
+      <div class="score-label" id="score-label">Score</div>
+    </div>
+
+    <button class="demo-btn" onclick="showScore()" style="margin-top:1.5rem;">
+      🏆 Apna Score Dekho!
+    </button>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-logo">Full<span>Stack</span>.pk</div>
+    <p>Is course ko Roman Urdu mein is liye banaya gaya ke har Pakistani student seedha seekh sake.</p>
+    <div class="footer-tags">
+      <span class="tag">HTML</span>
+      <span class="tag">CSS</span>
+      <span class="tag">JavaScript</span>
+      <span class="tag">Node.js</span>
+      <span class="tag">React</span>
+      <span class="tag">MongoDB</span>
+      <span class="tag">Full Stack</span>
+    </div>
+    <p style="margin-top:1.5rem; font-size:0.72rem;">Made with ❤️ for Pakistani students · 2025</p>
+  </footer>
+
+</main>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+/* ===== PROGRESS BAR ===== */
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('progress-bar').style.width = progress + '%';
+});
+
+/* ===== SIDEBAR ACTIVE LINK ===== */
+const sections = document.querySelectorAll('section[id], main > section');
+const navLinks = document.querySelectorAll('#sidebar a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  document.querySelectorAll('[id]').forEach(section => {
+    const sectionTop = section.offsetTop;
+    if (window.scrollY >= sectionTop - 200) {
+      current = section.getAttribute('id');
+    }
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) {
+      link.classList.add('active');
+    }
+  });
+});
+
+/* ===== SECTION FADE IN ON SCROLL ===== */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      // Animate race bars when visible
+      if (entry.target.id === 'tech-race') {
+        setTimeout(() => animateBars(), 300);
+      }
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+/* ===== ANIMATE BARS ===== */
+function animateBars() {
+  document.querySelectorAll('.race-fill').forEach(bar => {
+    bar.style.width = bar.dataset.width;
+  });
+}
+
+/* ===== HAMBURGER / SIDEBAR TOGGLE ===== */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// Close sidebar on link click (mobile)
+navLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+/* ===== DEMO 1: GREETING ===== */
+function greetDemo() {
+  const naam = document.getElementById('naam-input').value.trim();
+  const result = document.getElementById('greet-result');
+  if (!naam) {
+    result.textContent = '⚠️  Pehle apna naam likho!';
+    result.style.color = '#ff6b35';
+    return;
+  }
+  const greetings = ['Assalam o Alaikum', 'Marhaba', 'Hello', 'Salute'];
+  const g = greetings[Math.floor(Math.random() * greetings.length)];
+  result.textContent = `${g}, ${naam}! 👋\nTum ek future developer ho — keep going! 🚀`;
+  result.style.color = '#00ff9d';
+}
+
+/* ===== DEMO 2: CALCULATOR ===== */
+function calcDemo(op) {
+  const n1 = parseFloat(document.getElementById('num1').value);
+  const n2 = parseFloat(document.getElementById('num2').value);
+  const result = document.getElementById('calc-result');
+
+  if (isNaN(n1) || isNaN(n2)) {
+    result.textContent = '⚠️  Dono numbers zaroori hain!';
+    result.style.color = '#ff6b35';
+    return;
+  }
+  if (op === '/' && n2 === 0) {
+    result.textContent = '⚠️  Kisi ko zero se divide nahi kar sakte!';
+    result.style.color = '#ff6b35';
+    return;
+  }
+
+  const ops = {'+':'jama','−':'minus','×':'guna','÷':'taqseem'};
+  let ans;
+  if (op === '+') ans = n1 + n2;
+  else if (op === '-') ans = n1 - n2;
+  else if (op === '*') ans = n1 * n2;
+  else ans = n1 / n2;
+
+  result.textContent = `${n1} ${op} ${n2} = ${parseFloat(ans.toFixed(4))}`;
+  result.style.color = '#00e5ff';
+}
+
+/* ===== DEMO 3: COLOR PREVIEW ===== */
+function colorDemo() {
+  const val = document.getElementById('color-input').value.trim();
+  const result = document.getElementById('color-result');
+  result.style.background = val;
+  result.textContent = `Color: ${val} ✓`;
+  result.style.color = '#000';
+}
+
+/* ===== QUIZ LOGIC ===== */
+let answered = {};
+let score = 0;
+
+function checkAnswer(btn, qId, isCorrect) {
+  if (answered[qId]) return; // Already answered
+  answered[qId] = true;
+  score += isCorrect ? 1 : 0;
+
+  const qEl = document.getElementById(qId);
+  const feedback = document.getElementById(qId + '-feedback');
+  const allOptions = qEl.querySelectorAll('.quiz-option');
+
+  // Disable all options
+  allOptions.forEach(opt => {
+    opt.style.pointerEvents = 'none';
+  });
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    qEl.classList.add('correct');
+    feedback.textContent = '✅ Sahi jawab! Shabash — tumne theek likha!';
+    feedback.className = 'quiz-feedback correct show';
+  } else {
+    btn.classList.add('wrong');
+    qEl.classList.add('wrong');
+    feedback.textContent = '❌ Galat jawab. Wapis topic padho aur try karo!';
+    feedback.className = 'quiz-feedback wrong show';
+    // Highlight correct answer
+    allOptions.forEach(opt => {
+      const handler = opt.getAttribute('onclick');
+      if (handler && handler.includes('true')) {
+        opt.classList.add('reveal');
+      }
+    });
+  }
+}
+
+/* ===== SHOW SCORE ===== */
+function showScore() {
+  const board = document.getElementById('score-board');
+  const scoreNum = document.getElementById('score-num');
+  const scoreLabel = document.getElementById('score-label');
+  const total = 5;
+
+  board.classList.add('show');
+  scoreNum.textContent = score + '/' + total;
+
+  let msg = '';
+  if (score === total) msg = '🏆 Perfect Score! Tum hero ho!';
+  else if (score >= 3) msg = '😊 Acha performance! Thodi aur practice karo.';
+  else msg = '📚 Topics wapis padho — tumhare liye bahut scope hai!';
+  scoreLabel.textContent = msg;
+
+  board.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+<a href="index.html" style="position: fixed; top: 20px; right: 20px; background: #00e5ff; color: #000; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 9999; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 15px rgba(0,229,255,0.3);">🔙 Back to Index</a>
+</body>
+</html>
