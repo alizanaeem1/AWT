@@ -1,0 +1,258 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   BRAND COLOR SYSTEM — updated dynamically by ThemeProvider
+   ============================================================ */
+:root {
+  --brand-primary:   #34d399;  /* default: emerald-400 */
+  --brand-secondary: #22d3ee;  /* default: cyan-400    */
+}
+
+/* Primary color overrides (replaces emerald-400 across app) */
+.bg-emerald-400                     { background-color: var(--brand-primary) !important; }
+.text-emerald-400                   { color:            var(--brand-primary) !important; }
+.text-emerald-300                   { color:            var(--brand-primary) !important; }
+.border-emerald-400                 { border-color:     var(--brand-primary) !important; }
+.from-emerald-400                   { --tw-gradient-from: var(--brand-primary) !important; }
+.to-emerald-400                     { --tw-gradient-to:   var(--brand-primary) !important; }
+.shadow-emerald-400\/20             { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 20%, transparent) !important; }
+
+/* Opacity variants */
+.bg-emerald-400\/10  { background-color: color-mix(in srgb, var(--brand-primary) 10%, transparent) !important; }
+.bg-emerald-400\/15  { background-color: color-mix(in srgb, var(--brand-primary) 15%, transparent) !important; }
+.bg-emerald-400\/20  { background-color: color-mix(in srgb, var(--brand-primary) 20%, transparent) !important; }
+.ring-emerald-400\/20{ --tw-ring-color:  color-mix(in srgb, var(--brand-primary) 20%, transparent) !important; }
+.ring-emerald-400\/30{ --tw-ring-color:  color-mix(in srgb, var(--brand-primary) 30%, transparent) !important; }
+
+/* Hover states */
+.hover\:bg-emerald-300:hover        { background-color: color-mix(in srgb, var(--brand-primary) 90%, white) !important; }
+.hover\:text-emerald-300:hover      { color:            color-mix(in srgb, var(--brand-primary) 90%, white) !important; }
+.focus\:border-emerald-400:focus    { border-color:     var(--brand-primary) !important; }
+
+/* Secondary color overrides (replaces cyan-400 across app) */
+.text-cyan-400                      { color:            var(--brand-secondary) !important; }
+.text-cyan-300                      { color:            var(--brand-secondary) !important; }
+.from-cyan-400                      { --tw-gradient-from: var(--brand-secondary) !important; }
+.to-cyan-400                        { --tw-gradient-to:   var(--brand-secondary) !important; }
+.bg-cyan-400\/10 { background-color: color-mix(in srgb, var(--brand-secondary) 10%, transparent) !important; }
+.ring-cyan-400\/20{ --tw-ring-color: color-mix(in srgb, var(--brand-secondary) 20%, transparent) !important; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+pre {
+  position: relative;
+}
+
+pre code {
+  color: #e2e8f0;
+}
+
+pre code {
+  font-variant-ligatures: none;
+}
+
+.lecture-preview-light .lecture-block-preview {
+  color: var(--block-color, inherit) !important;
+  text-align: var(--block-align, inherit) !important;
+}
+
+.lecture-preview-light .lecture-block-preview:not(.lecture-card-preview) :where(h1, h2, h3, h4, p, li, td, summary, figcaption) {
+  color: inherit !important;
+  text-align: inherit !important;
+}
+
+.syntax-keyword {
+  color: #67e8f9;
+}
+
+.syntax-string {
+  color: #86efac;
+}
+
+.syntax-tag {
+  color: #f0abfc;
+}
+
+.lecture-preview-light .text-white,
+.lecture-preview-light .dark\:text-white {
+  color: #0f172a;
+}
+
+.lecture-preview-light .text-slate-300,
+.lecture-preview-light .dark\:text-slate-300 {
+  color: #334155;
+}
+
+.lecture-preview-light .text-slate-400,
+.lecture-preview-light .text-slate-500 {
+  color: #64748b;
+}
+
+.lecture-preview-light .bg-slate-950,
+.lecture-preview-light .bg-slate-900,
+.lecture-preview-light .dark\:bg-slate-950 {
+  background-color: #0f172a;
+}
+
+.lecture-preview-light .border-slate-800 {
+  border-color: #cbd5e1;
+}
+
+.builder-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+}
+
+.builder-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.builder-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.builder-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+}
+
+.builder-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.38);
+}
+
+.code-copy-button[data-copied="true"] .copy-icon {
+  display: none;
+}
+
+.code-copy-button[data-copied="true"] .check-icon {
+  display: inline-block;
+}
+
+/* ============================================================
+   PAGE TRANSITION ANIMATIONS
+   ============================================================ */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Page-level animation wrapper */
+.page-animate {
+  animation: page-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  animation: slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.stagger-children > *:nth-child(1)  { animation-delay: 0ms;  }
+.stagger-children > *:nth-child(2)  { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3)  { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4)  { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5)  { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6)  { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7)  { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8)  { animation-delay: 420ms; }
+
+/* Hover lift effect for cards */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Fade-in animation utility */
+.animate-fade-in {
+  animation: fade-in 0.5s ease both;
+}
+
+/* Scale-in for modals/dropdowns */
+.animate-scale-in {
+  animation: scale-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Slide in from right */
+.animate-slide-right {
+  animation: slide-in-right 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Autofill overrides to keep input backgrounds dark */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f8fafc !important;
+  caret-color: #f8fafc;
+  transition: background-color 50000s ease-in-out 0s;
+  box-shadow: inset 0 0 20px 20px #0f172a !important;
+}
