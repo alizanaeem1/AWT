@@ -1,6 +1,6 @@
 import { Eye, EyeOff, KeyRound, Search, Users, X } from 'lucide-react'
-import { Fragment, useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { Fragment, useEffect, useState } from 'react'
 import { isSupabaseConfigured, supabase } from '../lib/supabase.js'
 
 const demoUsers = [
@@ -28,18 +28,47 @@ export default function AdminUsersPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role, created_at')
-        .order('created_at', { ascending: false })
+      try {
+        // Fetch profiles
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, role, created_at')
+          .order('created_at', { ascending: false })
 
-      if (error) {
-        setLoadError(error.message)
+        if (profilesError) throw profilesError
+
+        // Fetch auth users via service role to get emails
+        const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+        let authUsers = []
+        if (serviceRoleKey) {
+          const { createClient } = await import('@supabase/supabase-js')
+          const adminClient = createClient(
+            import.meta.env.VITE_SUPABASE_URL,
+            serviceRoleKey,
+            { auth: { autoRefreshToken: false, persistSession: false } }
+          )
+          const { data, error } = await adminClient.auth.admin.listUsers()
+          if (!error) authUsers = data?.users || []
+        }
+
+        // Merge email + user_metadata.full_name from auth.users into profiles
+        const merged = (profiles || []).map((profile) => {
+          const authUser = authUsers.find((u) => u.id === profile.id)
+          const metaName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || ''
+          return {
+            ...profile,
+            email: authUser?.email || profile.email || '',
+            full_name: profile.full_name || metaName || ''
+          }
+        })
+
+        setUsers(merged)
+      } catch (err) {
+        setLoadError(err.message)
         setUsers([])
-      } else {
-        setUsers(data || [])
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
     loadUsers()
@@ -183,8 +212,10 @@ export default function AdminUsersPage() {
                           {(user.full_name || user.email || 'U').slice(0, 1).toUpperCase()}
                         </span>
                         <div>
-                          <p className="font-bold text-white">{user.full_name || (user.role === 'admin' ? 'Admin' : 'Student')}</p>
-                          <p className="text-xs text-slate-500">{user.email || 'No email saved yet'}</p>
+                          <p className="font-bold text-white">
+                            {user.full_name || user.email?.split('@')[0] || (user.role === 'admin' ? 'Admin' : 'Student')}
+                          </p>
+                          <p className="text-xs text-slate-500">{user.email || '—'}</p>
                         </div>
                       </div>
                     </td>

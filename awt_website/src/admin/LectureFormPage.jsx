@@ -21,7 +21,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
-import LectureBlockRenderer from '../components/LectureBlockRenderer.jsx'
+import LecturePreview from '../components/LecturePreview.jsx'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 import { createBlock, defaultBlockTypes, iconOptions } from '../data/lectureBlocks.js'
 import { useToast } from '../hooks/useToast.js'
@@ -77,7 +77,11 @@ export default function LectureFormPage({ mode = 'add' }) {
   const selectedBlock = formValues.content_blocks.find((block) => block.id === selectedBlockId)
 
   useEffect(() => {
-    let isMounted = true
+    let ignore = false
+    const initialLecture = createInitialLecture()
+    setIsLoading(isEdit)
+    setFormValues(initialLecture)
+    setSelectedBlockId(initialLecture.content_blocks[0]?.id)
 
     async function loadBuilder() {
       try {
@@ -85,25 +89,26 @@ export default function LectureFormPage({ mode = 'add' }) {
           isEdit ? fetchLectureForEdit(id) : Promise.resolve(null),
           fetchCustomComponents()
         ])
-        if (!isMounted) return
+        if (ignore) return
         setCustomComponents(components)
         if (lecture) {
+          if (lecture.id !== id) return
           const nextValues = lectureToFormValues(lecture)
           const nextBlocks = nextValues.content_blocks?.length ? nextValues.content_blocks : createInitialLecture().content_blocks
           setFormValues({ ...nextValues, content_blocks: nextBlocks })
           setSelectedBlockId(nextBlocks[0]?.id)
         }
       } catch (error) {
-        showToast(error.message, 'error')
+        if (!ignore) showToast(error.message, 'error')
       } finally {
-        if (isMounted) setIsLoading(false)
+        if (!ignore) setIsLoading(false)
       }
     }
 
     loadBuilder()
 
     return () => {
-      isMounted = false
+      ignore = true
     }
   }, [id, isEdit, showToast])
 
@@ -251,9 +256,9 @@ export default function LectureFormPage({ mode = 'add' }) {
     try {
       const titleFromBlock = formValues.content_blocks?.[0]?.type === 'heading' ? formValues.content_blocks[0]?.content?.text : ''
       const nextTitle = (formValues.title || titleFromBlock || 'Untitled Lecture').trim()
-      const saved = await saveLecture({ ...formValues, title: nextTitle, slug: formValues.slug || slugify(nextTitle), is_published: publishedOverride })
+      await saveLecture({ ...formValues, title: nextTitle, slug: formValues.slug || slugify(nextTitle), is_published: publishedOverride })
       showToast(isEdit ? 'Lecture builder saved.' : 'Lecture created from builder.')
-      navigate(`/admin/lectures/edit/${saved.id}`)
+      navigate('/admin/lectures')
     } catch (error) {
       showToast(error.message, 'error')
     } finally {
@@ -289,7 +294,21 @@ export default function LectureFormPage({ mode = 'add' }) {
               <p className="text-xs text-cyan-300">Visual Builder</p>
             </div>
           </div>
-          <div className="grid min-w-0 grid-cols-[minmax(220px,1fr)_auto] items-center gap-3">
+          <div className="grid min-w-0 grid-cols-[118px_minmax(220px,1fr)_auto] items-center gap-3">
+            <label className="relative block min-w-0">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                No
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={formValues.order_number ?? ''}
+                onChange={(event) => updateField('order_number', event.target.value)}
+                placeholder="1"
+                className="h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 pl-11 text-sm font-black text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
+                aria-label="Lecture number"
+              />
+            </label>
             <TextInput value={formValues.title} onChange={(event) => updateField('title', event.target.value)} placeholder="Introduction to CSS Flexbox" required />
             <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -505,9 +524,7 @@ export default function LectureFormPage({ mode = 'add' }) {
                 Close Preview
               </button>
             </div>
-            <article className="lecture-preview-light rounded-xl bg-white p-8 text-slate-950 shadow-2xl">
-              <LectureBlockRenderer blocks={formValues.content_blocks} />
-            </article>
+            <LecturePreview lecture={formValues} />
           </div>
         </div>
       ) : null}

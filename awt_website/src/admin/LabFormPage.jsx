@@ -32,6 +32,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import LabPreview from '../components/LabPreview.jsx'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 import { useToast } from '../hooks/useToast.js'
 import { fetchLabForEdit, labToFormValues, saveLab } from '../lib/adminRepository.js'
@@ -142,7 +143,16 @@ function createLabBlock(type, overrideContent = null) {
   }
 }
 
-const STARTER_BLOCKS = []
+function createStarterBlocks() {
+  return [
+    createLabBlock('objective', { text: 'Practice the core concept in a guided hands-on lab.' }),
+    createLabBlock('tools', { items: ['VS Code', 'Web Browser', 'Node.js'] }),
+    createLabBlock('steps', { items: ['Create the required project files', 'Write the starter code', 'Run the output in browser', 'Compare your result with the preview'] }),
+    createLabBlock('code', { language: 'HTML', code: '<h1>AWT Lab</h1>\n<p>Build and test your solution.</p>', css: 'body { font-family: Arial, sans-serif; padding: 24px; }\\nh1 { color: #0ea5e9; }', liveOutput: true }),
+    createLabBlock('output', { text: 'The page should render the lab heading and paragraph clearly in the browser.' }),
+    createLabBlock('tips', { items: ['Complete one step at a time', 'Use browser DevTools if the output is not correct'] })
+  ]
+}
 
 // ─── Compile to saveLab shape ─────────────────────────────────────────────────
 
@@ -153,8 +163,6 @@ function compileBlocks(blocks) {
     if (field === 'items') return (b.content.items || []).join('\n')
     return b.content[field] || ''
   }
-  const getAll = (type, field) =>
-    blocks.filter((x) => x.type === type).map((b) => b.content[field] || '').filter(Boolean).join('\n')
 
   const codeBlocks = blocks.filter((b) => b.type === 'code')
   const code = codeBlocks.map((b) => `/* ${b.content.language || 'Code'} */\n${b.content.code || ''}`).join('\n\n')
@@ -198,26 +206,41 @@ function compileBlocks(blocks) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+function createDefaultMeta() {
+  return {
+    title: 'New Practical Lab',
+    lab_number: '1',
+    slug: '',
+    category: 'HTML',
+    difficulty: 'Beginner',
+    estimated_time: '60',
+    status: 'Draft',
+    short_description: 'A guided lab with objective, tools, steps, code example, output preview, and helpful tips.',
+    is_published: false,
+    settings: {
+      backgroundColor: 'transparent',
+      color: '',
+      fontFamily: '',
+      fontSize: null,
+      fontWeight: null,
+      borderRadius: null,
+      borderWidth: null,
+      borderColor: '',
+      shadow: 'none',
+      animation: 'none'
+    }
+  }
+}
+
 export default function LabFormPage({ mode = 'add' }) {
   const { id } = useParams()
   const isEdit = mode === 'edit'
   const navigate = useNavigate()
   const { showToast } = useToast()
 
-  const [meta, setMeta] = useState({
-    title: '',
-    lab_number: '',
-    slug: '',
-    category: 'HTML',
-    difficulty: 'Beginner',
-    estimated_time: '60',
-    status: 'Draft',
-    short_description: '',
-    is_published: false
-  })
-  const [blocks, setBlocks] = useState(() => STARTER_BLOCKS.map((b) => ({ ...b, id: crypto.randomUUID() })))
+  const [meta, setMeta] = useState(createDefaultMeta)
+  const [blocks, setBlocks] = useState(() => [])
   const [selectedId, setSelectedId] = useState(null)
-  const [settingsTab, setSettingsTab] = useState('Content')
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(isEdit)
   const [isSaving, setIsSaving] = useState(false)
@@ -229,12 +252,16 @@ export default function LabFormPage({ mode = 'add' }) {
 
   // ── Load for edit ──
   useEffect(() => {
-    if (!isEdit) return
-    let mounted = true
+    let ignore = false
+    setIsLoading(isEdit)
+    setMeta(createDefaultMeta())
+    setBlocks([])
+    setSelectedId(null)
+    if (!isEdit) return () => { ignore = true }
     async function load() {
       try {
         const lab = await fetchLabForEdit(id)
-        if (!mounted || !lab) return
+        if (ignore || !lab || lab.id !== id) return
         const v = labToFormValues(lab)
         setMeta({
           title: v.title,
@@ -247,7 +274,8 @@ export default function LabFormPage({ mode = 'add' }) {
           short_description: lab.short_description || '',
           is_published: v.is_published
         })
-        const rebuilt = [
+        const savedBlocks = Array.isArray(lab.content_blocks) ? lab.content_blocks : []
+        const rebuilt = savedBlocks.length ? savedBlocks : [
           v.objective ? createLabBlock('objective', { text: v.objective }) : null,
           v.required_tools ? createLabBlock('tools', { items: v.required_tools.split('\n').filter(Boolean) }) : null,
           v.steps ? createLabBlock('steps', { items: v.steps.split('\n').filter(Boolean) }) : null,
@@ -256,15 +284,15 @@ export default function LabFormPage({ mode = 'add' }) {
           v.common_errors ? createLabBlock('errors', { items: v.common_errors.split('\n').filter(Boolean).map((e) => { const parts = e.split(' — '); return { error: parts[0] || e, cause: parts[1] || '', solution: parts[2] || '' } }) }) : null,
           v.tips ? createLabBlock('tips', { items: v.tips.split('\n').filter(Boolean) }) : null
         ].filter(Boolean)
-        setBlocks(rebuilt.length ? rebuilt : STARTER_BLOCKS.map((b) => ({ ...b, id: crypto.randomUUID() })))
+        setBlocks(rebuilt.length ? rebuilt : [])
       } catch (err) {
-        showToast(err.message, 'error')
+        if (!ignore) showToast(err.message, 'error')
       } finally {
-        if (mounted) setIsLoading(false)
+        if (!ignore) setIsLoading(false)
       }
     }
     load()
-    return () => { mounted = false }
+    return () => { ignore = true }
   }, [id, isEdit, showToast])
 
   // ── Meta helpers ──
@@ -362,11 +390,12 @@ export default function LabFormPage({ mode = 'add' }) {
         title,
         slug: meta.slug || slugify(title),
         lab_number: Number(meta.lab_number) || 0,
+        content_blocks: blocks,
         is_published: pub
       }
-      const saved = await saveLab(payload)
+      await saveLab(payload)
       showToast(isEdit ? 'Lab saved.' : 'Lab created.')
-      navigate(`/admin/labs/edit/${saved.id}`)
+      navigate('/admin/labs')
     } catch (err) {
       showToast(err.message, 'error')
     } finally {
@@ -636,22 +665,17 @@ export default function LabFormPage({ mode = 'add' }) {
         {/* ════ RIGHT PANEL — Settings ════ */}
         <aside className="builder-scrollbar min-h-0 overflow-y-auto border-l border-slate-800 bg-[#0b111d]">
           {selectedId === '__meta__' ? (
-            <div className="flex h-full flex-col bg-[#0b111d]">
-              <div className="border-b border-slate-800/80 bg-[#0d1525] px-4 py-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-400/20">
-                    <Settings2 className="h-4 w-4 text-emerald-300" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-black text-white">Lab Settings</p>
-                    <p className="text-[9px] text-slate-500">Basic Information</p>
-                  </div>
-                </div>
-              </div>
-              <div className="builder-scrollbar flex-1 overflow-y-auto px-4 py-4">
-                <MetaSettings meta={meta} onUpdate={updateMeta} />
-              </div>
-            </div>
+            <BlockSettingsPanel
+              block={{ id: '__meta__', type: 'meta', label: 'Basic Information', content: meta, settings: meta.settings || {} }}
+              builderType="lab"
+              onContent={(field, value) => updateMeta(field, value)}
+              onSettings={(field, value) => updateMeta('settings', { ...(meta.settings || {}), [field]: value })}
+              onLabel={() => {}}
+              onDelete={() => {}}
+              onDuplicate={() => {}}
+              onReset={() => updateMeta('settings', {})}
+              metaSlot={<MetaSettings meta={meta} onUpdate={updateMeta} />}
+            />
           ) : (
             <BlockSettingsPanel
               block={selectedBlock}
@@ -669,11 +693,7 @@ export default function LabFormPage({ mode = 'add' }) {
 
       {/* ── Preview Overlay ── */}
       {isPreviewOpen && (
-        <LabPreviewOverlay
-          meta={meta}
-          blocks={blocks}
-          onClose={() => setIsPreviewOpen(false)}
-        />
+        <LabPreview lab={{ meta, blocks }} onClose={() => setIsPreviewOpen(false)} />
       )}
 
       <ConfirmDialog
@@ -692,16 +712,18 @@ export default function LabFormPage({ mode = 'add' }) {
 // ─── Meta Card (top of canvas) ────────────────────────────────────────────────
 
 function MetaCard({ meta, onUpdate, isSelected, onSelect }) {
+  const s = meta.settings || {}
+  const cardStyle = buildBlockStyle(s, isSelected)
+  const textStyle = buildTextStyle(s)
+
   return (
     <div
       onClick={onSelect}
       className={[
         'cursor-pointer rounded-2xl border p-5 transition',
-        isSelected
-          ? 'border-cyan-400/50 ring-2 ring-cyan-400/10'
-          : 'border-slate-800 bg-slate-900/60 hover:border-slate-600'
+        isSelected ? 'ring-2 ring-cyan-400/10' : 'hover:border-slate-600'
       ].join(' ')}
-      style={isSelected ? { background: 'linear-gradient(135deg, #0f1a2e 0%, #0a1525 100%)' } : {}}
+      style={{ ...cardStyle, borderColor: isSelected ? '#22d3ee80' : (s.borderColor || '#1e293b') }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -756,7 +778,7 @@ function MetaCard({ meta, onUpdate, isSelected, onSelect }) {
         ))}
       </div>
       {meta.short_description && (
-        <p className="mt-3 text-xs leading-5 text-slate-400">{meta.short_description}</p>
+        <p className="mt-3 text-xs leading-5" style={{ color: textStyle.color || '#94a3b8' }}>{meta.short_description}</p>
       )}
     </div>
   )
@@ -1445,324 +1467,3 @@ function BlockSettings({ block, tab, onContent, onSettings, onLabel, onDelete })
 }
 
 // ─── Preview Overlay ──────────────────────────────────────────────────────────
-
-function LabPreviewOverlay({ meta, blocks, onClose }) {
-  return (
-    <div className="fixed inset-0 z-[120] overflow-y-auto bg-slate-950/80 backdrop-blur-sm" onMouseDown={onClose}>
-      <div className="mx-auto max-w-4xl px-4 py-10" onMouseDown={(e) => e.stopPropagation()}>
-        {/* Preview header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-black text-emerald-300">
-              STUDENT PREVIEW
-            </span>
-            <h2 className="mt-2 text-2xl font-black text-white">{meta.title || 'Untitled Lab'}</h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400"
-          >
-            <X className="h-3.5 w-3.5" />
-            Close Preview
-          </button>
-        </div>
-
-        {/* Preview content */}
-        <article className="rounded-2xl bg-white p-8 text-slate-950 shadow-2xl">
-          {/* Lab header */}
-          <div className="mb-8 border-b border-slate-200 pb-6">
-            <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
-              Lab {meta.lab_number || ''}
-              {meta.category ? ` · ${meta.category}` : ''}
-              {meta.difficulty ? ` · ${meta.difficulty}` : ''}
-            </p>
-            <h1 className="mt-2 text-3xl font-black text-slate-900">{meta.title || 'Untitled Lab'}</h1>
-            {meta.short_description && <p className="mt-2 text-sm leading-6 text-slate-500">{meta.short_description}</p>}
-            {meta.estimated_time && (
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                <Clock className="h-3.5 w-3.5" />
-                {meta.estimated_time} min estimated
-              </div>
-            )}
-          </div>
-
-          {/* Blocks */}
-          <div className="space-y-8">
-            {blocks.map((block) => <PreviewBlock key={block.id} block={block} />)}
-          </div>
-        </article>
-      </div>
-    </div>
-  )
-}
-
-function PreviewBlock({ block }) {
-  const c = block.content || {}
-  const s = block.settings || {}
-
-  // Build wrapper style from settings
-  const wrapStyle = {}
-  if (s.backgroundColor && s.backgroundColor !== 'transparent') {
-    const gradients = { 'gradient-cyan': 'linear-gradient(135deg,#0ea5e9,#6366f1)' }
-    wrapStyle.background = s.backgroundColor.startsWith('gradient-')
-      ? gradients[s.backgroundColor]
-      : s.backgroundColor
-  }
-  if (s.borderColor) wrapStyle.outlineColor = s.borderColor
-  if (s.borderRadius !== undefined) wrapStyle.borderRadius = `${s.borderRadius}px`
-  if (s.borderWidth !== undefined) { wrapStyle.border = `${s.borderWidth}px solid ${s.borderColor || '#e2e8f0'}` }
-  const shadows = { sm: '0 1px 4px rgba(0,0,0,.15)', md: '0 4px 12px rgba(0,0,0,.2)', lg: '0 8px 24px rgba(0,0,0,.25)', xl: '0 16px 40px rgba(0,0,0,.3)' }
-  if (s.shadow && s.shadow !== 'none') wrapStyle.boxShadow = shadows[s.shadow]
-  if (s.marginTop !== undefined) wrapStyle.marginTop = `${s.marginTop}px`
-  if (s.marginBottom !== undefined) wrapStyle.marginBottom = `${s.marginBottom}px`
-  if (s.marginLeft !== undefined) wrapStyle.marginLeft = `${s.marginLeft}px`
-  if (s.marginRight !== undefined) wrapStyle.marginRight = `${s.marginRight}px`
-  if (s.paddingTop !== undefined) wrapStyle.paddingTop = `${s.paddingTop}px`
-  if (s.paddingBottom !== undefined) wrapStyle.paddingBottom = `${s.paddingBottom}px`
-  if (s.paddingLeft !== undefined) wrapStyle.paddingLeft = `${s.paddingLeft}px`
-  if (s.paddingRight !== undefined) wrapStyle.paddingRight = `${s.paddingRight}px`
-  if (s.width === '100%') wrapStyle.width = '100%'
-  if (s.width === 'custom' && s.customWidth) wrapStyle.width = s.customWidth
-
-  // Build text style from settings
-  const textStyle = {}
-  if (s.color) textStyle.color = s.color
-  if (s.fontFamily) textStyle.fontFamily = s.fontFamily
-  if (s.fontSize) textStyle.fontSize = `${s.fontSize}px`
-  if (s.fontWeight) textStyle.fontWeight = s.fontWeight
-  if (s.lineHeight) textStyle.lineHeight = s.lineHeight
-  if (s.letterSpacing) textStyle.letterSpacing = `${s.letterSpacing}em`
-  if (s.alignment) textStyle.textAlign = s.alignment
-
-  // Has any style customisation?
-  const hasStyle = Object.keys(wrapStyle).length > 0 || Object.keys(textStyle).length > 0
-
-  // Wrap helper — applies settings styles to every block section
-  function Wrap({ children, className = '', style: extraStyle = {} }) {
-    return (
-      <section className={className} style={{ ...wrapStyle, ...textStyle, ...extraStyle }}>
-        {children}
-      </section>
-    )
-  }
-
-  if (block.type === 'objective') {
-    return (
-      <Wrap>
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-black text-slate-900">
-          <FlaskConical className="h-5 w-5 text-cyan-600" /> Objective
-        </h2>
-        <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-sm leading-6 text-slate-700" style={textStyle}>{c.text}</div>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'outcomes') {
-    return (
-      <Wrap>
-        <h2 className="mb-3 text-lg font-black text-slate-900">Activity Outcomes</h2>
-        <ul className="space-y-2">
-          {(c.items || []).map((item, i) => (
-            <li key={i} className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm" style={textStyle}>
-              <BookOpenCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> {item}
-            </li>
-          ))}
-        </ul>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'tools') {
-    return (
-      <Wrap>
-        <h2 className="mb-3 text-lg font-black text-slate-900">Required Tools</h2>
-        <div className="flex flex-wrap gap-2">
-          {(c.items || []).map((tool) => (
-            <span key={tool} className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-sm font-semibold" style={textStyle}>{tool}</span>
-          ))}
-        </div>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'steps') {
-    return (
-      <Wrap>
-        <h2 className="mb-3 text-lg font-black text-slate-900">{block.label}</h2>
-        <div className="space-y-2">
-          {(c.items || []).map((step, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm" style={textStyle}>
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-[10px] font-black text-white">{i + 1}</span>
-              {step}
-            </div>
-          ))}
-        </div>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'solved-activity') {
-    return (
-      <Wrap className="rounded-xl border border-amber-200 p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-black text-slate-900">{c.title || 'Solved Activity'}</h2>
-          <div className="flex gap-2 text-xs">
-            {c.time && <span className="rounded-full bg-amber-200 px-2 py-0.5 font-bold text-amber-800">{c.time} min</span>}
-            {c.difficulty && <span className="rounded-full bg-slate-200 px-2 py-0.5 font-bold text-slate-700">{c.difficulty}</span>}
-            {c.clo && <span className="rounded-full bg-cyan-100 px-2 py-0.5 font-bold text-cyan-800">{c.clo}</span>}
-          </div>
-        </div>
-        {c.objective && <p className="mb-4 text-sm leading-6 text-slate-600">{c.objective}</p>}
-        {c.instructions?.length > 0 && (
-          <div className="mb-4">
-            <p className="mb-2 text-xs font-black uppercase text-slate-500">Instructions</p>
-            <div className="space-y-1.5">
-              {c.instructions.map((step, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white">{i + 1}</span>
-                  {step}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {c.code && (
-          <div className="mb-4">
-            <p className="mb-2 text-xs font-black uppercase text-slate-500">Code ({c.language || 'HTML'})</p>
-            <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100"><code>{c.code}</code></pre>
-          </div>
-        )}
-        {c.output && (
-          <div className="mb-3">
-            <p className="mb-1 text-xs font-black uppercase text-slate-500">Output</p>
-            <p className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">{c.output}</p>
-          </div>
-        )}
-        {c.expectedResult && (
-          <div>
-            <p className="mb-1 text-xs font-black uppercase text-slate-500">Expected Result</p>
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{c.expectedResult}</p>
-          </div>
-        )}
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'graded-task') {
-    return (
-      <Wrap className="rounded-xl border border-orange-200 p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-black text-slate-900">{c.title || 'Graded Task'}</h2>
-          {c.marks && <span className="rounded-full bg-orange-500 px-3 py-0.5 text-xs font-black text-white">{c.marks} marks</span>}
-        </div>
-        {c.problem && <p className="mb-4 text-sm leading-6" style={textStyle}>{c.problem}</p>}
-        {c.requirements?.length > 0 && (
-          <div className="mb-4">
-            <p className="mb-2 text-xs font-black uppercase text-slate-500">Requirements</p>
-            <ul className="space-y-1 text-sm">
-              {c.requirements.map((req, i) => <li key={i} className="flex items-start gap-2" style={textStyle}><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" />{req}</li>)}
-            </ul>
-          </div>
-        )}
-        {c.submission && <p className="rounded-lg border border-orange-200 bg-white p-3 text-sm italic text-slate-600">{c.submission}</p>}
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'code') {
-    return (
-      <Wrap>
-        <div className="mb-2 flex items-center gap-2">
-          <h2 className="text-lg font-black text-slate-900">{block.label}</h2>
-          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-black text-slate-600">{c.language}</span>
-        </div>
-        <pre className="overflow-x-auto rounded-xl bg-slate-900 p-4 text-sm text-slate-100"><code>{c.code}</code></pre>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'output') {
-    return (
-      <Wrap>
-        <h2 className="mb-2 text-lg font-black text-slate-900">Output Preview</h2>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 font-mono text-sm" style={textStyle}>{c.text}</div>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'errors') {
-    return (
-      <Wrap>
-        <h2 className="mb-3 text-lg font-black text-slate-900">Common Errors</h2>
-        <div className="space-y-3">
-          {(c.items || []).map((item, i) => (
-            <div key={i} className="rounded-xl border border-red-200 bg-red-50 p-4">
-              <p className="font-black text-red-700">{item.error}</p>
-              <p className="mt-1 text-sm text-slate-600"><strong>Cause:</strong> {item.cause}</p>
-              <p className="mt-0.5 text-sm text-slate-600"><strong>Fix:</strong> {item.solution}</p>
-            </div>
-          ))}
-        </div>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'tips') {
-    return (
-      <Wrap>
-        <h2 className="mb-3 text-lg font-black text-slate-900">Helpful Tips</h2>
-        <div className="space-y-2">
-          {(c.items || []).map((tip, i) => (
-            <div key={i} className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-2.5 text-sm" style={textStyle}>
-              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" /> {tip}
-            </div>
-          ))}
-        </div>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'resources') {
-    return (
-      <Wrap>
-        <h2 className="mb-3 text-lg font-black text-slate-900">Resources</h2>
-        <ul className="space-y-1.5">
-          {(c.items || []).map((url, i) => (
-            <li key={i}>
-              <a href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-cyan-700 underline underline-offset-2 hover:text-cyan-900">
-                <BookOpen className="h-3.5 w-3.5 shrink-0" /> {url}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'notes') {
-    return (
-      <Wrap>
-        <h2 className="mb-2 text-lg font-black text-slate-900">Notes</h2>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6" style={textStyle}>{c.text}</div>
-      </Wrap>
-    )
-  }
-
-  if (block.type === 'image') {
-    return (
-      <Wrap>
-        {c.url ? (
-          <figure>
-            <img src={c.url} alt={c.caption} className="mx-auto rounded-xl" style={{ width: `${c.width || 80}%` }} />
-            {c.caption && <figcaption className="mt-2 text-center text-xs text-slate-500">{c.caption}</figcaption>}
-          </figure>
-        ) : (
-          <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 py-12 text-sm text-slate-400">No image URL set</div>
-        )}
-      </Wrap>
-    )
-  }
-
-  return null
-}

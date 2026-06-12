@@ -126,7 +126,9 @@ export default function BlockSettingsPanel({
   onDelete,
   onDuplicate,
   onReset,
-  builderType = 'lecture'
+  builderType = 'lecture',
+  // meta slot — renders custom content in Content tab
+  metaSlot = null
 }) {
   const [tab, setTab] = useState('Content')
   const [hidden, setHidden] = useState(false)
@@ -219,6 +221,7 @@ export default function BlockSettingsPanel({
             onUpdate={onUpdate}
             onImageUpload={onImageUpload}
             builderType={builderType}
+            metaSlot={metaSlot}
           />
         )}
         {tab === 'Style' && (
@@ -272,8 +275,11 @@ export default function BlockSettingsPanel({
 
 // ─── Content Tab ──────────────────────────────────────────────────────────────
 
-function ContentTab({ block, c, pc, patchFull, onUpdate, onImageUpload, builderType }) {
+function ContentTab({ block, c, pc, patchFull, onUpdate, onImageUpload, metaSlot }) {
   const type = block.type
+
+  // Meta slot — basic information card
+  if (type === 'meta' && metaSlot) return <div>{metaSlot}</div>
 
   // Heading
   if (type === 'heading') return (
@@ -580,7 +586,13 @@ function ContentTab({ block, c, pc, patchFull, onUpdate, onImageUpload, builderT
         <textarea
           className={`${textarea()} min-h-40 font-mono text-[10px]`}
           defaultValue={JSON.stringify(c, null, 2)}
-          onBlur={(e) => { try { onUpdate?.({...block, content: JSON.parse(e.target.value)}) } catch {} }}
+          onBlur={(e) => {
+            try {
+              onUpdate?.({ ...block, content: JSON.parse(e.target.value) })
+            } catch (error) {
+              console.warn('Invalid component JSON:', error.message)
+            }
+          }}
         />
       </Section>
     </div>
@@ -589,7 +601,7 @@ function ContentTab({ block, c, pc, patchFull, onUpdate, onImageUpload, builderT
 
 // ─── Style Tab ────────────────────────────────────────────────────────────────
 
-function StyleTab({ s, ps, blockType }) {
+function StyleTab({ s, ps }) {
   return (
     <div className="space-y-5">
       {/* Typography */}

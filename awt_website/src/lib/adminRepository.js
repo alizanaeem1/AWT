@@ -27,6 +27,21 @@ function stepCount(steps) {
   return Number(steps) || 0
 }
 
+function labBlockStepCount(blocks, fallbackSteps) {
+  const fallbackCount = stepCount(fallbackSteps)
+  if (!Array.isArray(blocks) || !blocks.length) return fallbackCount
+
+  const blockCount = blocks.reduce((total, block) => {
+    const content = block?.content || {}
+    if (block?.type === 'steps') return total + stepCount(content.items)
+    if (block?.type === 'solved-activity') return total + stepCount(content.instructions)
+    if (block?.type === 'graded-task') return total + stepCount(content.requirements)
+    return total
+  }, 0)
+
+  return blockCount || fallbackCount
+}
+
 function requireSupabase() {
   if (!supabase) throw new Error('Supabase environment variables are missing.')
 }
@@ -95,7 +110,7 @@ export async function fetchAdminLabs() {
 
   const { data, error } = await supabase
     .from('labs')
-    .select('id,title,lab_number,steps,is_published')
+    .select('id,title,lab_number,steps,is_published,content_blocks,updated_at')
     .order('lab_number', { ascending: true })
 
   if (error) {
@@ -108,7 +123,9 @@ export async function fetchAdminLabs() {
     title: lab.lab_number === 8 ? 'Mid Term' : lab.lab_number === 15 ? 'Final Term' : lab.title,
     number: lab.lab_number ?? 0,
     status: statusLabel(lab.is_published),
-    steps: stepCount(lab.steps)
+    blocks: Array.isArray(lab.content_blocks) ? lab.content_blocks.length : 0,
+    steps: labBlockStepCount(lab.content_blocks, lab.steps),
+    updated: formatDate(lab.updated_at)
   }))
 }
 
@@ -330,6 +347,7 @@ export async function saveLab(formValues) {
     output_preview: formValues.output_preview,
     common_errors: splitLines(formValues.common_errors),
     tips: splitLines(formValues.tips),
+    content_blocks: formValues.content_blocks || [],
     is_published: Boolean(formValues.is_published),
     updated_at: new Date().toISOString()
   }
@@ -426,6 +444,7 @@ export function labToFormValues(lab) {
     output_preview: lab?.output_preview || '',
     common_errors: stringifyList(lab?.common_errors),
     tips: stringifyList(lab?.tips),
+    content_blocks: lab?.content_blocks || [],
     is_published: Boolean(lab?.is_published)
   }
 }

@@ -1,10 +1,8 @@
 import { BookOpen, CheckCircle2, Eye, EyeOff, FlaskConical, Lock, Mail, TrendingUp, User } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 
 export default function StudentLoginPage() {
-  const navigate = useNavigate()
   const { signIn, signUp } = useAuth()
   const [mode, setMode] = useState('login')
   const [fullName, setFullName] = useState('')
@@ -19,6 +17,19 @@ export default function StudentLoginPage() {
     setError('')
     setMessage('')
     setIsSubmitting(true)
+
+    // Block admin emails from student portal immediately — no network call needed
+    const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+
+    if (adminEmails.includes(email.trim().toLowerCase())) {
+      setError('Invalid email or password.')
+      setIsSubmitting(false)
+      return
+    }
+
     try {
       if (mode === 'signup') {
         const data = await signUp({ email, password, fullName })
@@ -31,9 +42,9 @@ export default function StudentLoginPage() {
       } else {
         const res = await signIn(email, password)
         if (res.profile?.role === 'admin') {
-          // Admin users are NOT allowed to log in from the student portal
+          // Fallback: sign out if admin somehow slips through
           await import('../lib/supabase.js').then(m => m.supabase.auth.signOut())
-          setError('Invalid credentials. This portal is for students only.')
+          setError('This portal is for students only. Please use the Admin Panel.')
         } else {
           setMessage('Signed in successfully.')
         }
@@ -236,4 +247,3 @@ function AuthInput({ icon: Icon, value, onChange, type = 'text', ...props }) {
     </div>
   )
 }
-

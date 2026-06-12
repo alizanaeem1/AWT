@@ -57,10 +57,14 @@ create table if not exists public.labs (
   output_preview text,
   common_errors jsonb not null default '[]'::jsonb,
   tips jsonb not null default '[]'::jsonb,
+  content_blocks jsonb not null default '[]'::jsonb,
   is_published boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.labs
+  add column if not exists content_blocks jsonb not null default '[]'::jsonb;
 
 create table if not exists public.activities (
   id uuid primary key default gen_random_uuid(),
@@ -402,4 +406,3 @@ create policy "Admins can update site settings"
   using (
     exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
   );
-

@@ -1,5 +1,5 @@
 import { BarChart3, Bell, BookOpen, ChevronDown, FlaskConical, Home, LogOut, PanelLeft, Settings, User } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { useStudentContent } from '../hooks/useStudentContent.js'
@@ -13,6 +13,14 @@ const navItems = [
   { label: 'Profile', to: '/student/profile', icon: User }
 ]
 
+function notificationKey(notification) {
+  return [
+    notification?.type || 'item',
+    notification?.id || notification?.slug || notification?.title || 'unknown',
+    notification?.updated_at || notification?.created_at || ''
+  ].join(':')
+}
+
 export default function StudentLayout() {
   const { signOut, user, profile } = useAuth()
   const { lectures, labs } = useStudentContent()
@@ -21,8 +29,34 @@ export default function StudentLayout() {
   const [isOpen, setIsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotifOpen, setIsNotifOpen] = useState(false)
+  const [notificationVersion, setNotificationVersion] = useState(0)
   const notifRef = useRef(null)
   const profileRef = useRef(null)
+  const notificationStorageKey = user?.id ? `awt-student-read-notifications-${user.id}` : ''
+
+  const readNotificationIds = useMemo(() => {
+    if (!notificationStorageKey) return []
+    void notificationVersion
+    try {
+      const saved = JSON.parse(localStorage.getItem(notificationStorageKey) || '[]')
+      return Array.isArray(saved) ? saved : []
+    } catch {
+      return []
+    }
+  }, [notificationStorageKey, notificationVersion])
+
+  const allNotifications = useMemo(() => {
+    const recentLectures = [...(lectures || [])].sort((a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0)).slice(0, 2)
+    const recentLabs = [...(labs || [])].sort((a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0)).slice(0, 2)
+    return [...recentLectures.map((lecture) => ({ ...lecture, type: 'lecture' })), ...recentLabs.map((lab) => ({ ...lab, type: 'lab' }))]
+      .sort((a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0))
+      .slice(0, 4)
+  }, [labs, lectures])
+
+  const unreadNotifications = useMemo(
+    () => allNotifications.filter((notification) => !readNotificationIds.includes(notificationKey(notification))),
+    [allNotifications, readNotificationIds]
+  )
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -37,19 +71,26 @@ export default function StudentLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  function saveReadNotifications(ids) {
+    const uniqueIds = [...new Set(ids)]
+    if (notificationStorageKey) localStorage.setItem(notificationStorageKey, JSON.stringify(uniqueIds))
+    setNotificationVersion((version) => version + 1)
+  }
+
+  function markNotificationRead(notification) {
+    saveReadNotifications([...readNotificationIds, notificationKey(notification)])
+  }
+
+  function clearNotifications() {
+    saveReadNotifications([...readNotificationIds, ...allNotifications.map(notificationKey)])
+  }
+
   async function handleLogout() {
     await signOut()
     navigate('/student', { replace: true })
   }
 
   if (!user) return <StudentLoginPage />
-
-  // Generate notifications from recent content
-  const recentLectures = [...(lectures || [])].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 2)
-  const recentLabs = [...(labs || [])].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 2)
-  const notifications = [...recentLectures.map(l => ({ ...l, type: 'lecture' })), ...recentLabs.map(l => ({ ...l, type: 'lab' }))]
-    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-    .slice(0, 4)
 
   return (
     <div className="min-h-screen bg-[#0b1422] text-slate-100">
@@ -121,22 +162,33 @@ export default function StudentLayout() {
                 className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-900/60 text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
               >
                 <Bell className="h-4 w-4" />
-                {notifications.length > 0 && (
+                {unreadNotifications.length > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white ring-2 ring-[#07111e]">
-                    {notifications.length}
+                    {unreadNotifications.length}
                   </span>
                 )}
               </button>
 
               {isNotifOpen && (
                 <div className="animate-scale-in absolute right-0 mt-2.5 w-80 overflow-hidden rounded-2xl border border-slate-800/80 bg-[#0b1422]/95 shadow-2xl shadow-black/40 backdrop-blur-md z-50">
-                  <div className="border-b border-slate-800/80 px-4 py-3.5">
-                    <h3 className="text-sm font-black text-white">Notifications</h3>
-                    <p className="mt-0.5 text-xs text-slate-500">{notifications.length} new items</p>
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-800/80 px-4 py-3.5">
+                    <div>
+                      <h3 className="text-sm font-black text-white">Notifications</h3>
+                      <p className="mt-0.5 text-xs text-slate-500">{unreadNotifications.length} new items</p>
+                    </div>
+                    {unreadNotifications.length ? (
+                      <button
+                        type="button"
+                        onClick={clearNotifications}
+                        className="rounded-lg border border-slate-700/70 px-2.5 py-1 text-[11px] font-black text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-400/10"
+                      >
+                        Clear
+                      </button>
+                    ) : null}
                   </div>
                   <div className="max-h-72 overflow-y-auto p-2">
-                    {notifications.length ? notifications.map(n => (
-                      <Link key={n.id} to={n.type === 'lecture' ? `/student/lectures/${n.slug}` : `/student/labs/${n.slug}`} onClick={() => setIsNotifOpen(false)} className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-800/50">
+                    {unreadNotifications.length ? unreadNotifications.map(n => (
+                      <Link key={notificationKey(n)} to={n.type === 'lecture' ? `/student/lectures/${n.slug}` : `/student/labs/${n.slug}`} onClick={() => { markNotificationRead(n); setIsNotifOpen(false) }} className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-800/50">
                         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${n.type === 'lecture' ? 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/20' : 'bg-purple-500/15 text-purple-400 ring-1 ring-purple-500/20'}`}>
                           {n.type === 'lecture' ? <BookOpen className="h-4 w-4" /> : <FlaskConical className="h-4 w-4" />}
                         </span>

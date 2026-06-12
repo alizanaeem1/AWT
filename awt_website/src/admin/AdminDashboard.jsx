@@ -15,8 +15,8 @@ export default function AdminDashboard() {
           supabase.from('lectures').select('*', { count: 'exact', head: true }),
           supabase.from('labs').select('*', { count: 'exact', head: true }),
           supabase.from('activities').select('*', { count: 'exact', head: true }),
-          supabase.from('profiles').select('*', { count: 'exact', head: true }),
-          supabase.from('lectures').select('id,title,status,created_at').order('created_at', { ascending: false }).limit(5)
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
+          supabase.from('lectures').select('id,title,is_published,created_at').order('created_at', { ascending: false }).limit(5)
         ])
       setStats({ lectures: lectures || 0, labs: labs || 0, activities: activities || 0, students: students || 0 })
       setRecentLectures(recent || [])
@@ -63,24 +63,24 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {statCards.map((card) => (
           <div
             key={card.label}
-            className={`group relative overflow-hidden rounded-3xl bg-slate-900/60 p-6 ring-1 ring-white/5 transition-all hover:ring-1 hover:${card.ring} card-hover`}
+            className={`group relative overflow-hidden rounded-2xl bg-slate-900/60 p-4 ring-1 ring-white/5 transition-all hover:ring-1 hover:${card.ring} card-hover`}
           >
-            <div className={`absolute -right-6 -top-6 h-20 w-20 rounded-full bg-gradient-to-br ${card.from} ${card.to} opacity-50 blur-xl transition group-hover:scale-125`} />
-            <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${card.bg} transition duration-300 group-hover:scale-110`}>
-              <card.icon className={`h-5 w-5 ${card.color}`} />
+            <div className={`absolute -right-4 -top-4 h-14 w-14 rounded-full bg-gradient-to-br ${card.from} ${card.to} opacity-50 blur-xl transition group-hover:scale-125`} />
+            <div className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${card.bg} transition duration-300 group-hover:scale-110`}>
+              <card.icon className={`h-4 w-4 ${card.color}`} />
             </div>
-            <p className="mt-5 text-4xl font-black tracking-tight text-white">
+            <p className="mt-3 text-2xl font-black tracking-tight text-white">
               {isLoading ? (
-                <span className="inline-block h-8 w-12 animate-pulse rounded bg-slate-800" />
+                <span className="inline-block h-6 w-10 animate-pulse rounded bg-slate-800" />
               ) : (
                 card.value
               )}
             </p>
-            <p className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-400">{card.label}</p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{card.label}</p>
           </div>
         ))}
       </div>
@@ -126,12 +126,12 @@ export default function AdminDashboard() {
                       </span>
                       <span
                         className={`rounded-lg px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${
-                          lec.status === 'published'
+                          lec.is_published
                             ? 'bg-emerald-400/10 text-emerald-400 ring-1 ring-emerald-400/20'
                             : 'bg-amber-400/10 text-amber-400 ring-1 ring-amber-400/20'
                         }`}
                       >
-                        {lec.status}
+                        {lec.is_published ? 'Published' : 'Draft'}
                       </span>
                     </div>
                   </div>

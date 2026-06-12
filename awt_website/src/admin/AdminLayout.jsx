@@ -8,8 +8,6 @@ const navItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Lectures', to: '/admin/lectures', icon: BookOpen },
   { label: 'Labs', to: '/admin/labs', icon: FlaskConical },
-  { label: 'Activities', to: '/admin/activities', icon: FilePlus2 },
-  { label: 'Media', to: '/admin/media', icon: Image },
   { label: 'Users', to: '/admin/users', icon: Users },
   { label: 'Theme Settings', to: '/admin/theme', icon: Palette }
 ]

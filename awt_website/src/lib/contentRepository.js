@@ -12,13 +12,7 @@ function fallbackLectures() {
 }
 
 function fallbackLabs() {
-  return contentDatabase
-    .filter((item) => item.type === 'lab')
-    .map((item) => ({
-      ...item,
-      labNumber: item.order || 0,
-      objective: 'Demo lab from the local fallback content database.'
-    }))
+  return []
 }
 
 function getLecturePath(slug) {
@@ -43,6 +37,16 @@ function mapLecture(lecture) {
 function mapLab(lab) {
   const slug = lab.slug || `lab-${lab.lab_number}`
   const title = lab.lab_number === 8 ? 'Mid Term' : lab.lab_number === 15 ? 'Final Term' : lab.title
+  const blockSteps = Array.isArray(lab.content_blocks)
+    ? lab.content_blocks
+        .filter((block) => ['steps', 'solved-activity', 'graded-task'].includes(block.type))
+        .reduce((total, block) => {
+          if (block.type === 'steps') return total + (block.content?.items?.length || 0)
+          if (block.type === 'solved-activity') return total + (block.content?.instructions?.length || 0)
+          if (block.type === 'graded-task') return total + (block.content?.requirements?.length || 0)
+          return total
+        }, 0)
+    : 0
 
   return {
     id: lab.id,
@@ -54,7 +58,11 @@ function mapLab(lab) {
     order: lab.lab_number ?? 0,
     status: 'published',
     labNumber: lab.lab_number ?? 0,
-    objective: lab.objective || ''
+    objective: lab.objective || '',
+    category: lab.category || 'General',
+    content_blocks: lab.content_blocks || [],
+    blocks: lab.content_blocks || [],
+    steps: blockSteps || (Array.isArray(lab.steps) ? lab.steps.length : 0)
   }
 }
 
@@ -133,19 +141,16 @@ export async function getPublishedLabs() {
 
   const { data, error } = await supabase
     .from('labs')
-    .select('id,title,slug,lab_number,objective,steps,is_published')
+    .select('id,title,slug,lab_number,objective,steps,is_published,content_blocks')
     .eq('is_published', true)
     .order('lab_number', { ascending: true })
 
   if (error) {
-    console.warn('Falling back to local labs:', error.message)
-    return fallbackLabs()
+    console.warn('Unable to fetch published labs:', error.message)
+    return []
   }
 
-  return (data || []).map((lab) => ({
-    ...mapLab(lab),
-    steps: Array.isArray(lab.steps) ? lab.steps.length : 0
-  }))
+  return (data || []).map((lab) => mapLab(lab))
 }
 
 export function subscribeToContentChanges(onChange) {
