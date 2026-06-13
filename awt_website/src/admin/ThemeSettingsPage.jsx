@@ -1,5 +1,5 @@
 import { Globe, Palette, Save, Type } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSiteSettings } from '../hooks/useAdminData.js'
 import { useToast } from '../hooks/useToast.js'
 import { saveSiteSettings } from '../lib/adminRepository.js'
@@ -14,12 +14,21 @@ const emptySettings = {
 }
 
 export default function ThemeSettingsPage() {
-  const { data: settings } = useSiteSettings()
+  const { data: settings, isLoading } = useSiteSettings()
   const { showToast } = useToast()
-  const [savedSnapshot, setSavedSnapshot] = useState(null)
+  const [baseValues, setBaseValues] = useState(null)
   const [draftValues, setDraftValues] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
-  const formValues = draftValues || savedSnapshot || { ...emptySettings, ...settings }
+
+  // Once settings load from DB/localStorage, lock them in as base values
+  useEffect(() => {
+    if (!isLoading && settings) {
+      setBaseValues({ ...emptySettings, ...settings })
+      setDraftValues(null)
+    }
+  }, [isLoading, settings])
+
+  const formValues = draftValues || baseValues || { ...emptySettings, ...settings }
 
   function updateField(field, value) {
     setDraftValues((current) => ({ ...(current || formValues), [field]: value }))
@@ -30,7 +39,8 @@ export default function ThemeSettingsPage() {
     setIsSaving(true)
     try {
       const saved = await saveSiteSettings(formValues)
-      setSavedSnapshot({ ...emptySettings, ...saved })
+      const normalized = { ...emptySettings, ...saved }
+      setBaseValues(normalized)
       setDraftValues(null)
       showToast('Theme settings saved successfully.')
     } catch (error) {
@@ -194,7 +204,7 @@ export default function ThemeSettingsPage() {
         {/* Save Button */}
         <button
           type="submit"
-          disabled={isSaving}
+          disabled={isSaving || isLoading}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-sm font-black text-slate-950 shadow-lg shadow-emerald-400/20 transition hover:from-emerald-300 hover:to-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Save className="h-4 w-4" />
