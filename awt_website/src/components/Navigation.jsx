@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router-dom'
+import { useTheme } from '../hooks/useTheme.js'
+import BrandLogo from './BrandLogo.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 
 const navItems = [
@@ -8,14 +10,14 @@ const navItems = [
 ]
 
 export default function Navigation() {
+  const { websiteTitle } = useTheme()
+
   return (
     <header className="border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <NavLink to="/" className="flex items-center gap-3 text-slate-950 dark:text-white">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-sm font-bold text-amber-400 dark:bg-white dark:text-slate-950">
-            AWT
-          </span>
-          <span className="hidden text-sm font-semibold sm:block">Interactive Learning Platform</span>
+          <BrandLogo className="h-10 w-10 rounded-md bg-slate-950 text-sm font-bold text-amber-400 dark:bg-white dark:text-slate-950" />
+          <span className="hidden text-sm font-semibold sm:block">{websiteTitle}</span>
         </NavLink>
 
         <nav className="flex items-center gap-2">

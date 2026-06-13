@@ -180,7 +180,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-white/5 bg-slate-900/60 shadow-2xl backdrop-blur-md">
-        <table className="w-full text-sm">
+        <table className="hidden w-full text-sm lg:table">
           <thead>
             <tr className="border-b border-slate-800 bg-[#0d1725] text-xs uppercase tracking-wide text-slate-400">
               <th className="px-5 py-4 text-left font-bold">User</th>
@@ -260,6 +260,56 @@ export default function AdminUsersPage() {
             )}
           </tbody>
         </table>
+        <div className="space-y-3 p-3 lg:hidden">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+                <div className="h-4 w-2/3 animate-pulse rounded bg-slate-800" />
+                <div className="mt-3 h-3 w-1/2 animate-pulse rounded bg-slate-800/70" />
+              </div>
+            ))
+          ) : filtered.length ? (
+            filtered.map((user) => (
+              <article key={user.id} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+                <div className="flex items-start gap-3">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
+                    user.role === 'admin'
+                      ? 'bg-gradient-to-br from-amber-400/15 to-orange-500/15 text-amber-300 ring-1 ring-amber-400/20'
+                      : 'bg-gradient-to-br from-cyan-400/15 to-blue-500/15 text-cyan-300 ring-1 ring-cyan-400/20'
+                  }`}>
+                    {(user.full_name || user.email || 'U').slice(0, 1).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-white">
+                      {user.full_name || user.email?.split('@')[0] || (user.role === 'admin' ? 'Admin' : 'Student')}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">{user.email || 'Unknown email'}</p>
+                  </div>
+                  <span className={user.role === 'admin' ? 'rounded-lg bg-amber-400/10 px-2.5 py-1 text-xs font-black capitalize text-amber-350 ring-1 ring-amber-400/20' : 'rounded-lg bg-cyan-400/10 px-2.5 py-1 text-xs font-black capitalize text-cyan-300 ring-1 ring-cyan-400/20'}>
+                    {user.role}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-400">
+                  <span>{user.created_at ? new Date(user.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown'}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(editingId === user.id ? null : user.id)
+                      setNewPassword('')
+                      setMessage({ id: null, text: '', type: '' })
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800/80 px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-slate-700 hover:text-white"
+                  >
+                    <KeyRound className="h-3.5 w-3.5 text-slate-450" />
+                    Reset
+                  </button>
+                </div>
+              </article>
+            ))
+          ) : (
+            <p className="px-2 py-8 text-center text-sm text-slate-500">No users found.</p>
+          )}
+        </div>
       </div>
 
       {/* Password Reset Modal */}

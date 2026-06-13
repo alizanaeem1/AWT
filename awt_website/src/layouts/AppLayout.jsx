@@ -14,10 +14,10 @@ import { useDocsContent } from '../hooks/useDocsContent.js'
 export default function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [language, setLanguage] = useState(() => window.localStorage.getItem('awt-language') || 'EN')
   const [searchQuery, setSearchQuery] = useState('')
   const content = useDocsContent()
   const location = useLocation()
+
   const sortedContent = useMemo(
     () => [...content].sort((first, second) => {
       const typeOrder = { lecture: 0, lab: 1, activity: 2 }
@@ -25,6 +25,7 @@ export default function AppLayout() {
     }),
     [content]
   )
+
   const activeSlug = location.pathname.startsWith('/docs/')
     ? location.pathname.replace('/docs/', '')
     : location.pathname.startsWith('/labs/')
@@ -34,6 +35,7 @@ export default function AppLayout() {
       : location.pathname.startsWith('/lectures/')
         ? location.pathname.replace('/lectures/', '')
       : 'introduction'
+
   const isExamLabRoute = ['/labs/lab-8', '/labs/lab-15'].includes(location.pathname)
   const pageHeadings = location.pathname.startsWith('/lectures/')
     ? lectureHeadings
@@ -44,17 +46,12 @@ export default function AppLayout() {
       : docsHeadings
 
   useEffect(() => {
-    window.localStorage.setItem('awt-language', language)
-  }, [language])
-
-  useEffect(() => {
     function handleKeyDown(event) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setIsSearchOpen(true)
       }
     }
-
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
@@ -64,8 +61,6 @@ export default function AppLayout() {
       <ReadingProgress />
       <CodeCopyEnhancer />
       <DocsNavbar
-        language={language}
-        onLanguageToggle={() => setLanguage((current) => (current === 'EN' ? 'Roman Urdu' : 'EN'))}
         onMenuClick={() => setIsSidebarOpen(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -90,7 +85,7 @@ export default function AppLayout() {
         <div className="mx-auto flex max-w-[1400px]">
           <main className="min-w-0 flex-1">
             <DocsPageTools content={sortedContent} activeSlug={activeSlug} />
-            <Outlet context={{ language }} />
+            <Outlet />
           </main>
           <OnThisPage headings={pageHeadings} />
         </div>

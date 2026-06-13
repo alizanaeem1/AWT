@@ -1,14 +1,16 @@
 import { adminActivities, adminLabs, adminLectures } from '../admin/adminDemoData.js'
+import { defaultLogoText, defaultWebsiteTitle } from './siteBrand.js'
 import { supabase } from './supabase.js'
 import { slugify } from './slugify.js'
 
 const fallbackSiteSettings = {
-  websiteTitle: 'AWT Interactive Learning Platform',
+  websiteTitle: defaultWebsiteTitle,
   primaryColor: '#34d399',
   secondaryColor: '#22d3ee',
   defaultTheme: 'dark',
   languageDefault: 'en',
-  logoUrl: ''
+  logoUrl: '',
+  logoText: defaultLogoText
 }
 
 const localSettingsKey = 'awt-site-settings'
@@ -159,7 +161,7 @@ export async function fetchSiteSettings() {
 
   const { data, error } = await supabase
     .from('site_settings')
-    .select('id,website_title,logo_url,primary_color,secondary_color,default_theme,language_default')
+    .select('id,website_title,logo_url,logo_text,primary_color,secondary_color,default_theme,language_default')
     .limit(1)
     .maybeSingle()
 
@@ -175,7 +177,8 @@ export async function fetchSiteSettings() {
     secondaryColor: data.secondary_color || fallbackSiteSettings.secondaryColor,
     defaultTheme: data.default_theme || fallbackSiteSettings.defaultTheme,
     languageDefault: data.language_default || fallbackSiteSettings.languageDefault,
-    logoUrl: data.logo_url || fallbackSiteSettings.logoUrl
+    logoUrl: data.logo_url || fallbackSiteSettings.logoUrl,
+    logoText: data.logo_text || fallbackSiteSettings.logoText
   }
 }
 
@@ -183,20 +186,23 @@ export async function saveSiteSettings(settings) {
   const normalized = {
     websiteTitle: settings.websiteTitle || fallbackSiteSettings.websiteTitle,
     logoUrl: settings.logoUrl || '',
+    logoText: settings.logoText?.trim() || fallbackSiteSettings.logoText,
     primaryColor: settings.primaryColor || fallbackSiteSettings.primaryColor,
     secondaryColor: settings.secondaryColor || fallbackSiteSettings.secondaryColor,
     defaultTheme: settings.defaultTheme === 'light' ? 'light' : 'dark',
-    languageDefault: settings.languageDefault === 'roman-urdu' ? 'roman-urdu' : 'en'
+    languageDefault: 'en'
   }
 
   localStorage.setItem(localSettingsKey, JSON.stringify(normalized))
   localStorage.setItem('awt-theme', normalized.defaultTheme)
+  localStorage.setItem('awt-language', normalized.languageDefault)
   window.dispatchEvent(new CustomEvent('awt-site-settings-saved', { detail: normalized }))
   if (!supabase) return normalized
 
   const payload = {
     website_title: normalized.websiteTitle,
     logo_url: normalized.logoUrl,
+    logo_text: normalized.logoText,
     primary_color: normalized.primaryColor,
     secondary_color: normalized.secondaryColor,
     default_theme: normalized.defaultTheme,
@@ -212,7 +218,17 @@ export async function saveSiteSettings(settings) {
     : supabase.from('site_settings').insert(payload).select('id').single()
 
   const { error } = await query
-  if (error) throw error
+  if (error) {
+    if (error.code !== '42703' && !error.message?.includes('logo_text')) throw error
+
+    const legacyPayload = { ...payload }
+    delete legacyPayload.logo_text
+    const legacyQuery = existing.data?.id
+      ? supabase.from('site_settings').update(legacyPayload).eq('id', existing.data.id).select('id').single()
+      : supabase.from('site_settings').insert(legacyPayload).select('id').single()
+    const { error: legacyError } = await legacyQuery
+    if (legacyError) throw legacyError
+  }
   return normalized
 }
 
@@ -246,7 +262,6 @@ export async function saveLecture(formValues, thumbnailFile) {
     order_number: Number(formValues.order_number) || 0,
     short_description: formValues.short_description,
     english_content: formValues.english_content,
-    roman_urdu_content: formValues.roman_urdu_content,
     code_examples: formValues.code_examples,
     notes: formValues.notes,
     resources: splitLines(formValues.resources),
@@ -422,7 +437,6 @@ export function lectureToFormValues(lecture) {
     order_number: lecture?.order_number ?? '',
     short_description: lecture?.short_description || '',
     english_content: lecture?.english_content || '',
-    roman_urdu_content: lecture?.roman_urdu_content || '',
     code_examples: lecture?.code_examples || '',
     notes: lecture?.notes || '',
     resources: stringifyList(lecture?.resources),

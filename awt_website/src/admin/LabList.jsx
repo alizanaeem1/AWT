@@ -173,7 +173,7 @@ export default function LabList() {
       </div>
 
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard icon={FlaskConical} label="Total Labs"   value={stats.total}     caption="All time"   color="cyan"   />
         <StatCard icon={Send}         label="Published"    value={stats.published} caption={`${stats.total ? Math.round((stats.published/stats.total)*100) : 0}% of total`} color="emerald" />
         <StatCard icon={FileText}     label="Drafts"       value={stats.drafts}    caption={`${stats.total ? Math.round((stats.drafts/stats.total)*100) : 0}% of total`}    color="amber"  />
@@ -181,7 +181,7 @@ export default function LabList() {
       </div>
 
       {/* ── Filters ── */}
-      <div className="mt-4 grid grid-cols-[minmax(180px,1fr)_150px_210px_44px] gap-3">
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(180px,1fr)_150px_210px_44px]">
         <label className="relative block min-w-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
@@ -208,7 +208,7 @@ export default function LabList() {
 
       {/* ── Table ── */}
       <AdminCard className="mt-5 overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[780px] text-left text-sm">
             <thead className="border-b border-slate-800 bg-slate-950/60 text-xs uppercase text-slate-500">
               <tr>
@@ -315,6 +315,47 @@ export default function LabList() {
             </tbody>
           </table>
         </div>
+        <div className="space-y-3 p-3 lg:hidden">
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="rounded-xl border border-slate-800 bg-slate-900/30 p-4">
+                  <div className="h-4 w-2/3 animate-pulse rounded bg-slate-800" />
+                  <div className="mt-3 h-3 w-1/2 animate-pulse rounded bg-slate-800/70" />
+                </div>
+              ))
+            : filteredLabs.map((lab) => (
+                <article key={lab.id} className="rounded-xl border border-slate-800 bg-slate-900/30 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/20">
+                      <FlaskConical className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-white">{lab.title}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">Lab {lab.number}</p>
+                    </div>
+                    <StatusBadge status={lab.status} />
+                  </div>
+                  <div className="mt-3 text-xs text-slate-400">Blocks: {lab.blocks ?? lab.steps ?? 0}</div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" onClick={() => openPreview(lab)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-blue-300 hover:border-blue-400 hover:bg-blue-400/10" title="Preview lab">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <Link to={`/admin/labs/edit/${lab.id}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-slate-300 hover:border-emerald-400 hover:bg-emerald-400/10" title="Edit lab">
+                      <Edit3 className="h-4 w-4" />
+                    </Link>
+                    <button type="button" disabled={busyId === lab.id} onClick={() => togglePublished(lab)} className="inline-flex h-9 w-12 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-xs font-bold text-slate-300 disabled:opacity-50">
+                      {lab.status === 'Published' ? 'On' : 'Off'}
+                    </button>
+                    <button type="button" disabled={busyId === lab.id} onClick={() => setPendingDelete(lab)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-400/20 text-red-300 hover:border-red-300 hover:bg-red-400/10 disabled:opacity-50" title="Delete lab">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </article>
+              ))}
+          {!filteredLabs.length && !isLoading ? (
+            <p className="px-2 py-8 text-center text-sm text-slate-500">No labs found.</p>
+          ) : null}
+        </div>
       </AdminCard>
 
       {/* ── Inline Preview Modal ── */}
@@ -397,4 +438,3 @@ function StatCard({ icon: Icon, label, value, caption, color }) {
     </section>
   )
 }
-

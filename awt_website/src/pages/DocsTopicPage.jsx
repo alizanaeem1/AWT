@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useOutletContext, useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import LectureBlockRenderer from '../components/LectureBlockRenderer.jsx'
 import { docsHeadings, findDocItem } from '../data/docsNavigation.js'
@@ -9,7 +9,6 @@ import { fetchPublishedLectureBySlug } from '../lib/contentDetailsRepository.js'
 
 export default function DocsTopicPage() {
   const { slug } = useParams()
-  const { language = 'EN' } = useOutletContext() || {}
   const topic = findDocItem(slug)
   const [lecture, setLecture] = useState(null)
   const [isLoading, setIsLoading] = useState(!topic)
@@ -43,16 +42,14 @@ export default function DocsTopicPage() {
 
   if (!topic && !lecture) return <Navigate to="/" replace />
 
-  if (lecture) return <SupabaseLecturePage lecture={lecture} language={language} />
+  if (lecture) return <SupabaseLecturePage lecture={lecture} />
 
   return (
     <article className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-8 lg:py-14">
       <p className="mb-3 text-sm font-semibold text-cyan-300">AWT Docs</p>
       <h1 className="text-4xl font-bold tracking-normal text-white">{topic.title}</h1>
       <p className="mt-5 text-lg leading-8 text-slate-300">
-        {language === 'Roman Urdu'
-          ? `Yeh topic ${topic.title.toLowerCase()} ko simple notes, examples, aur practice prompts ke sath explain karta hai.`
-          : `This topic introduces ${topic.title.toLowerCase()} through concise notes, examples, and practice prompts designed for the AWT learning path.`}
+        This topic introduces {topic.title.toLowerCase()} through concise notes, examples, and practice prompts designed for the AWT learning path.
       </p>
 
       {docsHeadings.map((heading) => (
@@ -69,8 +66,8 @@ export default function DocsTopicPage() {
   )
 }
 
-function SupabaseLecturePage({ lecture, language }) {
-  const content = language === 'Roman Urdu' ? lecture.roman_urdu_content : lecture.english_content
+function SupabaseLecturePage({ lecture }) {
+  const content = lecture.english_content
   const resources = Array.isArray(lecture.resources) ? lecture.resources : []
   const blocks = Array.isArray(lecture.content_blocks) ? lecture.content_blocks : []
   const readContent = useContentProgress()

@@ -12,7 +12,8 @@ const fallbackSettings = {
   secondaryColor: '#22d3ee',
   defaultTheme: 'dark',
   languageDefault: 'en',
-  logoUrl: ''
+  logoUrl: '',
+  logoText: 'AIL'
 }
 
 /**

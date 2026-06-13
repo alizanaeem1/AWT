@@ -85,25 +85,25 @@ export function ProgressProvider({ children }) {
   }, [user])
 
   const markLectureRead = useCallback(async ({ contentId, title, isRead }) => {
-    setContentRead(contentId, isRead)
     if (!user) {
-      setProgressMessage('Progress saved on this device. Login to sync it.')
+      setProgressMessage('Please sign in to track your learning history.')
       return
     }
 
+    setContentRead(contentId, isRead)
     await saveLectureProgress({ profileId: user.id, contentId, title, isRead })
     await refreshProgress()
     setProgressMessage(isRead ? 'Lecture marked as read.' : 'Lecture marked as unread.')
   }, [refreshProgress, user])
 
   const saveLabSteps = useCallback(async ({ contentId, title, checkedSteps, totalSteps }) => {
-    setLabStepProgress(contentId, checkedSteps)
-    setContentRead(contentId, totalSteps > 0 && checkedSteps.length === totalSteps)
     if (!user) {
-      setProgressMessage('Lab progress saved on this device. Login to sync it.')
+      setProgressMessage('Please sign in to track your learning history.')
       return
     }
 
+    setLabStepProgress(contentId, checkedSteps)
+    setContentRead(contentId, totalSteps > 0 && checkedSteps.length === totalSteps)
     await saveLabProgress({ profileId: user.id, contentId, title, checkedSteps, totalSteps })
     await refreshProgress()
     setProgressMessage('Lab progress saved.')

@@ -1,8 +1,10 @@
 import { BookOpen, FilePlus2, FlaskConical, Home, Image, LayoutDashboard, LogOut, Palette, PanelLeft, Users } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import BrandLogo from '../components/BrandLogo.jsx'
 import { ToastProvider } from '../context/ToastContext.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useTheme } from '../hooks/useTheme.js'
 
 const navItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
@@ -15,6 +17,7 @@ const navItems = [
 export default function AdminLayout() {
   const [isOpen, setIsOpen] = useState(false)
   const { signOut, user, profile } = useAuth()
+  const { websiteTitle } = useTheme()
   const navigate = useNavigate()
 
   async function handleLogout() {
@@ -40,12 +43,10 @@ export default function AdminLayout() {
       >
         <div className="flex h-full flex-col p-4">
           <div className="flex items-center gap-3 px-2 py-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-400 text-sm font-black text-slate-950">
-              AWT
-            </span>
+            <BrandLogo className="h-10 w-10 rounded-lg bg-emerald-400 text-sm font-black text-slate-950" />
             <div>
               <p className="font-semibold text-white">Admin Panel</p>
-              <p className="text-xs text-slate-500">Content operations</p>
+              <p className="text-xs text-slate-500">{websiteTitle}</p>
             </div>
           </div>
 

@@ -2,12 +2,14 @@ import { Eye, EyeOff, Lock } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
+import { useTheme } from '../hooks/useTheme.js'
 import { TextInput } from './AdminShell.jsx'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAdmin, isLoading, profile, signIn, signOut, user } = useAuth()
+  const { websiteTitle } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -44,7 +46,7 @@ export default function AdminLogin() {
           <Lock className="h-6 w-6" />
         </div>
         <h1 className="mt-6 text-3xl font-bold text-white">Admin Login</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-400">Sign in with your Supabase admin account to manage AWT content.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-400">Sign in with your Supabase admin account to manage {websiteTitle} content.</p>
 
         {user && profile && profile.role !== 'admin' ? (
           <div className="mt-5 rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">

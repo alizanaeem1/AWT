@@ -24,10 +24,11 @@ import MediaPage from './admin/MediaPage.jsx'
 import AdminUsersPage from './admin/AdminUsersPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import AppLayout from './layouts/AppLayout.jsx'
+import HomePage from './pages/HomePage.jsx'
 
 export const router = createBrowserRouter([
   // Root → redirect to student portal
-  { path: '/', element: <Navigate to="/student" replace /> },
+  { path: '/', element: <HomePage /> },
 
   // Admin login
   { path: '/admin/login', element: <AdminLogin /> },

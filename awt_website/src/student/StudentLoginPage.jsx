@@ -1,9 +1,12 @@
 import { BookOpen, CheckCircle2, Eye, EyeOff, FlaskConical, Lock, Mail, TrendingUp, User } from 'lucide-react'
 import { useState } from 'react'
+import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useTheme } from '../hooks/useTheme.js'
 
 export default function StudentLoginPage() {
   const { signIn, signUp } = useAuth()
+  const { websiteTitle } = useTheme()
   const [mode, setMode] = useState('login')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -18,7 +21,7 @@ export default function StudentLoginPage() {
     setMessage('')
     setIsSubmitting(true)
 
-    // Block admin emails from student portal immediately — no network call needed
+    // Block admin emails from student portal immediately, before any network call.
     const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
       .split(',')
       .map((e) => e.trim().toLowerCase())
@@ -68,12 +71,10 @@ export default function StudentLoginPage() {
 
         {/* Logo */}
         <div className="relative flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/15 text-sm font-black text-emerald-300 ring-1 ring-emerald-400/30">
-            A
-          </span>
+          <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400/15 text-sm font-black text-emerald-300 ring-1 ring-emerald-400/30" />
           <div>
-            <p className="font-black text-white">AWT</p>
-            <p className="text-xs text-slate-500">Learning Platform</p>
+            <p className="font-black text-white">Student Portal</p>
+            <p className="text-xs text-slate-500">{websiteTitle}</p>
           </div>
         </div>
 
@@ -110,15 +111,15 @@ export default function StudentLoginPage() {
         </div>
 
         {/* Bottom */}
-        <p className="relative text-xs text-slate-600">© 2026 AWT Learning Platform. All rights reserved.</p>
+        <p className="relative text-xs text-slate-600">Copyright 2026 {websiteTitle}. All rights reserved.</p>
       </div>
 
-      {/* Right Panel — Auth Form */}
+      {/* Right Panel - Auth Form */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-14">
         {/* Mobile Logo */}
         <div className="mb-8 flex items-center gap-3 lg:hidden">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/15 text-sm font-black text-emerald-300 ring-1 ring-emerald-400/30">A</span>
-          <p className="font-black text-white">AWT Learning Platform</p>
+          <BrandLogo className="h-9 w-9 rounded-xl bg-emerald-400/15 text-sm font-black text-emerald-300 ring-1 ring-emerald-400/30" />
+          <p className="font-black text-white">{websiteTitle}</p>
         </div>
 
         <div className="w-full max-w-sm">
@@ -126,7 +127,7 @@ export default function StudentLoginPage() {
             {mode === 'login' ? 'Welcome back' : 'Create account'}
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            {mode === 'login' ? 'Sign in to continue your learning journey.' : 'Join the AWT student learning platform.'}
+            {mode === 'login' ? 'Sign in to continue your learning journey.' : `Join ${websiteTitle}.`}
           </p>
 
           {/* Toggle Tabs */}
@@ -247,3 +248,4 @@ function AuthInput({ icon: Icon, value, onChange, type = 'text', ...props }) {
     </div>
   )
 }
+

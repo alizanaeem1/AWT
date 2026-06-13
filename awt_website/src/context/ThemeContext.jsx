@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchSiteSettings } from '../lib/adminRepository.js'
+import { defaultLogoText, defaultWebsiteTitle } from '../lib/siteBrand.js'
 import { ThemeContext } from './theme.js'
 
 const storageKey = 'awt-theme'
@@ -10,6 +11,12 @@ function getInitialTheme() {
   const savedTheme = window.localStorage.getItem(storageKey)
   if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme
   return 'dark'
+}
+
+function hasSavedThemePreference() {
+  if (typeof window === 'undefined') return false
+  const savedTheme = window.localStorage.getItem(storageKey)
+  return savedTheme === 'light' || savedTheme === 'dark'
 }
 
 // Convert hex color to RGB values for rgba() usage
@@ -74,8 +81,41 @@ function applyTitle(websiteTitle) {
   if (websiteTitle) document.title = websiteTitle
 }
 
+function getInitialWebsiteTitle() {
+  if (typeof window === 'undefined') return defaultWebsiteTitle
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(settingsKey) || 'null')
+    return cached?.websiteTitle || defaultWebsiteTitle
+  } catch {
+    return defaultWebsiteTitle
+  }
+}
+
+function getInitialLogoUrl() {
+  if (typeof window === 'undefined') return ''
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(settingsKey) || 'null')
+    return cached?.logoUrl || ''
+  } catch {
+    return ''
+  }
+}
+
+function getInitialLogoText() {
+  if (typeof window === 'undefined') return defaultLogoText
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(settingsKey) || 'null')
+    return cached?.logoText || defaultLogoText
+  } catch {
+    return defaultLogoText
+  }
+}
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(getInitialTheme)
+  const [websiteTitle, setWebsiteTitleState] = useState(getInitialWebsiteTitle)
+  const [logoUrl, setLogoUrlState] = useState(getInitialLogoUrl)
+  const [logoText, setLogoTextState] = useState(getInitialLogoText)
 
   useEffect(() => {
     let isMounted = true
@@ -92,11 +132,14 @@ export function ThemeProvider({ children }) {
         const settings = await fetchSiteSettings()
         if (!isMounted) return
 
-        if (settings.defaultTheme === 'light' || settings.defaultTheme === 'dark') {
+        if (!hasSavedThemePreference() && (settings.defaultTheme === 'light' || settings.defaultTheme === 'dark')) {
           setTheme(settings.defaultTheme)
         }
         applyBrandColors(settings.primaryColor, settings.secondaryColor)
         applyTitle(settings.websiteTitle)
+        if (settings.websiteTitle) setWebsiteTitleState(settings.websiteTitle)
+        setLogoUrlState(settings.logoUrl || '')
+        setLogoTextState(settings.logoText || defaultLogoText)
       } catch (error) {
         console.warn('Unable to load site settings:', error.message)
       }
@@ -111,6 +154,9 @@ export function ThemeProvider({ children }) {
       }
       applyBrandColors(detail.primaryColor, detail.secondaryColor)
       applyTitle(detail.websiteTitle)
+      if (detail.websiteTitle) setWebsiteTitleState(detail.websiteTitle)
+      setLogoUrlState(detail.logoUrl || '')
+      setLogoTextState(detail.logoText || defaultLogoText)
     }
 
     loadSettings()
@@ -126,6 +172,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     const root = document.documentElement
     root.classList.toggle('dark', theme === 'dark')
+    root.dataset.theme = theme
     root.style.colorScheme = theme
     window.localStorage.setItem(storageKey, theme)
   }, [theme])
@@ -134,9 +181,20 @@ export function ThemeProvider({ children }) {
     () => ({
       theme,
       isDark: theme === 'dark',
+      websiteTitle,
+      logoUrl,
+      logoText,
+      setWebsiteTitle: (nextTitle) => {
+        const normalizedTitle = nextTitle?.trim() || defaultWebsiteTitle
+        setWebsiteTitleState(normalizedTitle)
+        applyTitle(normalizedTitle)
+      },
+      setTheme: (newTheme) => {
+        if (newTheme === 'light' || newTheme === 'dark') setTheme(newTheme)
+      },
       toggleTheme: () => setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))
     }),
-    [theme]
+    [logoText, logoUrl, theme, websiteTitle]
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

@@ -247,6 +247,8 @@ export default function LabFormPage({ mode = 'add' }) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [clearDialog, setClearDialog] = useState(false)
   const [dragOverId, setDragOverId] = useState(null)
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const selectedBlock = blocks.find((b) => b.id === selectedId) || null
 
@@ -427,7 +429,7 @@ export default function LabFormPage({ mode = 'add' }) {
   return (
     <div className="fixed inset-0 z-[70] overflow-hidden bg-[#050714] text-slate-100">
       {/* ── TOP BAR ── */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-slate-800/80 bg-[#070b1a]/95 px-4 shadow-2xl shadow-black/30 backdrop-blur xl:px-6">
+      <header className="sticky top-0 z-30 flex min-h-14 flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 bg-[#070b1a]/95 px-3 py-2 shadow-2xl shadow-black/30 backdrop-blur sm:gap-4 sm:px-4 lg:h-14 lg:flex-nowrap lg:py-0 xl:px-6">
         {/* Left */}
         <div className="flex min-w-0 items-center gap-3">
           <Link
@@ -436,9 +438,9 @@ export default function LabFormPage({ mode = 'add' }) {
           >
             <ChevronLeft className="h-4 w-4" />
           </Link>
-          <div className="min-w-0 hidden sm:block">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <FlaskConical className="h-4 w-4 shrink-0 text-cyan-400" />
+              <FlaskConical className="hidden h-4 w-4 shrink-0 text-cyan-400 sm:block" />
               <span className="truncate text-sm font-black text-white">
                 {meta.lab_number ? `Lab ${meta.lab_number} — ` : ''}{meta.title || 'Untitled Lab'}
               </span>
@@ -453,7 +455,7 @@ export default function LabFormPage({ mode = 'add' }) {
         </div>
 
         {/* Center */}
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-3 px-4">
+        <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 px-4 md:flex">
           <span className="hidden shrink-0 items-center gap-1.5 text-xs font-semibold text-emerald-400 sm:flex">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             Auto saved
@@ -462,6 +464,24 @@ export default function LabFormPage({ mode = 'add' }) {
 
         {/* Right */}
         <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsLibraryOpen(true)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400 lg:hidden"
+            aria-label="Open component library"
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Components</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400 lg:hidden"
+            aria-label="Open component settings"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Settings</span>
+          </button>
           <ThemeToggle />
           <button
             type="button"
@@ -469,13 +489,13 @@ export default function LabFormPage({ mode = 'add' }) {
             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400"
           >
             <Eye className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Preview</span>
+            <span className="hidden md:inline">Preview</span>
           </button>
           <button
             type="button"
             disabled={isSaving}
             onClick={() => handleSave(false)}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-violet-600 px-3 text-xs font-bold text-white transition hover:bg-violet-500 disabled:opacity-50"
+            className="hidden h-9 items-center gap-1.5 rounded-lg bg-violet-600 px-3 text-xs font-bold text-white transition hover:bg-violet-500 disabled:opacity-50 md:inline-flex"
           >
             <Bookmark className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Save Draft</span>
@@ -484,21 +504,39 @@ export default function LabFormPage({ mode = 'add' }) {
             type="button"
             disabled={isSaving}
             onClick={() => handleSave(true)}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-400 px-3 text-xs font-bold text-slate-950 transition hover:bg-emerald-300 disabled:opacity-50"
+            className="hidden h-9 items-center gap-1.5 rounded-lg bg-emerald-400 px-3 text-xs font-bold text-slate-950 transition hover:bg-emerald-300 disabled:opacity-50 md:inline-flex"
           >
             <Send className="h-3.5 w-3.5" />
             {isSaving ? 'Saving…' : <span className="hidden sm:inline">Publish Lab</span>}
           </button>
+          <details className="relative md:hidden">
+            <summary className="inline-flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg bg-emerald-400 text-slate-950">
+              <MoreVertical className="h-4 w-4" />
+            </summary>
+            <div className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-1 shadow-2xl">
+              <button type="button" disabled={isSaving} onClick={() => handleSave(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold text-slate-200 hover:bg-slate-900">
+                <Bookmark className="h-4 w-4" /> Save Draft
+              </button>
+              <button type="button" disabled={isSaving} onClick={() => handleSave(true)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold text-emerald-300 hover:bg-slate-900">
+                <Send className="h-4 w-4" /> Publish
+              </button>
+            </div>
+          </details>
         </div>
       </header>
 
       {/* ── 3-COLUMN WORKSPACE ── */}
-      <div
-        className="grid h-[calc(100vh-3.5rem)] min-h-0"
-        style={{ gridTemplateColumns: '260px 1fr 280px' }}
-      >
+      {(isLibraryOpen || isSettingsOpen) && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-slate-950/70 lg:hidden"
+          aria-label="Close builder panels"
+          onClick={() => { setIsLibraryOpen(false); setIsSettingsOpen(false) }}
+        />
+      )}
+      <div className="grid h-[calc(100vh-7.25rem)] min-h-0 sm:h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-3.5rem)] lg:grid-cols-[260px_minmax(0,1fr)_280px]">
         {/* ════ LEFT PANEL — Component Library ════ */}
-        <aside className="builder-scrollbar flex min-h-0 flex-col overflow-y-auto border-r border-slate-800 bg-[#0b1020]">
+        <aside className={['builder-scrollbar fixed bottom-0 left-0 top-0 z-50 flex w-[min(22rem,calc(100vw-1.5rem))] min-h-0 flex-col overflow-y-auto border-r border-slate-800 bg-[#0b1020] transition-transform lg:static lg:z-auto lg:w-auto lg:translate-x-0', isLibraryOpen ? 'translate-x-0' : '-translate-x-full'].join(' ')}>
           {/* Header */}
           <div className="sticky top-0 z-10 border-b border-slate-800 bg-[#0b1020] p-4">
             <div className="flex items-center justify-between">
@@ -506,7 +544,12 @@ export default function LabFormPage({ mode = 'add' }) {
                 <h2 className="text-sm font-black text-white">Component Library</h2>
                 <p className="text-[10px] text-slate-500">{ALL_COMPONENTS.length} blocks available</p>
               </div>
-              <Layers className="h-4 w-4 text-slate-600" />
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-slate-600" />
+                <button type="button" onClick={() => setIsLibraryOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-900 hover:text-white lg:hidden" aria-label="Close component library">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
             <div className="relative mt-3">
               <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
@@ -583,12 +626,12 @@ export default function LabFormPage({ mode = 'add' }) {
         {/* ════ CENTER — Lab Builder Canvas ════ */}
         <main className="builder-scrollbar min-h-0 overflow-y-auto bg-[#080d18]">
           {/* Canvas header */}
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/60 bg-[#080d18]/95 px-5 py-3 backdrop-blur">
+          <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-slate-800/60 bg-[#080d18]/95 px-3 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div>
               <h2 className="text-sm font-black text-white">Lab Builder Canvas</h2>
               <p className="text-[10px] text-slate-500">Drag · Reorder · Edit · Preview</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setClearDialog(true)}
@@ -610,7 +653,7 @@ export default function LabFormPage({ mode = 'add' }) {
 
           {/* Drop zone */}
           <div
-            className="min-h-[calc(100vh-8rem)] p-5"
+            className="min-h-[calc(100vh-11rem)] p-3 sm:min-h-[calc(100vh-8rem)] sm:p-5"
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleCanvasDrop}
           >
@@ -663,7 +706,13 @@ export default function LabFormPage({ mode = 'add' }) {
         </main>
 
         {/* ════ RIGHT PANEL — Settings ════ */}
-        <aside className="builder-scrollbar min-h-0 overflow-y-auto border-l border-slate-800 bg-[#0b111d]">
+        <aside className={['builder-scrollbar fixed bottom-0 right-0 top-0 z-50 w-[min(24rem,calc(100vw-1.5rem))] min-h-0 overflow-y-auto border-l border-slate-800 bg-[#0b111d] transition-transform lg:static lg:z-auto lg:w-auto lg:translate-x-0', isSettingsOpen ? 'translate-x-0' : 'translate-x-full'].join(' ')}>
+          <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-800 bg-[#0b111d] px-4 py-3 lg:hidden">
+            <h2 className="text-sm font-black text-white">Component Settings</h2>
+            <button type="button" onClick={() => setIsSettingsOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-900 hover:text-white" aria-label="Close component settings">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
           {selectedId === '__meta__' ? (
             <BlockSettingsPanel
               block={{ id: '__meta__', type: 'meta', label: 'Basic Information', content: meta, settings: meta.settings || {} }}
@@ -692,6 +741,10 @@ export default function LabFormPage({ mode = 'add' }) {
       </div>
 
       {/* ── Preview Overlay ── */}
+      <button type="button" onClick={() => setIsLibraryOpen(true)} className="fixed bottom-5 right-5 z-30 inline-flex h-12 w-12 items-center justify-center rounded-full bg-cyan-400 text-slate-950 shadow-2xl shadow-cyan-400/20 lg:hidden" aria-label="Add component">
+        <Plus className="h-5 w-5" />
+      </button>
+
       {isPreviewOpen && (
         <LabPreview lab={{ meta, blocks }} onClose={() => setIsPreviewOpen(false)} />
       )}

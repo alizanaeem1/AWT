@@ -101,6 +101,7 @@ create table if not exists public.site_settings (
   id uuid primary key default gen_random_uuid(),
   website_title text not null default 'AWT Interactive Learning Platform',
   logo_url text,
+  logo_text text not null default 'AIL',
   primary_color text not null default '#34d399',
   secondary_color text not null default '#22d3ee',
   default_theme text not null default 'dark' check (default_theme in ('dark', 'light')),
@@ -108,6 +109,9 @@ create table if not exists public.site_settings (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.site_settings
+  add column if not exists logo_text text not null default 'AIL';
 
 create table if not exists public.media_files (
   id uuid primary key default gen_random_uuid(),
@@ -373,12 +377,16 @@ create table if not exists public.site_settings (
   id uuid primary key default gen_random_uuid(),
   website_title text not null default 'AWT Interactive Learning Platform',
   logo_url text,
+  logo_text text not null default 'AIL',
   primary_color text not null default '#34d399',
   secondary_color text not null default '#22d3ee',
   default_theme text not null default 'dark' check (default_theme in ('dark', 'light')),
   language_default text not null default 'en' check (language_default in ('en', 'roman-urdu')),
   updated_at timestamptz not null default now()
 );
+
+alter table public.site_settings
+  add column if not exists logo_text text not null default 'AIL';
 
 -- RLS for site_settings
 alter table public.site_settings enable row level security;

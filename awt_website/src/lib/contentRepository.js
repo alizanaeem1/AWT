@@ -1,4 +1,5 @@
 import { contentDatabase } from '../data/contentDatabase.js'
+import { labs } from '../data/labs.js'
 import { supabase } from './supabase.js'
 
 function fallbackLectures() {
@@ -12,7 +13,23 @@ function fallbackLectures() {
 }
 
 function fallbackLabs() {
-  return []
+  return labs.map((lab) => ({
+    id: lab.id,
+    type: 'lab',
+    group: 'Labs',
+    title: lab.title,
+    slug: lab.slug,
+    path: `/labs/${lab.slug}`,
+    order: lab.number,
+    status: 'published',
+    labNumber: lab.number,
+    objective: lab.objective || '',
+    category: 'Labs',
+    content_blocks: [],
+    blocks: [],
+    steps: lab.steps?.length || 0,
+    estimatedTime: lab.estimatedTime || lab.duration || '45 min'
+  }))
 }
 
 function getLecturePath(slug) {
@@ -26,11 +43,13 @@ function mapLecture(lecture) {
     group: lecture.category || 'General',
     category: lecture.category || 'General',
     title: lecture.title,
+    english_content: lecture.english_content || '',
     slug: lecture.slug,
     path: getLecturePath(lecture.slug),
     order: lecture.order_number ?? 0,
     status: 'published',
-    shortDescription: lecture.short_description || ''
+    shortDescription: lecture.short_description || '',
+    short_description: lecture.short_description || ''
   }
 }
 
@@ -87,7 +106,7 @@ export async function getPublishedContent() {
   const [lecturesResult, labsResult, activitiesResult] = await Promise.all([
     supabase
       .from('lectures')
-      .select('id,title,slug,category,order_number,short_description,is_published')
+      .select('id,title,slug,category,order_number,short_description,english_content,is_published')
       .eq('is_published', true)
       .order('order_number', { ascending: true }),
     supabase
@@ -121,7 +140,7 @@ export async function getPublishedLectures() {
 
   const { data, error } = await supabase
     .from('lectures')
-    .select('id,title,slug,category,order_number,short_description,is_published,content_blocks')
+    .select('id,title,slug,category,order_number,short_description,english_content,is_published,content_blocks')
     .eq('is_published', true)
     .order('order_number', { ascending: true })
 

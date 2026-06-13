@@ -12,6 +12,7 @@ import {
   TerminalSquare,
   X
 } from 'lucide-react'
+import { useState } from 'react'
 
 function toArray(value) {
   if (!value) return []
@@ -114,13 +115,14 @@ function buildTextStyle(settings = {}) {
 }
 
 export default function LabPreview({ lab, onClose, footer, headerAside, className = '' }) {
+  const [previewDevice, setPreviewDevice] = useState('desktop')
   const preview = buildPreviewLab(lab)
   const settings = preview.settings
   const metaCardStyle = buildBlockStyle(settings)
   const metaTextStyle = buildTextStyle(settings)
 
   const article = (
-    <article className={`rounded-2xl border border-[#223346] bg-[#111c2b] p-8 text-slate-100 shadow-2xl shadow-black/30 ${className}`}>
+    <article className={`rounded-2xl border border-[#223346] bg-[#111c2b] p-4 text-slate-100 shadow-2xl shadow-black/30 sm:p-8 ${className}`}>
       <div
         className="mb-8 border-b pb-6"
         style={{
@@ -143,7 +145,7 @@ export default function LabPreview({ lab, onClose, footer, headerAside, classNam
               {preview.category ? ` · ${preview.category}` : ''}
               {preview.level ? ` · ${preview.level}` : ''}
             </p>
-            <h1 className="mt-2 text-3xl font-black" style={{ color: metaTextStyle.color || '#ffffff', fontFamily: metaTextStyle.fontFamily, fontWeight: metaTextStyle.fontWeight || 900 }}>
+            <h1 className="mt-2 text-2xl font-black sm:text-3xl" style={{ color: metaTextStyle.color || '#ffffff', fontFamily: metaTextStyle.fontFamily, fontWeight: metaTextStyle.fontWeight || 900 }}>
               {preview.title}
             </h1>
             {preview.shortDescription && (
@@ -174,25 +176,42 @@ export default function LabPreview({ lab, onClose, footer, headerAside, classNam
   )
 
   if (!onClose) return article
+  const previewWidthClass = {
+    desktop: 'max-w-4xl',
+    tablet: 'max-w-3xl',
+    mobile: 'max-w-[390px]'
+  }[previewDevice]
 
   return (
     <div className="fixed inset-0 z-[120] overflow-y-auto bg-slate-950/80 backdrop-blur-sm" onMouseDown={onClose}>
-      <div className="mx-auto max-w-4xl px-4 py-10" onMouseDown={(event) => event.stopPropagation()}>
-        <div className="mb-6 flex items-center justify-between">
+      <div className={`mx-auto w-full px-4 py-10 ${previewWidthClass}`} onMouseDown={(event) => event.stopPropagation()}>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-black text-emerald-300">
               STUDENT PREVIEW
             </span>
             <h2 className="mt-2 text-2xl font-black text-white">{preview.title}</h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400"
-          >
-            <X className="h-3.5 w-3.5" />
-            Close Preview
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {['desktop', 'tablet', 'mobile'].map((device) => (
+              <button
+                key={device}
+                type="button"
+                onClick={() => setPreviewDevice(device)}
+                className={`rounded-lg border px-3 py-2 text-xs font-bold capitalize ${previewDevice === device ? 'border-cyan-400 bg-cyan-400/10 text-cyan-300' : 'border-slate-700 text-slate-300 hover:border-cyan-400'}`}
+              >
+                {device}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400"
+            >
+              <X className="h-3.5 w-3.5" />
+              Close Preview
+            </button>
+          </div>
         </div>
         {article}
       </div>

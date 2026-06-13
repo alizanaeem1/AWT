@@ -1,6 +1,6 @@
 import { Check, ChevronLeft, ChevronRight, Clipboard } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useOutletContext } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useContentProgress } from '../hooks/useContentProgress.js'
 import { useProgress } from '../hooks/useProgress.js'
 
@@ -59,14 +59,12 @@ function Callout({ tone, icon, title, children }) {
 }
 
 export default function LectureDetailPage() {
-  const { language = 'EN' } = useOutletContext() || {}
   const [activeTab, setActiveTab] = useState('HTML')
   const [copied, setCopied] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState('')
   const readContent = useContentProgress()
   const { markLectureRead, progressMessage } = useProgress()
   const isRead = readContent.has(lectureId)
-  const isRomanUrdu = language === 'Roman Urdu'
   const activeCode = activeTab === 'HTML' ? htmlCode : cssCode
 
   async function copyCode() {
@@ -90,9 +88,7 @@ export default function LectureDetailPage() {
           Introduction to HTML Structure
         </h1>
         <p className="mt-5 text-lg leading-8 text-slate-700 dark:text-slate-300">
-          {isRomanUrdu
-            ? 'Is lecture mein hum HTML ka role, page structure, semantic tags, aur pehli professional web section banana seekhenge.'
-            : 'Learn how HTML gives web pages structure, meaning, and a clean foundation for styling and interactivity.'}
+          Learn how HTML gives web pages structure, meaning, and a clean foundation for styling and interactivity.
         </p>
         <div className="mt-6 rounded-md border border-slate-800 bg-slate-900 p-4">
           <div className="flex items-center justify-between gap-4">

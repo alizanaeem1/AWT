@@ -1,8 +1,12 @@
-import { BookOpen, Languages, Menu, Search } from 'lucide-react'
+import { BookOpen, Menu, Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useTheme } from '../hooks/useTheme.js'
+import BrandLogo from './BrandLogo.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 
-export default function DocsNavbar({ language, onLanguageToggle, onMenuClick, searchQuery, onSearchOpen }) {
+export default function DocsNavbar({ onMenuClick, searchQuery, onSearchOpen }) {
+  const { websiteTitle } = useTheme()
+
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
       <div className="flex h-16 items-center gap-3 px-4 lg:px-6">
@@ -16,10 +20,8 @@ export default function DocsNavbar({ language, onLanguageToggle, onMenuClick, se
         </button>
 
         <Link to="/" className="flex min-w-0 items-center gap-3 text-white">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-cyan-400 text-sm font-black text-slate-950">
-            AWT
-          </span>
-          <span className="hidden truncate text-sm font-semibold sm:block">Interactive Learning Platform</span>
+          <BrandLogo className="h-9 w-9 rounded-md bg-cyan-400 text-sm font-black text-slate-950" />
+          <span className="hidden truncate text-sm font-semibold sm:block">{websiteTitle}</span>
         </Link>
 
         <div className="ml-auto flex flex-1 items-center justify-end gap-2">
@@ -50,17 +52,6 @@ export default function DocsNavbar({ language, onLanguageToggle, onMenuClick, se
             <option value="v1.0">v1.0</option>
             <option value="v0.9">v0.9</option>
           </select>
-
-          <button
-            type="button"
-            onClick={onLanguageToggle}
-            className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-white"
-            aria-label="Toggle language"
-            title="Toggle language"
-          >
-            <Languages className="h-4 w-4" />
-            <span>{language}</span>
-          </button>
 
           <ThemeToggle />
 

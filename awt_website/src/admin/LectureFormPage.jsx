@@ -10,13 +10,16 @@ import {
   GripVertical,
   HelpCircle,
   Italic,
+  Layers,
   MoreVertical,
   Plus,
   RotateCcw,
   RotateCw,
   Send,
+  Settings2,
   Trash2,
-  Underline
+  Underline,
+  X
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -72,8 +75,11 @@ export default function LectureFormPage({ mode = 'add' }) {
   const [isLoading, setIsLoading] = useState(isEdit)
   const [isSaving, setIsSaving] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewDevice, setPreviewDevice] = useState('desktop')
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
   const [componentSearch, setComponentSearch] = useState('')
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const selectedBlock = formValues.content_blocks.find((block) => block.id === selectedBlockId)
 
   useEffect(() => {
@@ -279,22 +285,27 @@ export default function LectureFormPage({ mode = 'add' }) {
     { title: 'Developer', types: ['code-block', 'table'] },
     { title: 'Resources', types: ['assignment', 'resource-list', 'summary'] }
   ]
+  const previewWidthClass = {
+    desktop: 'max-w-5xl',
+    tablet: 'max-w-3xl',
+    mobile: 'max-w-[390px]'
+  }[previewDevice]
 
   return (
     <div className="fixed inset-0 z-[70] overflow-hidden bg-[#050716] text-slate-100">
       <div className="min-h-screen overflow-hidden">
-      <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-[#070b1a]/95 px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur xl:px-6">
-        <div className="grid grid-cols-[280px_minmax(360px,1fr)_auto] items-center gap-4">
+      <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-[#070b1a]/95 px-3 py-3 shadow-2xl shadow-black/20 backdrop-blur sm:px-4 xl:px-6">
+        <div className="grid gap-3 lg:grid-cols-[280px_minmax(360px,1fr)_auto] lg:items-center lg:gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <Link to="/admin/lectures" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-300 hover:border-cyan-400 hover:text-white" aria-label="Back to lectures">
               <ChevronLeft className="h-5 w-5" />
             </Link>
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-black text-white">Add Lecture</h1>
+              <h1 className="truncate text-lg font-black text-white sm:text-xl">Add Lecture</h1>
               <p className="text-xs text-cyan-300">Visual Builder</p>
             </div>
           </div>
-          <div className="grid min-w-0 grid-cols-[118px_minmax(220px,1fr)_auto] items-center gap-3">
+          <div className="grid min-w-0 gap-2 md:grid-cols-[118px_minmax(220px,1fr)_auto] md:items-center md:gap-3">
             <label className="relative block min-w-0">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
                 No
@@ -310,25 +321,46 @@ export default function LectureFormPage({ mode = 'add' }) {
               />
             </label>
             <TextInput value={formValues.title} onChange={(event) => updateField('title', event.target.value)} placeholder="Introduction to CSS Flexbox" required />
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300">
+            <span className="hidden items-center gap-2 text-sm font-semibold text-emerald-300 md:inline-flex">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               Auto saved
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <button type="button" onClick={() => setIsLibraryOpen(true)} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm font-bold text-slate-200 hover:border-cyan-400 lg:hidden" aria-label="Open component library">
+              <Layers className="h-4 w-4" />
+              <span className="hidden md:inline">Components</span>
+            </button>
+            <button type="button" onClick={() => setIsSettingsOpen(true)} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm font-bold text-slate-200 hover:border-cyan-400 lg:hidden" aria-label="Open component settings">
+              <Settings2 className="h-4 w-4" />
+              <span className="hidden md:inline">Settings</span>
+            </button>
             <ThemeToggle />
             <button type="button" onClick={() => setIsPreviewOpen(true)} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 text-sm font-bold text-slate-200 hover:border-cyan-400">
               <Eye className="h-4 w-4" />
-              Preview
+              <span className="hidden md:inline">Preview</span>
             </button>
-            <button type="button" disabled={isSaving} onClick={() => handleSave(false)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-bold text-white hover:bg-violet-500 disabled:opacity-60">
+            <button type="button" disabled={isSaving} onClick={() => handleSave(false)} className="hidden h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-bold text-white hover:bg-violet-500 disabled:opacity-60 md:inline-flex">
               <Bookmark className="h-4 w-4" />
               Save as Draft
             </button>
-            <button type="button" disabled={isSaving} onClick={() => handleSave(true)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-400 px-4 text-sm font-bold text-slate-950 hover:bg-emerald-300 disabled:opacity-60">
+            <button type="button" disabled={isSaving} onClick={() => handleSave(true)} className="hidden h-10 items-center gap-2 rounded-lg bg-emerald-400 px-4 text-sm font-bold text-slate-950 hover:bg-emerald-300 disabled:opacity-60 md:inline-flex">
               <Send className="h-4 w-4" />
               {isSaving ? 'Saving...' : 'Publish Lecture'}
             </button>
+            <details className="relative md:hidden">
+              <summary className="inline-flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-lg bg-emerald-400 text-slate-950">
+                <MoreVertical className="h-4 w-4" />
+              </summary>
+              <div className="absolute right-0 top-12 z-50 w-44 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-1 shadow-2xl">
+                <button type="button" disabled={isSaving} onClick={() => handleSave(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold text-slate-200 hover:bg-slate-900">
+                  <Bookmark className="h-4 w-4" /> Save Draft
+                </button>
+                <button type="button" disabled={isSaving} onClick={() => handleSave(true)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold text-emerald-300 hover:bg-slate-900">
+                  <Send className="h-4 w-4" /> Publish
+                </button>
+              </div>
+            </details>
           </div>
         </div>
       </header>
@@ -336,14 +368,24 @@ export default function LectureFormPage({ mode = 'add' }) {
         <p className="p-6 text-sm font-medium text-slate-400">Loading builder...</p>
       ) : (
         <>
-        <div
-          className="grid h-[calc(100vh-4.5rem)] min-h-0 border-b border-slate-800"
-          style={{ gridTemplateColumns: '21% 49% 30%' }}
-        >
-          <aside className="builder-scrollbar min-h-0 overflow-y-auto border-r border-slate-800 bg-[#0b1020]/95 p-5">
+        {(isLibraryOpen || isSettingsOpen) && (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-slate-950/70 lg:hidden"
+            aria-label="Close builder panels"
+            onClick={() => { setIsLibraryOpen(false); setIsSettingsOpen(false) }}
+          />
+        )}
+        <div className="grid h-[calc(100vh-9.25rem)] min-h-0 border-b border-slate-800 sm:h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-4.5rem)] lg:grid-cols-[21%_49%_30%]">
+          <aside className={['builder-scrollbar fixed bottom-0 left-0 top-0 z-50 w-[min(22rem,calc(100vw-1.5rem))] min-h-0 overflow-y-auto border-r border-slate-800 bg-[#0b1020]/95 p-5 transition-transform lg:static lg:z-auto lg:w-auto lg:translate-x-0', isLibraryOpen ? 'translate-x-0' : '-translate-x-full'].join(' ')}>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-black text-white">Component Library</h2>
-              <HelpCircle className="h-4 w-4 text-slate-500" />
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-slate-500" />
+                <button type="button" onClick={() => setIsLibraryOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-900 hover:text-white lg:hidden" aria-label="Close component library">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
             <input
               value={componentSearch}
@@ -406,21 +448,21 @@ export default function LectureFormPage({ mode = 'add' }) {
             </div>
           </aside>
 
-          <section className="builder-scrollbar min-h-0 overflow-y-auto border-r border-slate-800 bg-[#0a1020] p-5">
-            <div className="flex items-start justify-between gap-4">
+          <section className="builder-scrollbar min-h-0 overflow-y-auto border-r border-slate-800 bg-[#0a1020] p-3 sm:p-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <h2 className="text-lg font-black text-white">Lecture Builder</h2>
                 <p className="mt-1 text-sm text-slate-400">Drag components, reorder, edit and build your lecture</p>
               </div>
-              <div className="flex gap-2">
-                <button type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm font-semibold text-slate-300"><RotateCcw className="h-4 w-4" />Undo</button>
-                <button type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm font-semibold text-slate-300"><RotateCw className="h-4 w-4" />Redo</button>
-                <button type="button" onClick={() => setIsClearDialogOpen(true)} className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-400/30 bg-red-400/10 px-3 text-sm font-semibold text-red-300"><Trash2 className="h-4 w-4" />Clear All</button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm font-semibold text-slate-300"><RotateCcw className="h-4 w-4" /><span className="hidden sm:inline">Undo</span></button>
+                <button type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm font-semibold text-slate-300"><RotateCw className="h-4 w-4" /><span className="hidden sm:inline">Redo</span></button>
+                <button type="button" onClick={() => setIsClearDialogOpen(true)} className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-400/30 bg-red-400/10 px-3 text-sm font-semibold text-red-300"><Trash2 className="h-4 w-4" /><span className="hidden sm:inline">Clear All</span></button>
                 <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-300"><MoreVertical className="h-4 w-4" /></button>
               </div>
             </div>
             <div
-              className="mt-5 min-h-[620px] border-l border-r border-cyan-400/50 bg-[#080d17] p-3"
+              className="mt-5 min-h-[calc(100vh-17rem)] border-l border-r border-cyan-400/50 bg-[#080d17] p-2 sm:p-3 lg:min-h-[620px]"
               onDragOver={(event) => event.preventDefault()}
               onDrop={handleDrop}
             >
@@ -445,8 +487,8 @@ export default function LectureFormPage({ mode = 'add' }) {
                       className={['rounded-lg border transition shadow-lg shadow-black/10', isSelected ? 'ring-2 ring-cyan-400/30' : 'hover:border-slate-500'].join(' ')}
                       style={buildLectureBlockStyle(block.settings || {}, isSelected, accent)}
                     >
-                      <div className="mb-3 flex items-center justify-between gap-3 px-4 pt-4">
-                        <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
+                      <div className="mb-3 flex flex-col gap-3 px-3 pt-3 lg:flex-row lg:items-center lg:justify-between lg:px-4 lg:pt-4">
+                        <div className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-200">
                           <span
                             draggable
                             onDragStart={(event) => event.dataTransfer.setData('application/awt-move-block', block.id)}
@@ -458,9 +500,9 @@ export default function LectureFormPage({ mode = 'add' }) {
                           <span className="flex h-9 w-9 items-center justify-center rounded-md text-white" style={{ backgroundColor: `${accent}66` }}>
                             <Icon className="h-5 w-5" />
                           </span>
-                          {blockLabel}
+                          <span className="min-w-0 truncate">{blockLabel}</span>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                           <button type="button" onClick={(event) => { event.stopPropagation(); moveBlock(block.id, -1) }} disabled={index === 0} className="rounded-md px-2 py-1 text-xs text-slate-400 hover:bg-slate-800 disabled:opacity-30">Up</button>
                           <button type="button" onClick={(event) => { event.stopPropagation(); moveBlock(block.id, 1) }} disabled={index === formValues.content_blocks.length - 1} className="rounded-md px-2 py-1 text-xs text-slate-400 hover:bg-slate-800 disabled:opacity-30">Down</button>
                           <button type="button" onClick={(event) => { event.stopPropagation(); duplicateBlock(block) }} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-800"><Copy className="h-4 w-4" /></button>
@@ -497,7 +539,13 @@ export default function LectureFormPage({ mode = 'add' }) {
             </div>
           </section>
 
-          <aside className="builder-scrollbar min-h-0 overflow-y-auto bg-[#0b111d]">
+          <aside className={['builder-scrollbar fixed bottom-0 right-0 top-0 z-50 w-[min(24rem,calc(100vw-1.5rem))] min-h-0 overflow-y-auto bg-[#0b111d] transition-transform lg:static lg:z-auto lg:w-auto lg:translate-x-0', isSettingsOpen ? 'translate-x-0' : 'translate-x-full'].join(' ')}>
+            <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-800 bg-[#0b111d] px-4 py-3 lg:hidden">
+              <h2 className="text-sm font-black text-white">Component Settings</h2>
+              <button type="button" onClick={() => setIsSettingsOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-900 hover:text-white" aria-label="Close component settings">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
             <BlockSettingsPanel
               block={selectedBlock}
               builderType="lecture"
@@ -510,19 +558,34 @@ export default function LectureFormPage({ mode = 'add' }) {
             />
           </aside>
         </div>
+        <button type="button" onClick={() => setIsLibraryOpen(true)} className="fixed bottom-5 right-5 z-30 inline-flex h-12 w-12 items-center justify-center rounded-full bg-cyan-400 text-slate-950 shadow-2xl shadow-cyan-400/20 lg:hidden" aria-label="Add component">
+          <Plus className="h-5 w-5" />
+        </button>
         </>
       )}
       {isPreviewOpen ? (
         <div className="fixed inset-0 z-[120] overflow-y-auto bg-slate-950/90 p-6 backdrop-blur" onMouseDown={() => setIsPreviewOpen(false)}>
-          <div className="mx-auto max-w-5xl" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="mb-4 flex items-center justify-between">
+          <div className={`mx-auto w-full ${previewWidthClass}`} onMouseDown={(event) => event.stopPropagation()}>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-cyan-300">Lecture Preview</p>
                 <h2 className="text-2xl font-bold text-white">{formValues.title || 'Untitled Lecture'}</h2>
               </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {['desktop', 'tablet', 'mobile'].map((device) => (
+                  <button
+                    key={device}
+                    type="button"
+                    onClick={() => setPreviewDevice(device)}
+                    className={`rounded-lg border px-3 py-2 text-xs font-bold capitalize ${previewDevice === device ? 'border-cyan-400 bg-cyan-400/10 text-cyan-300' : 'border-slate-700 text-slate-300 hover:border-cyan-400'}`}
+                  >
+                    {device}
+                  </button>
+                ))}
               <button type="button" onClick={() => setIsPreviewOpen(false)} className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-bold text-slate-200 hover:border-cyan-400">
                 Close Preview
               </button>
+              </div>
             </div>
             <LecturePreview lecture={formValues} />
           </div>
