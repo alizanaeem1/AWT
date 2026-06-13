@@ -1,5 +1,5 @@
 export const defaultWebsiteTitle = 'AWT Interactive Learning Platform'
-export const defaultLogoText = 'AIL'
+export const defaultLogoText = 'AWT'
 
 export function getWebsiteInitials(title = defaultWebsiteTitle) {
   const words = String(title)
@@ -8,6 +8,10 @@ export function getWebsiteInitials(title = defaultWebsiteTitle) {
     .filter(Boolean)
 
   if (!words.length) return 'AWT'
+  
+  const firstWord = words[0].toUpperCase()
+  if (firstWord === 'AWT') return 'AWT'
+
   return words
     .slice(0, 3)
     .map((word) => word[0])

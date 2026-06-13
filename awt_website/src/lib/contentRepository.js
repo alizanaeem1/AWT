@@ -19,7 +19,7 @@ function fallbackLabs() {
     group: 'Labs',
     title: lab.title,
     slug: lab.slug,
-    path: `/labs/${lab.slug}`,
+    path: `/student/labs/${lab.slug}`,
     order: lab.number,
     status: 'published',
     labNumber: lab.number,
@@ -33,10 +33,11 @@ function fallbackLabs() {
 }
 
 function getLecturePath(slug) {
-  return `/lectures/${slug}`
+  return `/student/lectures/${slug}`
 }
 
 function mapLecture(lecture) {
+  const slug = lecture.slug || `lecture-${lecture.id || lecture.order_number || Date.now()}`
   return {
     id: lecture.id,
     type: 'lecture',
@@ -44,8 +45,8 @@ function mapLecture(lecture) {
     category: lecture.category || 'General',
     title: lecture.title,
     english_content: lecture.english_content || '',
-    slug: lecture.slug,
-    path: getLecturePath(lecture.slug),
+    slug,
+    path: getLecturePath(slug),
     order: lecture.order_number ?? 0,
     status: 'published',
     shortDescription: lecture.short_description || '',
@@ -73,7 +74,7 @@ function mapLab(lab) {
     group: lab.lab_number === 8 || lab.lab_number === 15 ? 'Exams' : 'Labs',
     title,
     slug,
-    path: `/labs/${slug}`,
+    path: `/student/labs/${slug}`,
     order: lab.lab_number ?? 0,
     status: 'published',
     labNumber: lab.lab_number ?? 0,

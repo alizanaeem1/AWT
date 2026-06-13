@@ -13,7 +13,7 @@ const fallbackSettings = {
   defaultTheme: 'dark',
   languageDefault: 'en',
   logoUrl: '',
-  logoText: 'AIL'
+  logoText: 'AWT'
 }
 
 /**

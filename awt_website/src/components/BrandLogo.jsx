@@ -4,7 +4,7 @@ import { getLogoText } from '../lib/siteBrand.js'
 export default function BrandLogo({ className = '', imageClassName = '', fallbackClassName = '' }) {
   const { logoUrl, logoText, websiteTitle } = useTheme()
   const fallbackText = getLogoText(logoText, websiteTitle)
-  const isLongText = fallbackText.length > 2
+  const isLongText = fallbackText.length > 4
   const wordCount = fallbackText.split(/\s+/).filter(Boolean).length
   const fallbackStyle = isLongText
     ? {
@@ -30,13 +30,17 @@ export default function BrandLogo({ className = '', imageClassName = '', fallbac
     )
   }
 
+  // Remove override text classes if they interfere, and render with a premium gradient
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center ${className} ${fallbackClassName}`}
-      style={fallbackStyle}
+      className={`inline-flex shrink-0 items-center justify-center font-black tracking-wider text-white shadow-lg bg-gradient-to-tr from-emerald-500 to-cyan-500 hover:brightness-110 active:scale-95 transition-all duration-200 ${className} ${fallbackClassName}`}
+      style={{
+        textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+        ...fallbackStyle
+      }}
       title={fallbackText}
     >
-      <span className="block max-w-full whitespace-nowrap px-1.5 text-center leading-tight" style={textStyle}>
+      <span className="block max-w-full whitespace-nowrap px-1.5 text-center leading-none uppercase" style={textStyle}>
         {fallbackText}
       </span>
     </span>

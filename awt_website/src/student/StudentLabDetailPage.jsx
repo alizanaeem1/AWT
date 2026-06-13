@@ -1,6 +1,6 @@
 import { Download } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams, useLocation } from 'react-router-dom'
 import LabPreview, { LabPreviewCompleteButton } from '../components/LabPreview.jsx'
 import { useProgress } from '../hooks/useProgress.js'
 import { fetchPublishedLabBySlug } from '../lib/contentDetailsRepository.js'
@@ -8,6 +8,8 @@ import { getItemProgress } from './studentProgress.js'
 
 export default function StudentLabDetailPage() {
   const { slug } = useParams()
+  const location = useLocation()
+  const isPublic = !location.pathname.startsWith('/student')
   const { progressMessage, records, readIds, saveLabSteps } = useProgress()
   const [lab, setLab] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -77,7 +79,7 @@ export default function StudentLabDetailPage() {
     <article className="mx-auto max-w-5xl print:max-w-none">
       <LabPreview
         lab={current}
-        headerAside={(
+        headerAside={isPublic ? null : (
           <div className="rounded-2xl border border-slate-700/60 bg-slate-950/35 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <span className="text-xs font-black uppercase tracking-widest text-slate-500">Student Tools</span>

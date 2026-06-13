@@ -5,6 +5,9 @@ import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
 import { useTheme } from '../hooks/useTheme.js'
 
+/* Force dark rendering regardless of site theme */
+const darkStyle = { colorScheme: 'dark' }
+
 export default function SignInPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -28,11 +31,26 @@ export default function SignInPage() {
     e.preventDefault()
     setError('')
     setIsSubmitting(true)
+
+    // Block admin emails immediately
+    const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+
+    if (adminEmails.includes(email.trim().toLowerCase())) {
+      setError('Invalid email or password.')
+      setIsSubmitting(false)
+      return
+    }
+
     try {
       const result = await signIn(email, password)
       const role = result.profile?.role
       if (role === 'admin') {
-        navigate('/admin/dashboard', { replace: true })
+        // Sign out if admin logs in via student portal
+        await import('../lib/supabase.js').then(m => m.supabase.auth.signOut())
+        setError('This portal is for students only. Please use the Admin Panel.')
       } else {
         navigate(from, { replace: true })
       }
@@ -44,7 +62,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#020817] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-[#020817] text-white" data-theme="dark" style={darkStyle}>
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-40 left-1/4 h-[600px] w-[600px] rounded-full bg-emerald-500/10 blur-[120px]" />
@@ -140,7 +158,15 @@ export default function SignInPage() {
         </aside>
 
         {/* ── RIGHT PANEL ── */}
-        <main className="flex w-full flex-col items-center justify-center px-5 py-12 lg:w-1/2 lg:px-16">
+        <main className="relative flex w-full flex-col items-center justify-center px-5 py-12 lg:w-1/2 lg:px-16">
+          {/* Top Right Back to Home */}
+          <Link
+            to="/"
+            className="absolute right-6 top-6 hidden items-center gap-2 rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-2 text-sm font-semibold text-slate-400 backdrop-blur transition hover:bg-slate-800 hover:text-white sm:flex"
+          >
+            ← Back to Home
+          </Link>
+
           {/* Mobile brand */}
           <Link to="/" className="mb-10 flex items-center gap-3 lg:hidden">
             <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400 text-[10px] font-black text-slate-950" />
@@ -149,18 +175,29 @@ export default function SignInPage() {
 
           <div className="w-full max-w-md page-animate">
             {/* Card */}
-            <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-8 shadow-2xl shadow-black/40 backdrop-blur-xl">
-              {/* Icon */}
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400/20 to-cyan-400/10 ring-1 ring-emerald-400/30">
-                <Lock className="h-7 w-7 text-emerald-400" />
+            <div className="rounded-2xl border border-slate-800/70 p-8 shadow-2xl shadow-black/40 backdrop-blur-xl" style={{ backgroundColor: 'rgba(15,23,42,0.85)', borderColor: 'rgba(51,65,85,0.7)' }}>
+              {/* Toggle Tabs */}
+              <div className="mb-8 flex rounded-xl border border-slate-700/60 bg-slate-800/40 p-1">
+                <div className="flex h-10 flex-1 items-center justify-center rounded-lg bg-emerald-400 text-sm font-bold text-slate-950 shadow-sm">
+                  Sign In
+                </div>
+                <Link
+                  to="/signup"
+                  state={{ from: location.state?.from }}
+                  className="flex h-10 flex-1 items-center justify-center rounded-lg text-sm font-bold text-slate-400 transition hover:text-white"
+                >
+                  Sign Up
+                </Link>
               </div>
 
-              <h2 className="mt-5 text-3xl font-black tracking-tight text-white">Sign in</h2>
+              {/* Icon */}
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400/20 to-cyan-400/10 ring-1 ring-emerald-400/30">
+                <Lock className="h-6 w-6 text-emerald-400" />
+              </div>
+
+              <h2 className="mt-4 text-3xl font-black tracking-tight text-white">Welcome back</h2>
               <p className="mt-1.5 text-sm text-slate-400">
-                Don&apos;t have an account?{' '}
-                <Link to="/signup" className="font-semibold text-emerald-400 transition hover:text-emerald-300">
-                  Create one free
-                </Link>
+                Sign in to your account to continue learning.
               </p>
 
               {/* Logged in as wrong role warning */}
@@ -196,7 +233,8 @@ export default function SignInPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="h-12 w-full rounded-xl border border-slate-700/70 bg-slate-800/50 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/15"
+                      style={{ backgroundColor: 'rgba(30,41,59,0.6)', borderColor: 'rgba(71,85,105,0.7)', color: '#f1f5f9' }}
+                    className="h-12 w-full rounded-xl border pl-11 pr-4 text-sm placeholder-slate-500 outline-none transition focus:ring-2"
                     />
                   </div>
                 </div>
@@ -218,7 +256,8 @@ export default function SignInPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="h-12 w-full rounded-xl border border-slate-700/70 bg-slate-800/50 pl-11 pr-12 text-sm text-white placeholder-slate-500 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/15"
+                      style={{ backgroundColor: 'rgba(30,41,59,0.6)', borderColor: 'rgba(71,85,105,0.7)', color: '#f1f5f9' }}
+                    className="h-12 w-full rounded-xl border pl-11 pr-12 text-sm placeholder-slate-500 outline-none transition focus:ring-2"
                     />
                     <button
                       type="button"
@@ -266,29 +305,6 @@ export default function SignInPage() {
                   Sign out current account
                 </button>
               )}
-
-              {/* Divider */}
-              <div className="mt-6 flex items-center gap-3">
-                <div className="h-px flex-1 bg-slate-800" />
-                <span className="text-xs text-slate-600">OR</span>
-                <div className="h-px flex-1 bg-slate-800" />
-              </div>
-
-              {/* Admin login link */}
-              <Link
-                to="/admin/login"
-                className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-700/70 bg-slate-800/30 text-sm font-semibold text-slate-300 transition hover:border-slate-600 hover:bg-slate-800/60 hover:text-white"
-              >
-                <ShieldCheck className="h-4 w-4 text-slate-400" />
-                Admin login
-              </Link>
-            </div>
-
-            {/* Back to home */}
-            <div className="mt-6 text-center">
-              <Link to="/" className="text-sm text-slate-500 transition hover:text-slate-300">
-                ← Back to homepage
-              </Link>
             </div>
           </div>
         </main>

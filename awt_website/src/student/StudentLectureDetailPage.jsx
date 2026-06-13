@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams, useLocation } from 'react-router-dom'
 import LecturePreview from '../components/LecturePreview.jsx'
 import { useProgress } from '../hooks/useProgress.js'
 import { fetchPublishedLectureBySlug } from '../lib/contentDetailsRepository.js'
@@ -7,6 +7,8 @@ import { getItemProgress } from './studentProgress.js'
 
 export default function StudentLectureDetailPage() {
   const { slug } = useParams()
+  const location = useLocation()
+  const isPublic = !location.pathname.startsWith('/student')
   const { markLectureRead, progressMessage, records, readIds } = useProgress()
   const [lecture, setLecture] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -76,11 +78,11 @@ export default function StudentLectureDetailPage() {
     <article className="mx-auto max-w-5xl print:max-w-none">
       <LecturePreview
         lecture={previewLecture}
-        progress={percent}
-        progressMessage={progressMessage}
-        isComplete={isComplete}
-        onComplete={markComplete}
-        onDownload={downloadPDF}
+        progress={isPublic ? undefined : percent}
+        progressMessage={isPublic ? undefined : progressMessage}
+        isComplete={isPublic ? false : isComplete}
+        onComplete={isPublic ? undefined : markComplete}
+        onDownload={isPublic ? undefined : downloadPDF}
       />
     </article>
   )

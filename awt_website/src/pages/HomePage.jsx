@@ -55,7 +55,7 @@ const navItems = [
   ['Lectures', '#lectures'],
   ['Labs', '#labs'],
   ['Features', '#features'],
-  ['Sign In', '/student']
+  ['Sign In', '/signin']
 ]
 
 const socialItems = [Globe2, Video, User]
@@ -123,7 +123,7 @@ export default function HomePage() {
                 Start Learning
                 <ArrowRight className="h-5 w-5" />
               </a>
-              <Link to="/student" className="inline-flex h-14 items-center justify-center gap-3 rounded-lg border border-slate-600/80 bg-slate-950/35 px-7 text-sm font-black text-white transition hover:-translate-y-0.5 hover:border-emerald-300/70">
+              <Link to="/signin" className="inline-flex h-14 items-center justify-center gap-3 rounded-lg border border-slate-600/80 bg-slate-950/35 px-7 text-sm font-black text-white transition hover:-translate-y-0.5 hover:border-emerald-300/70">
                 <User className="h-5 w-5" />
                 Sign In to Track Progress
               </Link>
@@ -192,7 +192,7 @@ function normalizeLectures(items = []) {
       duration: lecture.duration || `${Math.max(25, Math.ceil((lecture.english_content || lecture.shortDescription || '').length / 700))} min`
     }))
 
-  return normalized.length >= 5 ? normalized : [...normalized, ...fallbackLectures].slice(0, 5)
+  return normalized.length > 0 ? normalized : fallbackLectures
 }
 
 function normalizeLabs(items = []) {
@@ -205,7 +205,7 @@ function normalizeLabs(items = []) {
       group: lab.group || 'Lab'
     }))
 
-  return normalized.length >= 5 ? normalized : [...normalized, ...fallbackLabs].slice(0, 5)
+  return normalized.length > 0 ? normalized : fallbackLabs
 }
 
 function LandingNav() {
@@ -230,12 +230,12 @@ function LandingNav() {
             EN
             <ChevronDown className="h-4 w-4" />
           </button>
-          <Link to="/student" className="inline-flex h-10 items-center rounded-lg border border-emerald-400/70 px-5 text-sm font-black text-white transition hover:bg-emerald-400/10">
+          <Link to="/signin" className="inline-flex h-10 items-center rounded-lg border border-emerald-400/70 px-5 text-sm font-black text-white transition hover:bg-emerald-400/10">
             Sign In
           </Link>
-          <a href="#lectures" className="inline-flex h-10 items-center rounded-lg bg-emerald-400 px-5 text-sm font-black text-slate-950 transition hover:bg-emerald-300">
-            Get Started
-          </a>
+          <Link to="/signup" className="inline-flex h-10 items-center rounded-lg bg-emerald-400 px-5 text-sm font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-300">
+            Sign Up
+          </Link>
         </div>
         <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-800 text-slate-200 sm:hidden" aria-label="Open menu">
           <Menu className="h-5 w-5" />
@@ -347,20 +347,26 @@ function StatCard({ stat }) {
 
 function PreviewSection({ id, title, viewLabel, viewTo, isLoading, emptyText, children }) {
   const hasContent = Array.isArray(children) ? children.length > 0 : Boolean(children)
+  const childCount = Array.isArray(children) ? children.length : (children ? 1 : 0)
+
+  // Standard grid, items align left naturally
+  const gridColsClass = isLoading
+    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5'
+    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5'
 
   return (
-    <section id={id} className="mx-auto max-w-7xl px-5 pt-5 sm:px-7">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10">
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-black">{title}</h2>
-          <Link to={viewTo} className="inline-flex items-center gap-2 text-sm font-black text-emerald-300 hover:text-emerald-200">
+    <section id={id} className="mx-auto max-w-7xl px-5 pt-12 sm:px-7">
+      <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6 md:p-8 shadow-2xl shadow-black/35 backdrop-blur-md">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">{title}</h2>
+          <Link to={viewTo} className="inline-flex items-center gap-2 text-sm font-black text-emerald-400 hover:text-emerald-300 transition-colors">
             {viewLabel}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className={`grid gap-5 ${gridColsClass}`}>
           {isLoading ? Array.from({ length: 5 }).map((_, index) => <SkeletonCard key={index} />) : hasContent ? children : (
-            <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-5 text-sm text-slate-400">{emptyText}</div>
+            <div className="rounded-xl border border-slate-850 bg-slate-950/45 p-6 text-center text-sm text-slate-400 col-span-full">{emptyText}</div>
           )}
         </div>
       </div>
@@ -370,15 +376,15 @@ function PreviewSection({ id, title, viewLabel, viewTo, isLoading, emptyText, ch
 
 function LectureCard({ lecture }) {
   return (
-    <PreviewCard to={`/student/lectures/${lecture.slug}`} buttonText="View Lecture">
+    <PreviewCard to={`/lectures/${lecture.slug}`} buttonText="View Lecture">
       <CategoryIcon label={lecture.group || 'AWT'} />
-      <h3 className="mt-5 line-clamp-2 min-h-[3rem] text-base font-black text-white">{lecture.title}</h3>
-      <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-slate-300">
+      <h3 className="mt-5 line-clamp-2 min-h-[3rem] text-base font-black text-white group-hover:text-emerald-300 transition-colors">{lecture.title}</h3>
+      <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-xs leading-5 text-slate-400 group-hover:text-slate-350 transition-colors">
         {lecture.shortDescription || lecture.short_description || 'Open this lecture to explore the lesson content and examples.'}
       </p>
-      <p className="mt-4 text-xs font-semibold text-slate-400">
+      <p className="mt-4 text-xs font-semibold text-slate-500">
         Lecture {lecture.order || 1}
-        <span className="mx-2">-</span>
+        <span className="mx-2 text-slate-700">•</span>
         {lecture.duration || '25 min'}
       </p>
     </PreviewCard>
@@ -387,27 +393,27 @@ function LectureCard({ lecture }) {
 
 function LabCard({ lab }) {
   return (
-    <PreviewCard to={`/student/labs/${lab.slug}`} buttonText="Open Lab">
+    <PreviewCard to={`/labs/${lab.slug}`} buttonText="Open Lab">
       <div className="flex items-center gap-3">
         <CategoryIcon label={lab.group || 'Lab'} compact />
-        <span className="text-sm font-semibold text-slate-300">Lab {lab.labNumber}</span>
+        <span className="text-xs font-semibold text-slate-400">Lab {lab.labNumber}</span>
       </div>
-      <h3 className="mt-5 line-clamp-2 min-h-[3rem] text-base font-black text-white">{cleanLabTitle(lab.title)}</h3>
-      <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-slate-300">
+      <h3 className="mt-5 line-clamp-2 min-h-[3rem] text-base font-black text-white group-hover:text-cyan-300 transition-colors">{cleanLabTitle(lab.title)}</h3>
+      <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-xs leading-5 text-slate-400 group-hover:text-slate-350 transition-colors">
         {lab.objective || 'Practice a focused AWT skill with guided steps and a working output.'}
       </p>
-      <p className="mt-4 text-xs font-semibold text-slate-400">{lab.duration || '2 - 3 Hours'}</p>
+      <p className="mt-4 text-xs font-semibold text-slate-500">{lab.duration || '2 - 3 Hours'}</p>
     </PreviewCard>
   )
 }
 
 function PreviewCard({ to, buttonText, children }) {
   return (
-    <Link to={to} className="group flex min-h-[244px] flex-col rounded-lg border border-slate-800 bg-slate-950/30 p-4 transition hover:-translate-y-1 hover:border-emerald-400/45 hover:bg-slate-900/70">
+    <Link to={to} target="_blank" rel="noopener noreferrer" className="group flex min-h-[250px] flex-col rounded-2xl border border-slate-800/80 bg-slate-950/20 p-5 transition-all duration-350 hover:-translate-y-1.5 hover:border-emerald-450/45 hover:bg-slate-900/60 hover:shadow-xl hover:shadow-emerald-950/15">
       <div className="flex-1">{children}</div>
-      <span className="mt-5 inline-flex h-10 items-center justify-between rounded-md border border-slate-700 px-3 text-sm font-black text-white transition group-hover:border-emerald-400/60 group-hover:text-emerald-300">
+      <span className="mt-5 inline-flex h-11 items-center justify-between rounded-xl border border-slate-750 px-4 text-xs font-black text-slate-200 transition-all duration-350 group-hover:border-emerald-400/50 group-hover:text-emerald-300 group-hover:bg-emerald-400/5">
         {buttonText}
-        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
       </span>
     </Link>
   )
@@ -469,7 +475,7 @@ function LearningHistoryCallout() {
           </p>
         </div>
         <div className="text-left md:text-center">
-          <Link to="/student" className="inline-flex h-14 min-w-48 items-center justify-center gap-3 rounded-lg bg-emerald-400 px-7 text-sm font-black text-slate-950 transition hover:bg-emerald-300">
+          <Link to="/signin" className="inline-flex h-14 min-w-48 items-center justify-center gap-3 rounded-lg bg-emerald-400 px-7 text-sm font-black text-slate-950 transition hover:bg-emerald-300">
             <User className="h-5 w-5" />
             Sign In
           </Link>
@@ -519,7 +525,8 @@ function LandingFooter() {
         <FooterColumn title="Platform" links={[
           { label: 'Lectures', to: '/student/lectures' },
           { label: 'Labs', to: '/student/labs' },
-          { label: 'Sign In', to: '/student' },
+          { label: 'Sign In', to: '/signin' },
+          { label: 'Sign Up', to: '/signup' },
           { label: 'Admin', to: '/admin' }
         ]} />
         <FooterColumn title="Company" links={[

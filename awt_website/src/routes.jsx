@@ -25,10 +25,18 @@ import AdminUsersPage from './admin/AdminUsersPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import AppLayout from './layouts/AppLayout.jsx'
 import HomePage from './pages/HomePage.jsx'
+import SignInPage from './pages/SignInPage.jsx'
+import SignUpPage from './pages/SignUpPage.jsx'
+import PublicViewerLayout from './layouts/PublicViewerLayout.jsx'
+
 
 export const router = createBrowserRouter([
   // Root → redirect to student portal
   { path: '/', element: <HomePage /> },
+
+  // Student auth
+  { path: '/signin', element: <SignInPage /> },
+  { path: '/signup', element: <SignUpPage /> },
 
   // Admin login
   { path: '/admin/login', element: <AdminLogin /> },
@@ -71,9 +79,14 @@ export const router = createBrowserRouter([
     ]
   },
 
-  // Legacy redirects
-  { path: '/lectures/:slug', element: <Navigate to="/student/lectures" replace /> },
-  { path: '/labs/:slug', element: <Navigate to="/student/labs" replace /> },
+  // Public direct viewer for lectures and labs (no sidebar/portal)
+  {
+    element: <PublicViewerLayout />,
+    children: [
+      { path: '/lectures/:slug', element: <StudentLectureDetailPage /> },
+      { path: '/labs/:slug', element: <StudentLabDetailPage /> }
+    ]
+  },
   { path: '/docs/:slug', element: <Navigate to="/student" replace /> },
 
   // Student portal
