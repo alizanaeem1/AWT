@@ -104,6 +104,7 @@ export const router = createBrowserRouter([
       { path: 'lectures/:slug', element: <StudentLectureDetailPage /> },
       { path: 'labs', element: <StudentLabsPage /> },
       { path: 'labs/:slug', element: <StudentLabDetailPage /> },
+      { path: 'activities', element: <StudentOverviewPage /> },
       { path: 'analytics', element: <StudentAnalyticsPage /> },
       { path: 'profile', element: <StudentProfilePage /> }
     ]

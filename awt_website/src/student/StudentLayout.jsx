@@ -1,5 +1,6 @@
-import { Activity, BarChart3, Bell, BookOpen, CheckCheck, ChevronDown, Clock, FlaskConical, Home, LogOut, PanelLeft, Settings, User, X } from 'lucide-react'
+import { Activity, BarChart3, Bell, BookOpen, CheckCheck, ChevronDown, Clock, FlaskConical, Home, LogOut, Menu, Settings, User, X } from 'lucide-react'
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
@@ -18,8 +19,10 @@ const navItems = [
   { label: 'Dashboard', to: '/student', icon: Home, end: true },
   { label: 'Lectures', to: '/student/lectures', icon: BookOpen },
   { label: 'Labs', to: '/student/labs', icon: FlaskConical },
+  { label: 'Activities', to: '/student/activities', icon: Activity, mobileOnly: true },
   { label: 'Analytics', to: '/student/analytics', icon: BarChart3 },
-  { label: 'Profile', to: '/student/profile', icon: User }
+  { label: 'Profile', to: '/student/profile', icon: User },
+  { label: 'Settings', to: '/student/profile', icon: Settings, mobileOnly: true }
 ]
 
 export default function StudentLayout() {
@@ -127,6 +130,7 @@ export default function StudentLayout() {
                 onClick={() => setIsOpen(false)}
                 className={({ isActive }) => [
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition',
+                  item.mobileOnly ? 'lg:hidden' : '',
                   isActive
                     ? 'bg-emerald-400/15 text-emerald-700 ring-1 ring-emerald-400/20 dark:text-emerald-100'
                     : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900/80 dark:hover:text-white'
@@ -258,8 +262,8 @@ export default function StudentLayout() {
                 </Link>
               )}
             </div>
-            <button type="button" onClick={() => setIsOpen(true)} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden" aria-label="Open student navigation">
-              <PanelLeft className="h-4 w-4" />
+            <button type="button" onClick={() => setIsOpen(true)} className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-500 shadow-sm backdrop-blur transition hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden" aria-label="Open Navigation Menu">
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </header>
@@ -284,40 +288,88 @@ function getStudentPageTitle(pathname) {
 }
 
 function NotificationPanel({ notifications, unreadCount, isLoading, onClose, onClear, onMarkAllRead, onNotificationClick }) {
-  return (
-    <div className="fixed bottom-3 left-3 right-3 z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-black/25 dark:border-slate-800/90 dark:bg-[#07111e] lg:absolute lg:bottom-auto lg:left-auto lg:right-0 lg:top-full lg:mt-2.5 lg:w-[360px] lg:max-h-[min(70vh,520px)]">
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-slate-800/90">
-        <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">Notifications</h3>
-          <p className="mt-0.5 text-xs font-semibold text-slate-500">{unreadCount} unread items</p>
-        </div>
-        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white" aria-label="Close notifications">
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+  // Render via portal — completely outside the layout tree so it never affects page layout
+  return createPortal(
+    <>
+      {/* Backdrop — full screen, dark overlay, closes on click */}
+      <div
+        className="fixed inset-0 z-[9998] bg-slate-950/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800/90">
-        <button type="button" onClick={onMarkAllRead} disabled={!notifications.length} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-black text-cyan-700 transition hover:bg-cyan-50 disabled:opacity-40 dark:text-cyan-300 dark:hover:bg-cyan-400/10">
-          <CheckCheck className="h-3.5 w-3.5" />
-          Mark all as read
-        </button>
-        <button type="button" onClick={onClear} disabled={!notifications.length} className="rounded-lg px-2.5 py-1.5 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-300 dark:hover:bg-red-500/10">
-          Clear all
-        </button>
-      </div>
+      {/* Panel — fixed, above backdrop */}
+      <div className="fixed z-[9999] flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-black/30 dark:border-slate-800/90 dark:bg-[#07111e]
+        /* Mobile: centered bottom sheet */
+        bottom-3 left-3 right-3 max-h-[70vh]
+        /* Desktop: dropdown near bell */
+        lg:bottom-auto lg:left-auto lg:right-4 lg:top-20 lg:w-[360px] lg:max-h-[min(70vh,520px)]">
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {isLoading ? (
-          <div className="space-y-2 p-2">
-            {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-900" />)}
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-slate-800/90">
+          <div>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white">Notifications</h3>
+            <p className="mt-0.5 text-xs font-semibold text-slate-500">{unreadCount} unread</p>
           </div>
-        ) : notifications.length ? notifications.map((notification) => (
-          <NotificationItem key={notification.id} notification={notification} onClick={onNotificationClick} />
-        )) : (
-          <p className="p-6 text-center text-sm font-semibold text-slate-500">No new notifications</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
+            aria-label="Close notifications"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Actions row — only show if there are notifications */}
+        {notifications.length > 0 && (
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800/90">
+            <button
+              type="button"
+              onClick={onMarkAllRead}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-black text-cyan-700 transition hover:bg-cyan-50 dark:text-cyan-300 dark:hover:bg-cyan-400/10"
+            >
+              <CheckCheck className="h-3.5 w-3.5" />
+              Mark all read
+            </button>
+            <button
+              type="button"
+              onClick={onClear}
+              className="rounded-lg px-2.5 py-1.5 text-xs font-black text-red-600 transition hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-500/10"
+            >
+              Clear all
+            </button>
+          </div>
         )}
+
+        {/* Scrollable content */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          {isLoading ? (
+            <div className="space-y-2 p-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-20 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-900" />
+              ))}
+            </div>
+          ) : notifications.length ? (
+            notifications.map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} onClick={onNotificationClick} />
+            ))
+          ) : (
+            /* Improved empty state */
+            <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-3xl dark:bg-slate-900">
+                🔔
+              </div>
+              <p className="mt-4 text-sm font-black text-slate-700 dark:text-slate-200">No Notifications Yet</p>
+              <p className="mt-1.5 text-xs leading-5 text-slate-500">
+                You'll see lecture, lab and activity updates here.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>,
+    document.body
   )
 }
 

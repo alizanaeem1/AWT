@@ -1,4 +1,4 @@
-import { BarChart3, Bell, BookOpen, FlaskConical, Home, LayoutDashboard, LogOut, Palette, PanelLeft, Settings, User, Users } from 'lucide-react'
+import { Activity, BarChart3, Bell, BookOpen, FlaskConical, Home, LayoutDashboard, LogOut, Menu, Palette, Settings, User, Users } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
@@ -11,8 +11,12 @@ const navItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Lectures', to: '/admin/lectures', icon: BookOpen },
   { label: 'Labs', to: '/admin/labs', icon: FlaskConical },
-  { label: 'Users', to: '/admin/users', icon: Users },
-  { label: 'Theme Settings', to: '/admin/theme', icon: Palette }
+  { label: 'Activities', to: '/admin/activities', icon: Activity, mobileOnly: true },
+  { label: 'Analytics', to: '/admin/dashboard', icon: BarChart3, mobileOnly: true },
+  { label: 'Profile', to: '/admin/users', icon: User, mobileOnly: true },
+  { label: 'Settings', to: '/admin/theme', icon: Settings, mobileOnly: true },
+  { label: 'Users', to: '/admin/users', icon: Users, desktopOnly: true },
+  { label: 'Theme Settings', to: '/admin/theme', icon: Palette, desktopOnly: true }
 ]
 
 export default function AdminLayout() {
@@ -84,6 +88,8 @@ export default function AdminLayout() {
                 className={({ isActive }) =>
                   [
                     'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition',
+                    item.mobileOnly ? 'lg:hidden' : '',
+                    item.desktopOnly ? 'hidden lg:flex' : '',
                     isActive
                       ? 'bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-400/20'
                       : 'text-slate-400 hover:bg-slate-900 hover:text-white'
@@ -94,36 +100,6 @@ export default function AdminLayout() {
                 {item.label}
               </NavLink>
             ))}
-            <NavLink
-              to="/admin/dashboard"
-              onClick={() => setIsOpen(false)}
-              className={({ isActive }) =>
-                [
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition lg:hidden',
-                  isActive
-                    ? 'bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-400/20'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                ].join(' ')
-              }
-            >
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </NavLink>
-            <NavLink
-              to="/admin/users"
-              onClick={() => setIsOpen(false)}
-              className={({ isActive }) =>
-                [
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition lg:hidden',
-                  isActive
-                    ? 'bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-400/20'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                ].join(' ')
-              }
-            >
-              <User className="h-4 w-4" />
-              Profile
-            </NavLink>
           </nav>
 
           <div className="border-t border-slate-800 pt-4">
@@ -218,10 +194,10 @@ export default function AdminLayout() {
               <button
                 type="button"
                 onClick={() => setIsOpen(true)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/70 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                aria-label="Open admin navigation"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/70 text-slate-300 shadow-sm backdrop-blur transition hover:bg-slate-800 hover:text-white active:scale-95"
+                aria-label="Open Navigation Menu"
               >
-                <PanelLeft className="h-4 w-4" />
+                <Menu className="h-5 w-5" />
               </button>
             </div>
           </div>
