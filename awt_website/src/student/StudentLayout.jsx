@@ -19,10 +19,8 @@ const navItems = [
   { label: 'Dashboard', to: '/student', icon: Home, end: true },
   { label: 'Lectures', to: '/student/lectures', icon: BookOpen },
   { label: 'Labs', to: '/student/labs', icon: FlaskConical },
-  { label: 'Activities', to: '/student/activities', icon: Activity, mobileOnly: true },
   { label: 'Analytics', to: '/student/analytics', icon: BarChart3 },
-  { label: 'Profile', to: '/student/profile', icon: User },
-  { label: 'Settings', to: '/student/profile', icon: Settings, mobileOnly: true }
+  { label: 'Profile', to: '/student/profile', icon: User }
 ]
 
 export default function StudentLayout() {
@@ -111,13 +109,13 @@ export default function StudentLayout() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-[#0b1422] dark:text-slate-100">
       <div className={['fixed inset-0 z-40 bg-slate-950/70 lg:hidden print:hidden', isOpen ? 'block' : 'hidden'].join(' ')} onClick={() => setIsOpen(false)} />
-      <aside className={['fixed bottom-0 left-0 top-0 z-50 w-52 border-r border-slate-200 bg-white shadow-2xl shadow-black/10 transition-transform dark:border-[#1b2b3c] dark:bg-[#07111e] dark:shadow-black/20 lg:translate-x-0 print:hidden', isOpen ? 'translate-x-0' : '-translate-x-full'].join(' ')}>
+      <aside className={['fixed bottom-0 left-0 top-0 z-50 w-[80vw] max-w-80 border-r border-[#1b2b3c] bg-[#07111e] shadow-2xl shadow-black/20 transition-transform duration-300 ease-out lg:w-52 lg:border-slate-200 lg:bg-white lg:shadow-black/10 lg:translate-x-0 lg:dark:border-[#1b2b3c] lg:dark:bg-[#07111e] lg:dark:shadow-black/20 print:hidden', isOpen ? 'translate-x-0' : '-translate-x-full'].join(' ')}>
         <div className="flex h-full flex-col p-3">
-          <div className="flex items-center gap-3 px-2 py-4">
-            <BrandLogo className="h-9 w-9 rounded-lg bg-emerald-400/15 text-sm font-black text-emerald-600 ring-1 ring-emerald-400/30 dark:text-emerald-300" />
+          <div className="flex items-center gap-4 px-2 py-4">
+            <BrandLogo className="h-12 w-12 rounded-xl bg-emerald-400/15 text-sm font-black text-emerald-600 ring-1 ring-emerald-400/30 dark:text-emerald-300 lg:h-9 lg:w-9 lg:rounded-lg" />
             <div className="min-w-0">
-              <p className="font-black text-slate-900 dark:text-white">Student Portal</p>
-              <p className="truncate text-xs text-slate-500">{websiteTitle}</p>
+              <p className="text-base font-black leading-snug text-white lg:text-sm lg:text-slate-900 lg:dark:text-white">Student Portal</p>
+              <p className="max-w-[11rem] whitespace-normal text-xs leading-snug text-slate-400 lg:truncate lg:text-slate-500">{websiteTitle || 'AWT Interactive Learning Platform'}</p>
             </div>
           </div>
 
@@ -130,10 +128,9 @@ export default function StudentLayout() {
                 onClick={() => setIsOpen(false)}
                 className={({ isActive }) => [
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition',
-                  item.mobileOnly ? 'lg:hidden' : '',
                   isActive
                     ? 'bg-emerald-400/15 text-emerald-700 ring-1 ring-emerald-400/20 dark:text-emerald-100'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900/80 dark:hover:text-white'
+                    : 'text-slate-400 hover:bg-slate-900/80 hover:text-white lg:text-slate-500 lg:hover:bg-slate-100 lg:hover:text-slate-900 lg:dark:text-slate-400 lg:dark:hover:bg-slate-900/80 lg:dark:hover:text-white'
                 ].join(' ')}
               >
                 <item.icon className="h-4 w-4" />
@@ -142,9 +139,9 @@ export default function StudentLayout() {
             ))}
           </nav>
 
-          <div className="space-y-2 border-t border-slate-200 pt-3 dark:border-[#1b2b3c]">
+          <div className="space-y-2 border-t border-[#1b2b3c] pt-3 lg:border-slate-200 lg:dark:border-[#1b2b3c]">
             {user ? (
-              <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-500 hover:bg-slate-100 hover:text-red-600 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-red-200">
+              <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-400 hover:bg-slate-900 hover:text-red-200 lg:text-slate-500 lg:hover:bg-slate-100 lg:hover:text-red-600 lg:dark:text-slate-400 lg:dark:hover:bg-slate-900 lg:dark:hover:text-red-200">
                 <LogOut className="h-4 w-4" />
                 Logout
               </button>
