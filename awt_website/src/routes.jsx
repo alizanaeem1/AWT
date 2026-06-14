@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import DocsTopicPage from './pages/DocsTopicPage.jsx'
 import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx'
+import ProtectedStudentRoute from './components/ProtectedStudentRoute.jsx'
 import LectureDetailPage from './pages/LectureDetailPage.jsx'
 import LabDetailPage from './pages/LabDetailPage.jsx'
 import StudentLayout from './student/StudentLayout.jsx'
@@ -29,9 +30,8 @@ import SignInPage from './pages/SignInPage.jsx'
 import SignUpPage from './pages/SignUpPage.jsx'
 import PublicViewerLayout from './layouts/PublicViewerLayout.jsx'
 
-
 export const router = createBrowserRouter([
-  // Root → redirect to student portal
+  // Root
   { path: '/', element: <HomePage /> },
 
   // Student auth
@@ -41,7 +41,7 @@ export const router = createBrowserRouter([
   // Admin login
   { path: '/admin/login', element: <AdminLogin /> },
 
-  // Admin panel (protected)
+  // Admin panel (protected — admin role required)
   {
     path: '/admin',
     element: (
@@ -65,7 +65,7 @@ export const router = createBrowserRouter([
     ]
   },
 
-  // Legacy learn routes
+  // Legacy learn routes (public)
   {
     path: '/learn',
     element: <AppLayout />,
@@ -79,7 +79,7 @@ export const router = createBrowserRouter([
     ]
   },
 
-  // Public direct viewer for lectures and labs (no sidebar/portal)
+  // Public direct viewer for lectures and labs
   {
     element: <PublicViewerLayout />,
     children: [
@@ -89,10 +89,14 @@ export const router = createBrowserRouter([
   },
   { path: '/docs/:slug', element: <Navigate to="/student" replace /> },
 
-  // Student portal
+  // Student portal (protected — session required)
   {
     path: '/student',
-    element: <StudentLayout />,
+    element: (
+      <ProtectedStudentRoute>
+        <StudentLayout />
+      </ProtectedStudentRoute>
+    ),
     children: [
       { index: true, element: <StudentOverviewPage /> },
       { path: 'lectures', element: <StudentLecturesPage /> },

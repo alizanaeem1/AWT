@@ -145,9 +145,9 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(async () => {
     if (!supabase) return
-    await supabase.auth.signOut()
     setSession(null)
     setProfile(null)
+    await supabase.auth.signOut()
   }, [])
 
   const value = useMemo(

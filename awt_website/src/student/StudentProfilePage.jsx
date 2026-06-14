@@ -16,26 +16,26 @@ export default function StudentProfilePage() {
     : 'Today'
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-6 px-1 pb-6 sm:space-y-8 sm:px-0 sm:pb-0">
       {/* Profile Header */}
       <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl">
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl"></div>
         <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl"></div>
         
-        <div className="relative p-8 sm:p-10">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-6">
+        <div className="relative p-5 sm:p-10">
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left sm:gap-6">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-6">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="h-24 w-24 shrink-0 rounded-full object-cover shadow-xl shadow-blue-500/20 ring-4 ring-slate-900" />
+                <img src={profile.avatar_url} alt="Avatar" className="h-20 w-20 shrink-0 rounded-full object-cover shadow-xl shadow-blue-500/20 ring-4 ring-slate-900 sm:h-24 sm:w-24" />
               ) : (
-                <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-4xl font-black text-white shadow-xl shadow-blue-500/20 ring-4 ring-slate-900">
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-3xl font-black text-white shadow-xl shadow-blue-500/20 ring-4 ring-slate-900 sm:h-24 sm:w-24 sm:text-4xl">
                   {(profile?.full_name || user?.email || 'S').slice(0, 1).toUpperCase()}
                 </span>
               )}
-              <div>
-                <h2 className="text-3xl font-black tracking-tight text-white">{profile?.full_name || 'Student'}</h2>
-                <p className="mt-1.5 font-medium text-slate-400">{user?.email}</p>
-                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-400 ring-1 ring-emerald-400/20">
+              <div className="min-w-0">
+                <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">{profile?.full_name || 'Student'}</h2>
+                <p className="mt-1 break-all text-sm font-medium text-slate-400 sm:text-base">{user?.email}</p>
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-400 ring-1 ring-emerald-400/20 sm:mt-3">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   {profile?.role || 'Student'} Account
                 </div>
@@ -46,7 +46,7 @@ export default function StudentProfilePage() {
       </section>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3">
         <StatCard icon={BookOpen} label="Total Lectures" value={stats.totalLectures} color="text-blue-400" bg="bg-blue-400/10" />
         <StatCard icon={CheckCircle2} label="Completed Lectures" value={stats.completedLectures} color="text-emerald-400" bg="bg-emerald-400/10" />
         <StatCard icon={FlaskConical} label="Total Labs" value={stats.totalLabs} color="text-purple-400" bg="bg-purple-400/10" />
@@ -65,14 +65,14 @@ export default function StudentProfilePage() {
 
 function StatCard({ icon: Icon, label, value, color, bg }) {
   return (
-    <div className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-900/50 p-6 transition-all duration-300 hover:border-slate-700 hover:bg-slate-800/80 hover:shadow-2xl">
-      <div className="flex items-center gap-4">
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${bg} ${color} transition-transform duration-300 group-hover:scale-110`}>
-          <Icon className="h-6 w-6" />
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/50 p-4 transition-all duration-300 hover:border-slate-700 hover:bg-slate-800/80 hover:shadow-2xl sm:rounded-3xl sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 sm:rounded-2xl ${bg} ${color} transition-transform duration-300 group-hover:scale-110`}>
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-bold text-slate-400">{label}</p>
-          <p className="mt-1 truncate text-2xl font-black tracking-tight text-white sm:text-3xl">{value}</p>
+        <div className="min-w-0">
+          <p className="whitespace-normal break-words text-xs font-bold leading-tight text-slate-400">{label}</p>
+          <p className="mt-1 text-xl font-black tracking-tight text-white sm:text-2xl md:text-3xl">{value}</p>
         </div>
       </div>
     </div>

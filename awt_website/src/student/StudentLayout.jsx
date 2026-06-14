@@ -5,7 +5,6 @@ import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
 import { useStudentContent } from '../hooks/useStudentContent.js'
 import { useTheme } from '../hooks/useTheme.js'
-import StudentLoginPage from './StudentLoginPage.jsx'
 
 const navItems = [
   { label: 'Dashboard', to: '/student', icon: Home, end: true },
@@ -90,7 +89,7 @@ export default function StudentLayout() {
 
   async function handleLogout() {
     await signOut()
-    navigate('/student', { replace: true })
+    navigate('/signin', { replace: true })
   }
 
   return (
