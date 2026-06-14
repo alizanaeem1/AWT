@@ -64,10 +64,10 @@ export default function SignInPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#020817] text-white" data-theme="dark" style={darkStyle}>
       {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/4 h-[600px] w-[600px] rounded-full bg-emerald-500/10 blur-[120px]" />
         <div className="absolute -bottom-40 right-1/4 h-[500px] w-[500px] rounded-full bg-cyan-500/8 blur-[100px]" />
-        <div className="absolute left-1/2 top-1/2 h-[400px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/4 blur-[100px]" />
+        <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/4 blur-[100px]" />
       </div>
 
       {/* Grid overlay */}

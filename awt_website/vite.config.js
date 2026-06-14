@@ -34,7 +34,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,json,webmanifest}'],
-        navigateFallback: '/offline.html',
+        navigateFallback: '/index.html',
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.hostname.includes('supabase.co'),

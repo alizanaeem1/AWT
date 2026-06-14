@@ -45,7 +45,7 @@ export default function StudentLabsPage() {
       </div>
 
       {/* Search + Filter */}
-      <div className="flex w-full items-center gap-3">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex h-12 min-w-0 flex-1 items-center rounded-2xl border border-slate-700/60 bg-slate-900/60 transition focus-within:border-purple-400/60 focus-within:ring-2 focus-within:ring-purple-400/10">
           <Search className="absolute left-4 h-4 w-4 text-slate-500" />
           <input
@@ -62,7 +62,7 @@ export default function StudentLabsPage() {
         </div>
         <select
           value={category} onChange={(e) => setCategory(e.target.value)}
-          className="h-12 w-[220px] shrink-0 rounded-2xl border border-slate-700/60 bg-slate-900/60 px-4 text-sm font-bold text-slate-200 outline-none transition focus:border-purple-400/60"
+          className="h-12 w-full rounded-2xl border border-slate-700/60 bg-slate-900/60 px-4 text-sm font-bold text-slate-200 outline-none transition focus:border-purple-400/60 sm:w-[220px] sm:shrink-0"
         >
           {categories.map((item) => <option key={item}>{item}</option>)}
         </select>

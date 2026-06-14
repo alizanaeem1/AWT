@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import { LanguageProvider } from './context/LanguageContext.jsx'
 import { ProgressProvider } from './context/ProgressContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
+import OfflineGate from './components/OfflineGate.jsx'
 import './styles/index.css'
 
 if (import.meta.env.DEV && 'serviceWorker' in navigator) {
@@ -20,7 +21,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <LanguageProvider>
         <AuthProvider>
           <ProgressProvider>
-            <RouterProvider router={router} />
+            <OfflineGate>
+              <RouterProvider router={router} />
+            </OfflineGate>
           </ProgressProvider>
         </AuthProvider>
       </LanguageProvider>
