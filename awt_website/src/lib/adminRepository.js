@@ -2,6 +2,7 @@ import { adminActivities, adminLabs, adminLectures } from '../admin/adminDemoDat
 import { defaultLogoText, defaultWebsiteTitle } from './siteBrand.js'
 import { supabase } from './supabase.js'
 import { slugify } from './slugify.js'
+import { createPublishNotification } from './notificationRepository.js'
 
 const fallbackSiteSettings = {
   websiteTitle: defaultWebsiteTitle,
@@ -273,11 +274,14 @@ export async function saveLecture(formValues, thumbnailFile) {
   if (thumbnailUrl) payload.thumbnail_url = thumbnailUrl
 
   const query = formValues.id
-    ? supabase.from('lectures').update(payload).eq('id', formValues.id).select('id,slug').single()
-    : supabase.from('lectures').insert(payload).select('id,slug').single()
+    ? supabase.from('lectures').update(payload).eq('id', formValues.id).select('id,title,slug').single()
+    : supabase.from('lectures').insert(payload).select('id,title,slug').single()
 
   const { data, error } = await query
   if (error) throw error
+  if (payload.is_published) {
+    await createPublishNotification({ type: 'lecture', contentId: data.id, slug: data.slug, title: data.title })
+  }
   return data
 }
 
@@ -289,11 +293,16 @@ export async function deleteLecture(id) {
 
 export async function setLecturePublished(id, isPublished) {
   requireSupabase()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('lectures')
     .update({ is_published: isPublished, updated_at: new Date().toISOString() })
     .eq('id', id)
+    .select('id,title,slug')
+    .single()
   if (error) throw error
+  if (isPublished) {
+    await createPublishNotification({ type: 'lecture', contentId: data.id, slug: data.slug, title: data.title })
+  }
 }
 
 export async function fetchCustomComponents() {
@@ -368,11 +377,14 @@ export async function saveLab(formValues) {
   }
 
   const query = formValues.id
-    ? supabase.from('labs').update(payload).eq('id', formValues.id).select('id,slug').single()
-    : supabase.from('labs').insert(payload).select('id,slug').single()
+    ? supabase.from('labs').update(payload).eq('id', formValues.id).select('id,title,slug').single()
+    : supabase.from('labs').insert(payload).select('id,title,slug').single()
 
   const { data, error } = await query
   if (error) throw error
+  if (payload.is_published) {
+    await createPublishNotification({ type: 'lab', contentId: data.id, slug: data.slug, title: data.title })
+  }
   return data
 }
 
@@ -384,11 +396,16 @@ export async function deleteLab(id) {
 
 export async function setLabPublished(id, isPublished) {
   requireSupabase()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('labs')
     .update({ is_published: isPublished, updated_at: new Date().toISOString() })
     .eq('id', id)
+    .select('id,title,slug')
+    .single()
   if (error) throw error
+  if (isPublished) {
+    await createPublishNotification({ type: 'lab', contentId: data.id, slug: data.slug, title: data.title })
+  }
 }
 
 export async function saveActivity(formValues) {
@@ -405,11 +422,14 @@ export async function saveActivity(formValues) {
   }
 
   const query = formValues.id
-    ? supabase.from('activities').update(payload).eq('id', formValues.id).select('id').single()
-    : supabase.from('activities').insert(payload).select('id').single()
+    ? supabase.from('activities').update(payload).eq('id', formValues.id).select('id,title,slug').single()
+    : supabase.from('activities').insert(payload).select('id,title,slug').single()
 
   const { data, error } = await query
   if (error) throw error
+  if (payload.is_published) {
+    await createPublishNotification({ type: 'activity', contentId: data.id, slug: data.slug || data.id, title: data.title })
+  }
   return data
 }
 
@@ -421,11 +441,16 @@ export async function deleteActivity(id) {
 
 export async function setActivityPublished(id, isPublished) {
   requireSupabase()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('activities')
     .update({ is_published: isPublished, updated_at: new Date().toISOString() })
     .eq('id', id)
+    .select('id,title,slug')
+    .single()
   if (error) throw error
+  if (isPublished) {
+    await createPublishNotification({ type: 'activity', contentId: data.id, slug: data.slug || data.id, title: data.title })
+  }
 }
 
 export function lectureToFormValues(lecture) {

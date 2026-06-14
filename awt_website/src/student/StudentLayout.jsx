@@ -1,10 +1,17 @@
-import { BarChart3, Bell, BookOpen, ChevronDown, FlaskConical, Home, LogOut, PanelLeft, Settings, User } from 'lucide-react'
+import { Activity, BarChart3, Bell, BookOpen, CheckCheck, ChevronDown, Clock, FlaskConical, Home, LogOut, PanelLeft, Settings, User, X } from 'lucide-react'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
-import { useStudentContent } from '../hooks/useStudentContent.js'
 import { useTheme } from '../hooks/useTheme.js'
+import {
+  fetchNotifications,
+  getNotificationPath,
+  hideNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  subscribeToNotifications
+} from '../lib/notificationRepository.js'
 import { setManifest } from '../lib/pwa.js'
 
 const navItems = [
@@ -15,56 +22,51 @@ const navItems = [
   { label: 'Profile', to: '/student/profile', icon: User }
 ]
 
-function notificationKey(notification) {
-  return [
-    notification?.type || 'item',
-    notification?.id || notification?.slug || notification?.title || 'unknown',
-    notification?.updated_at || notification?.created_at || ''
-  ].join(':')
-}
-
 export default function StudentLayout() {
   const { signOut, user, profile } = useAuth()
-  const { lectures, labs } = useStudentContent()
   const { websiteTitle } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotifOpen, setIsNotifOpen] = useState(false)
-  const [notificationVersion, setNotificationVersion] = useState(0)
+  const [notifications, setNotifications] = useState([])
+  const [isNotificationsLoading, setIsNotificationsLoading] = useState(false)
   const notifRef = useRef(null)
   const profileRef = useRef(null)
-  const notificationStorageKey = user?.id ? `awt-student-read-notifications-${user.id}` : ''
 
-  const readNotificationIds = useMemo(() => {
-    if (!notificationStorageKey) return []
-    void notificationVersion
-    try {
-      const saved = JSON.parse(localStorage.getItem(notificationStorageKey) || '[]')
-      return Array.isArray(saved) ? saved : []
-    } catch {
-      return []
-    }
-  }, [notificationStorageKey, notificationVersion])
-
-  const allNotifications = useMemo(() => {
-    const recentLectures = [...(lectures || [])].sort((a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0)).slice(0, 2)
-    const recentLabs = [...(labs || [])].sort((a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0)).slice(0, 2)
-    return [...recentLectures.map((lecture) => ({ ...lecture, type: 'lecture' })), ...recentLabs.map((lab) => ({ ...lab, type: 'lab' }))]
-      .sort((a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0))
-      .slice(0, 4)
-  }, [labs, lectures])
-
-  const unreadNotifications = useMemo(
-    () => allNotifications.filter((notification) => !readNotificationIds.includes(notificationKey(notification))),
-    [allNotifications, readNotificationIds]
-  )
+  const unreadNotifications = useMemo(() => notifications.filter((notification) => !notification.is_read), [notifications])
   const pageTitle = getStudentPageTitle(location.pathname)
 
   useEffect(() => {
     setManifest('student')
   }, [])
+
+  useEffect(() => {
+    let ignore = false
+
+    async function loadNotifications() {
+      if (!user) {
+        setNotifications([])
+        return
+      }
+
+      setIsNotificationsLoading(true)
+      const nextNotifications = await fetchNotifications(user.id)
+      if (!ignore) {
+        setNotifications(nextNotifications)
+        setIsNotificationsLoading(false)
+      }
+    }
+
+    loadNotifications()
+    const unsubscribe = subscribeToNotifications(loadNotifications)
+
+    return () => {
+      ignore = true
+      unsubscribe()
+    }
+  }, [user])
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -79,18 +81,23 @@ export default function StudentLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  function saveReadNotifications(ids) {
-    const uniqueIds = [...new Set(ids)]
-    if (notificationStorageKey) localStorage.setItem(notificationStorageKey, JSON.stringify(uniqueIds))
-    setNotificationVersion((version) => version + 1)
+  async function handleNotificationClick(notification) {
+    setNotifications((items) => items.map((item) => item.id === notification.id ? { ...item, is_read: true } : item))
+    setIsNotifOpen(false)
+    await markNotificationRead(notification.id)
   }
 
-  function markNotificationRead(notification) {
-    saveReadNotifications([...readNotificationIds, notificationKey(notification)])
+  async function handleMarkAllRead() {
+    const ids = notifications.map((notification) => notification.id)
+    setNotifications((items) => items.map((item) => ({ ...item, is_read: true })))
+    await markAllNotificationsRead(ids)
   }
 
-  function clearNotifications() {
-    saveReadNotifications([...readNotificationIds, ...allNotifications.map(notificationKey)])
+  function handleClearNotifications() {
+    const ids = notifications.map((notification) => notification.id)
+    hideNotifications(user?.id, ids)
+    setNotifications([])
+    setIsNotifOpen(false)
   }
 
   async function handleLogout() {
@@ -189,38 +196,18 @@ export default function StudentLayout() {
                 </button>
 
                 {isNotifOpen && (
-                  <div className="animate-scale-in absolute right-0 z-50 mt-2.5 w-[calc(100vw-1rem)] max-w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-black/10 backdrop-blur-md dark:border-slate-800/80 dark:bg-[#0b1422]/95 dark:shadow-black/40">
-                    <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-slate-800/80">
-                      <div>
-                        <h3 className="text-sm font-black text-slate-900 dark:text-white">Notifications</h3>
-                        <p className="mt-0.5 text-xs text-slate-500">{unreadNotifications.length} new items</p>
-                      </div>
-                      {unreadNotifications.length ? (
-                        <button
-                          type="button"
-                          onClick={clearNotifications}
-                          className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-black text-cyan-600 transition hover:border-cyan-400 hover:bg-cyan-50 dark:border-slate-700/70 dark:text-cyan-300 dark:hover:border-cyan-400 dark:hover:bg-cyan-400/10"
-                        >
-                          Clear
-                        </button>
-                      ) : null}
-                    </div>
-                    <div className="max-h-72 overflow-y-auto p-2">
-                      {unreadNotifications.length ? unreadNotifications.map(n => (
-                        <Link key={notificationKey(n)} to={n.type === 'lecture' ? `/student/lectures/${n.slug}` : `/student/labs/${n.slug}`} onClick={() => { markNotificationRead(n); setIsNotifOpen(false) }} className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-800/50">
-                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${n.type === 'lecture' ? 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/20' : 'bg-purple-500/15 text-purple-400 ring-1 ring-purple-500/20'}`}>
-                            {n.type === 'lecture' ? <BookOpen className="h-4 w-4" /> : <FlaskConical className="h-4 w-4" />}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-white">New {n.type === 'lecture' ? 'Lecture' : 'Lab'} Added</p>
-                            <p className="mt-0.5 truncate text-xs text-slate-400">{n.title}</p>
-                          </div>
-                        </Link>
-                      )) : (
-                        <p className="p-4 text-center text-sm text-slate-500">No new notifications</p>
-                      )}
-                    </div>
-                  </div>
+                  <>
+                    <div className="fixed inset-0 z-40 bg-slate-950/65 backdrop-blur-sm lg:hidden" onClick={() => setIsNotifOpen(false)} />
+                    <NotificationPanel
+                      notifications={notifications}
+                      unreadCount={unreadNotifications.length}
+                      isLoading={isNotificationsLoading}
+                      onClose={() => setIsNotifOpen(false)}
+                      onClear={handleClearNotifications}
+                      onMarkAllRead={handleMarkAllRead}
+                      onNotificationClick={handleNotificationClick}
+                    />
+                  </>
                 )}
               </div>
             )}
@@ -294,4 +281,96 @@ function getStudentPageTitle(pathname) {
   if (pathname.includes('/student/analytics')) return 'Analytics'
   if (pathname.includes('/student/profile')) return 'Profile'
   return 'Dashboard'
+}
+
+function NotificationPanel({ notifications, unreadCount, isLoading, onClose, onClear, onMarkAllRead, onNotificationClick }) {
+  return (
+    <div className="fixed bottom-3 left-3 right-3 z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-black/25 dark:border-slate-800/90 dark:bg-[#07111e] lg:absolute lg:bottom-auto lg:left-auto lg:right-0 lg:top-full lg:mt-2.5 lg:w-[360px] lg:max-h-[min(70vh,520px)]">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-slate-800/90">
+        <div>
+          <h3 className="text-sm font-black text-slate-900 dark:text-white">Notifications</h3>
+          <p className="mt-0.5 text-xs font-semibold text-slate-500">{unreadCount} unread items</p>
+        </div>
+        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white" aria-label="Close notifications">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800/90">
+        <button type="button" onClick={onMarkAllRead} disabled={!notifications.length} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-black text-cyan-700 transition hover:bg-cyan-50 disabled:opacity-40 dark:text-cyan-300 dark:hover:bg-cyan-400/10">
+          <CheckCheck className="h-3.5 w-3.5" />
+          Mark all as read
+        </button>
+        <button type="button" onClick={onClear} disabled={!notifications.length} className="rounded-lg px-2.5 py-1.5 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-300 dark:hover:bg-red-500/10">
+          Clear all
+        </button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        {isLoading ? (
+          <div className="space-y-2 p-2">
+            {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-900" />)}
+          </div>
+        ) : notifications.length ? notifications.map((notification) => (
+          <NotificationItem key={notification.id} notification={notification} onClick={onNotificationClick} />
+        )) : (
+          <p className="p-6 text-center text-sm font-semibold text-slate-500">No new notifications</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function NotificationItem({ notification, onClick }) {
+  const Icon = notification.type === 'lab' ? FlaskConical : notification.type === 'activity' ? Activity : BookOpen
+  const typeLabel = notification.type === 'lab' ? 'Lab' : notification.type === 'activity' ? 'Activity' : 'Lecture'
+  const iconClass = notification.type === 'lab'
+    ? 'bg-purple-500/15 text-purple-500 ring-purple-500/20'
+    : notification.type === 'activity'
+      ? 'bg-amber-500/15 text-amber-500 ring-amber-500/20'
+      : 'bg-blue-500/15 text-blue-500 ring-blue-500/20'
+
+  return (
+    <Link
+      to={getNotificationPath(notification)}
+      onClick={() => onClick(notification)}
+      className={[
+        'mb-2 flex gap-3 rounded-xl border p-3 transition hover:border-cyan-400/50 hover:bg-slate-50 dark:hover:bg-slate-900/70',
+        notification.is_read
+          ? 'border-slate-100 bg-white dark:border-slate-800/70 dark:bg-slate-950/20'
+          : 'border-cyan-400/35 bg-cyan-50/70 dark:border-cyan-400/25 dark:bg-cyan-400/10'
+      ].join(' ')}
+    >
+      <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${iconClass}`}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <p className="min-w-0 text-sm font-black leading-snug text-slate-900 dark:text-white">{notification.title}</p>
+          {!notification.is_read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-cyan-400" />}
+        </div>
+        <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">{notification.message}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">{typeLabel}</span>
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+            <Clock className="h-3 w-3" />
+            {formatNotificationTime(notification.created_at)}
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+function formatNotificationTime(value) {
+  if (!value) return 'Just now'
+  const diff = Date.now() - new Date(value).getTime()
+  const minutes = Math.max(0, Math.floor(diff / 60000))
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hr ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(value))
 }

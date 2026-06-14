@@ -148,7 +148,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <div className="lg:pl-72">
+      <div className="w-full min-w-0 lg:pl-72">
         <header className="sticky top-0 z-30 rounded-b-2xl border-b border-slate-800/90 bg-slate-950/90 shadow-lg shadow-black/20 backdrop-blur lg:hidden">
           <div className="flex h-16 items-center justify-between gap-3 px-3 sm:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -227,7 +227,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main className="w-full min-w-0 px-4 py-5 sm:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>

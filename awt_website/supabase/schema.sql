@@ -123,10 +123,24 @@ create table if not exists public.media_files (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  message text not null,
+  type text not null check (type in ('lecture', 'lab', 'activity')),
+  content_id text not null,
+  content_slug text not null,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now(),
+  unique (type, content_id)
+);
+
 create index if not exists lectures_published_order_idx on public.lectures (is_published, order_number);
 create index if not exists labs_published_number_idx on public.labs (is_published, lab_number);
 create index if not exists activities_published_created_idx on public.activities (is_published, created_at);
 create index if not exists progress_profile_idx on public.progress (profile_id);
+create index if not exists notifications_created_idx on public.notifications (created_at desc);
+create index if not exists notifications_read_idx on public.notifications (is_read, created_at desc);
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -168,6 +182,7 @@ alter table public.progress enable row level security;
 alter table public.site_settings enable row level security;
 alter table public.media_files enable row level security;
 alter table public.custom_components enable row level security;
+alter table public.notifications enable row level security;
 
 drop policy if exists "Lectures are readable" on public.lectures;
 drop policy if exists "Published lectures or admins can read" on public.lectures;
@@ -190,6 +205,9 @@ drop policy if exists "Users can insert their own student profile" on public.pro
 drop policy if exists "Users can update their own profile" on public.profiles;
 drop policy if exists "Users can read their own progress" on public.progress;
 drop policy if exists "Users can manage their own progress" on public.progress;
+drop policy if exists "Authenticated users can read notifications" on public.notifications;
+drop policy if exists "Authenticated users can mark notifications read" on public.notifications;
+drop policy if exists "Admins can manage notifications" on public.notifications;
 
 create policy "Published lectures or admins can read"
   on public.lectures for select
@@ -292,6 +310,123 @@ create policy "Users can manage their own progress"
   on public.progress for all
   using (auth.uid() = profile_id)
   with check (auth.uid() = profile_id);
+
+create policy "Authenticated users can read notifications"
+  on public.notifications for select
+  using (auth.uid() is not null);
+
+create policy "Admins can manage notifications"
+  on public.notifications for all
+  using (public.is_admin(auth.uid()))
+  with check (public.is_admin(auth.uid()));
+
+create or replace function public.mark_notifications_read(notification_ids uuid[])
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.notifications
+  set is_read = true
+  where id = any(notification_ids)
+    and auth.uid() is not null;
+$$;
+
+create or replace function public.upsert_publish_notification(
+  notification_type text,
+  item_id text,
+  item_slug text,
+  item_title text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  next_title text;
+  next_message text;
+begin
+  if notification_type = 'lab' then
+    next_title := 'New Lab Added';
+    next_message := item_title || ' is now available in your labs.';
+  elsif notification_type = 'activity' then
+    next_title := 'New Activity Added';
+    next_message := item_title || ' is now available in your activities.';
+  else
+    next_title := 'New Lecture Added';
+    next_message := item_title || ' is now available in your lectures.';
+  end if;
+
+  insert into public.notifications (title, message, type, content_id, content_slug, is_read, created_at)
+  values (next_title, next_message, notification_type, item_id, item_slug, false, now())
+  on conflict (type, content_id)
+  do update set
+    title = excluded.title,
+    message = excluded.message,
+    content_slug = excluded.content_slug,
+    is_read = false,
+    created_at = now();
+end;
+$$;
+
+create or replace function public.notify_when_lecture_published()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.is_published = true and (tg_op = 'INSERT' or old.is_published = false) then
+    perform public.upsert_publish_notification('lecture', new.id::text, new.slug, new.title);
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.notify_when_lab_published()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.is_published = true and (tg_op = 'INSERT' or old.is_published = false) then
+    perform public.upsert_publish_notification('lab', new.id::text, new.slug, new.title);
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.notify_when_activity_published()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.is_published = true and (tg_op = 'INSERT' or old.is_published = false) then
+    perform public.upsert_publish_notification('activity', new.id::text, coalesce(new.slug, new.id::text), new.title);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists lecture_publish_notification on public.lectures;
+drop trigger if exists lab_publish_notification on public.labs;
+drop trigger if exists activity_publish_notification on public.activities;
+
+create trigger lecture_publish_notification
+  after insert or update of is_published on public.lectures
+  for each row execute procedure public.notify_when_lecture_published();
+
+create trigger lab_publish_notification
+  after insert or update of is_published on public.labs
+  for each row execute procedure public.notify_when_lab_published();
+
+create trigger activity_publish_notification
+  after insert or update of is_published on public.activities
+  for each row execute procedure public.notify_when_activity_published();
 
 insert into storage.buckets (id, name, public)
 values ('media', 'media', true)
