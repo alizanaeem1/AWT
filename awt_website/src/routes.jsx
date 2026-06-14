@@ -99,6 +99,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <StudentOverviewPage /> },
+      { path: 'dashboard', element: <StudentOverviewPage /> },
       { path: 'lectures', element: <StudentLecturesPage /> },
       { path: 'lectures/:slug', element: <StudentLectureDetailPage /> },
       { path: 'labs', element: <StudentLabsPage /> },

@@ -1,12 +1,14 @@
-import { Activity, BookOpen, FlaskConical, LayoutDashboard, Plus, Users, Sparkles, PlusCircle } from 'lucide-react'
+import { Activity, BookOpen, Download, FlaskConical, Users, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { usePWAInstall } from '../hooks/usePWAInstall.js'
 import { supabase } from '../lib/supabase.js'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ lectures: 0, labs: 0, activities: 0, students: 0 })
   const [recentLectures, setRecentLectures] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const { canInstall, installApp, installResult, isIOS, isStandalone } = usePWAInstall()
 
   useEffect(() => {
     async function load() {
@@ -53,11 +55,31 @@ export default function AdminDashboard() {
             </h1>
             <p className="mt-1 text-slate-400">Control learning content, configure labs, and monitor platform health.</p>
           </div>
-          <div className="shrink-0 text-left sm:text-right">
+          <div className="shrink-0 space-y-3 text-left sm:text-right">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">System Time</p>
             <p className="mt-1 text-sm font-semibold text-slate-300">
               {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
+            {canInstall && (
+              <button
+                type="button"
+                onClick={() => installApp('admin')}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-400/35 bg-emerald-400/10 px-4 text-sm font-black text-emerald-300 transition hover:border-emerald-300 hover:bg-emerald-400/15"
+              >
+                <Download className="h-4 w-4" />
+                Install Admin App
+              </button>
+            )}
+            {!isStandalone && isIOS && (
+              <p className="max-w-xs text-xs font-semibold text-slate-500 sm:ml-auto">
+                To install, tap Share then Add to Home Screen.
+              </p>
+            )}
+            {installResult === 'dismissed' && (
+              <p className="max-w-xs text-xs font-semibold text-slate-500 sm:ml-auto">
+                Install was dismissed. You can install later from the browser menu.
+              </p>
+            )}
           </div>
         </div>
       </div>

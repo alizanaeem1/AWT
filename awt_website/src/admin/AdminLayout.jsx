@@ -1,10 +1,11 @@
-import { BookOpen, FilePlus2, FlaskConical, Home, Image, LayoutDashboard, LogOut, Palette, PanelLeft, Users } from 'lucide-react'
-import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { BarChart3, Bell, BookOpen, FlaskConical, Home, LayoutDashboard, LogOut, Palette, PanelLeft, Settings, User, Users } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { ToastProvider } from '../context/ToastContext.jsx'
 import { useAuth } from '../hooks/useAuth.js'
 import { useTheme } from '../hooks/useTheme.js'
+import { setManifest } from '../lib/pwa.js'
 
 const navItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
@@ -16,9 +17,33 @@ const navItems = [
 
 export default function AdminLayout() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isNotifOpen, setIsNotifOpen] = useState(false)
   const { signOut, user, profile } = useAuth()
   const { websiteTitle } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
+  const profileRef = useRef(null)
+  const notifRef = useRef(null)
+  const pageTitle = getAdminPageTitle(location.pathname)
+
+  useEffect(() => {
+    setManifest('admin')
+  }, [])
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false)
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotifOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   async function handleLogout() {
     await signOut()
@@ -27,7 +52,7 @@ export default function AdminLayout() {
 
   return (
     <ToastProvider>
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-slate-100">
       <div
         className={[
           'fixed inset-0 z-40 bg-slate-950/70 transition lg:hidden',
@@ -69,6 +94,36 @@ export default function AdminLayout() {
                 {item.label}
               </NavLink>
             ))}
+            <NavLink
+              to="/admin/dashboard"
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition lg:hidden',
+                  isActive
+                    ? 'bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-400/20'
+                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                ].join(' ')
+              }
+            >
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </NavLink>
+            <NavLink
+              to="/admin/users"
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition lg:hidden',
+                  isActive
+                    ? 'bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-400/20'
+                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                ].join(' ')
+              }
+            >
+              <User className="h-4 w-4" />
+              Profile
+            </NavLink>
           </nav>
 
           <div className="border-t border-slate-800 pt-4">
@@ -94,16 +149,81 @@ export default function AdminLayout() {
       </aside>
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur lg:hidden">
-          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-300 hover:bg-slate-900 hover:text-white lg:hidden"
-              aria-label="Open admin navigation"
-            >
-              <PanelLeft className="h-5 w-5" />
-            </button>
+        <header className="sticky top-0 z-30 rounded-b-2xl border-b border-slate-800/90 bg-slate-950/90 shadow-lg shadow-black/20 backdrop-blur lg:hidden">
+          <div className="flex h-16 items-center justify-between gap-3 px-3 sm:px-5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400 text-xs font-black text-slate-950" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-white">{pageTitle}</p>
+                <p className="truncate text-[11px] font-semibold text-slate-500">AWT Admin</p>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1.5">
+              <div className="relative" ref={notifRef}>
+                <button
+                  type="button"
+                  onClick={() => { setIsNotifOpen(!isNotifOpen); setIsProfileOpen(false) }}
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/70 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-4 w-4" />
+                </button>
+                {isNotifOpen && (
+                  <div className="absolute right-0 z-50 mt-2 w-[calc(100vw-1rem)] max-w-72 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/95 shadow-2xl shadow-black/40 backdrop-blur">
+                    <div className="border-b border-slate-800 px-4 py-3">
+                      <p className="text-sm font-black text-white">Notifications</p>
+                      <p className="mt-0.5 text-xs text-slate-500">Admin updates</p>
+                    </div>
+                    <p className="p-4 text-center text-sm text-slate-500">No new notifications</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={profileRef}>
+                <button
+                  type="button"
+                  onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotifOpen(false) }}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/70 text-slate-200 transition hover:bg-slate-800 hover:text-white"
+                  aria-label="Admin profile"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400/20 text-xs font-black text-emerald-300">
+                    {(profile?.full_name || user?.email || 'A').slice(0, 1).toUpperCase()}
+                  </span>
+                </button>
+                {isProfileOpen && (
+                  <div className="absolute right-0 z-50 mt-2 w-60 rounded-2xl border border-slate-800 bg-slate-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur">
+                    <div className="px-3 py-2">
+                      <p className="truncate text-sm font-black text-white">{profile?.full_name || 'Admin User'}</p>
+                      <p className="truncate text-xs text-slate-500">{user?.email}</p>
+                    </div>
+                    <div className="my-1 border-t border-slate-800" />
+                    <Link to="/admin/users" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-300 transition hover:bg-slate-900 hover:text-white">
+                      <User className="h-4 w-4" />
+                      Profile
+                    </Link>
+                    <Link to="/admin/theme" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-300 transition hover:bg-slate-900 hover:text-white">
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                    <div className="my-1 border-t border-slate-800" />
+                    <button type="button" onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-400 transition hover:bg-red-500/10 hover:text-red-300">
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsOpen(true)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/70 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Open admin navigation"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -114,4 +234,18 @@ export default function AdminLayout() {
     </div>
     </ToastProvider>
   )
+}
+
+function getAdminPageTitle(pathname) {
+  if (pathname.includes('/admin/lectures/add')) return 'Add Lecture'
+  if (pathname.includes('/admin/lectures/edit')) return 'Edit Lecture'
+  if (pathname.includes('/admin/lectures')) return 'Lectures'
+  if (pathname.includes('/admin/labs/add')) return 'Add Lab'
+  if (pathname.includes('/admin/labs/edit')) return 'Edit Lab'
+  if (pathname.includes('/admin/labs')) return 'Labs'
+  if (pathname.includes('/admin/users')) return 'Users'
+  if (pathname.includes('/admin/theme')) return 'Theme Settings'
+  if (pathname.includes('/admin/media')) return 'Media'
+  if (pathname.includes('/admin/activities')) return 'Activities'
+  return 'Dashboard'
 }

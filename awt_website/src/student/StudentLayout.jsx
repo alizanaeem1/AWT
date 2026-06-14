@@ -5,6 +5,7 @@ import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
 import { useStudentContent } from '../hooks/useStudentContent.js'
 import { useTheme } from '../hooks/useTheme.js'
+import { setManifest } from '../lib/pwa.js'
 
 const navItems = [
   { label: 'Dashboard', to: '/student', icon: Home, end: true },
@@ -59,6 +60,11 @@ export default function StudentLayout() {
     () => allNotifications.filter((notification) => !readNotificationIds.includes(notificationKey(notification))),
     [allNotifications, readNotificationIds]
   )
+  const pageTitle = getStudentPageTitle(location.pathname)
+
+  useEffect(() => {
+    setManifest('student')
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -141,18 +147,22 @@ export default function StudentLayout() {
       </aside>
 
       <div className="lg:pl-52 print:pl-0">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-md print:hidden shadow-sm dark:border-white/5 dark:bg-[#07111e]/80 dark:shadow-md dark:shadow-black/20">
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={() => setIsOpen(true)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700/60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden">
-              <PanelLeft className="h-4 w-4" />
-            </button>
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between rounded-b-2xl border-b border-slate-200 bg-white/90 px-3 shadow-sm backdrop-blur-md print:hidden dark:border-white/5 dark:bg-[#07111e]/90 dark:shadow-md dark:shadow-black/20 lg:h-auto lg:rounded-none lg:px-4 lg:py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
+              <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400/15 text-xs font-black text-emerald-600 ring-1 ring-emerald-400/30 dark:text-emerald-300" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-slate-900 dark:text-white">{pageTitle}</p>
+                <p className="truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">Student Portal</p>
+              </div>
+            </div>
             <div className="hidden items-center gap-2 lg:flex">
               <BrandLogo className="h-7 w-7 rounded-md bg-emerald-400/15 text-[10px] font-black text-emerald-600 ring-1 ring-emerald-400/30 dark:text-emerald-300" />
               <span className="bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-sm font-black text-transparent dark:from-emerald-300 dark:to-cyan-300">Student Portal</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {profile?.role === 'admin' && (
               <Link
                 to="/admin/dashboard"
@@ -168,7 +178,7 @@ export default function StudentLayout() {
                 <button
                   type="button"
                   onClick={() => { setIsNotifOpen(!isNotifOpen); setIsProfileOpen(false) }}
-                  className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700/50 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+                  className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700/50 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white lg:h-9 lg:w-9"
                 >
                   <Bell className="h-4 w-4" />
                   {unreadNotifications.length > 0 && (
@@ -179,7 +189,7 @@ export default function StudentLayout() {
                 </button>
 
                 {isNotifOpen && (
-                  <div className="animate-scale-in absolute right-0 mt-2.5 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-black/10 backdrop-blur-md z-50 dark:border-slate-800/80 dark:bg-[#0b1422]/95 dark:shadow-black/40">
+                  <div className="animate-scale-in absolute right-0 z-50 mt-2.5 w-[calc(100vw-1rem)] max-w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-black/10 backdrop-blur-md dark:border-slate-800/80 dark:bg-[#0b1422]/95 dark:shadow-black/40">
                     <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-slate-800/80">
                       <div>
                         <h3 className="text-sm font-black text-slate-900 dark:text-white">Notifications</h3>
@@ -221,7 +231,7 @@ export default function StudentLayout() {
                 <>
                   <button
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-left transition hover:bg-slate-50 dark:border-slate-700/60 dark:bg-slate-800/40 dark:hover:bg-slate-800"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-left transition hover:bg-slate-50 dark:border-slate-700/60 dark:bg-slate-800/40 dark:hover:bg-slate-800 sm:w-auto sm:justify-start sm:gap-2 sm:rounded-full sm:py-1 sm:pl-1 sm:pr-3"
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400/20 text-xs font-bold text-emerald-600 dark:text-emerald-300">
                       {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'S'}
@@ -229,7 +239,7 @@ export default function StudentLayout() {
                     <span className="hidden text-sm font-semibold text-slate-700 dark:text-slate-200 sm:block">
                       {profile?.full_name || 'Student'}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                    <ChevronDown className="hidden h-4 w-4 text-slate-400 sm:block" />
                   </button>
 
                   {isProfileOpen && (
@@ -239,13 +249,13 @@ export default function StudentLayout() {
                         <p className="truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
                       </div>
                       <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
-                      <Link to="/student" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white">
-                        <Home className="h-4 w-4" />
-                        Dashboard
+                      <Link to="/student/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white">
+                        <User className="h-4 w-4" />
+                        Profile
                       </Link>
                       <Link to="/student/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white">
                         <Settings className="h-4 w-4" />
-                        Profile Settings
+                        Settings
                       </Link>
                       <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
                       <button type="button" onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300">
@@ -261,6 +271,9 @@ export default function StudentLayout() {
                 </Link>
               )}
             </div>
+            <button type="button" onClick={() => setIsOpen(true)} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden" aria-label="Open student navigation">
+              <PanelLeft className="h-4 w-4" />
+            </button>
           </div>
         </header>
         <main className="min-h-screen bg-slate-100 px-4 py-5 dark:bg-[#0b1422] sm:px-6 lg:px-7">
@@ -271,4 +284,14 @@ export default function StudentLayout() {
       </div>
     </div>
   )
+}
+
+function getStudentPageTitle(pathname) {
+  if (pathname.includes('/student/lectures/')) return 'Lecture Detail'
+  if (pathname.includes('/student/labs/')) return 'Lab Detail'
+  if (pathname.includes('/student/lectures')) return 'Lectures'
+  if (pathname.includes('/student/labs')) return 'Labs'
+  if (pathname.includes('/student/analytics')) return 'Analytics'
+  if (pathname.includes('/student/profile')) return 'Profile'
+  return 'Dashboard'
 }

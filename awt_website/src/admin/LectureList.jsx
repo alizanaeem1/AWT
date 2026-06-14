@@ -129,7 +129,7 @@ export default function LectureList() {
         <StatCard icon={CalendarDays} label="Last Updated" value={stats.lastUpdated} caption="Lecture records" color="blue" />
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(180px,1fr)_150px_190px_210px_44px]">
+      <div className="mt-4 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(180px,1fr)_150px_190px_210px_44px]">
         <label className="relative block min-w-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input

@@ -24,7 +24,9 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
+import { usePWAInstall } from '../hooks/usePWAInstall.js'
 import { getPublishedLabs, getPublishedLectures } from '../lib/contentRepository.js'
+import { setManifest } from '../lib/pwa.js'
 
 const fallbackLectures = [
   { title: 'Introduction to AWT', group: 'AWT', shortDescription: 'Overview of advanced web technologies and roadmap.', order: 1, duration: '25 min', slug: 'html-introduction-lecture' },
@@ -64,6 +66,11 @@ export default function HomePage() {
   const [lectures, setLectures] = useState([])
   const [labs, setLabs] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const { canInstall, installApp, installResult, isIOS, isStandalone } = usePWAInstall()
+
+  useEffect(() => {
+    setManifest('student')
+  }, [])
 
   useEffect(() => {
     let ignore = false
@@ -132,7 +139,27 @@ export default function HomePage() {
                 <User className="h-4 w-4" />
                 Sign In to Track Progress
               </Link>
+              {canInstall && (
+                <button
+                  type="button"
+                  onClick={() => installApp('student')}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-6 text-sm font-black text-emerald-300 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-400/15 sm:h-14 sm:w-auto sm:px-7"
+                >
+                  <Download className="h-4 w-4" />
+                  Install Student App
+                </button>
+              )}
             </div>
+            {!isStandalone && isIOS && (
+              <p className="mt-3 text-xs font-semibold text-slate-400">
+                To install, tap Share then Add to Home Screen.
+              </p>
+            )}
+            {installResult === 'dismissed' && (
+              <p className="mt-3 text-xs font-semibold text-slate-400">
+                Install was dismissed. You can install later from the browser menu.
+              </p>
+            )}
 
             {/* Feature badges — 2 cols on mobile, 4 on lg */}
             <div className="mt-6 grid grid-cols-2 gap-2 text-xs text-slate-300 sm:mt-8 sm:text-sm lg:grid-cols-4">
