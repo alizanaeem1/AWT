@@ -73,14 +73,16 @@ export default function AdminLayout() {
       >
         <div className="flex h-full flex-col p-4">
           <div className="flex items-center gap-3 px-2 py-3">
-            <BrandLogo
-              className="h-12 w-12 flex-shrink-0 rounded-xl bg-emerald-400 text-sm font-black text-slate-950"
-              imageClassName="object-contain"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="whitespace-normal text-base font-black leading-tight text-white">Admin Panel</p>
-              <p className="mt-0.5 text-xs leading-tight text-slate-500">AWT Interactive Learning</p>
-            </div>
+            <Link to="/admin/dashboard" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
+              <BrandLogo
+                className="h-12 w-12 flex-shrink-0 rounded-xl bg-emerald-400 text-sm font-black text-slate-950"
+                imageClassName="object-contain"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="whitespace-normal text-base font-black leading-tight text-white">Admin Panel</p>
+                <p className="mt-0.5 text-xs leading-tight text-slate-500">AWT Interactive Learning</p>
+              </div>
+            </Link>
           </div>
 
           <nav className="mt-6 flex-1 space-y-1">
@@ -121,11 +123,13 @@ export default function AdminLayout() {
         <header className="sticky top-0 z-30 rounded-b-2xl border-b border-slate-800/90 bg-slate-950/90 shadow-lg shadow-black/20 backdrop-blur lg:hidden">
           <div className="flex h-16 items-center justify-between gap-3 px-3 sm:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
-              <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400 text-xs font-black text-slate-950" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-black text-white">{pageTitle}</p>
-                <p className="truncate text-[11px] font-semibold text-slate-500">AWT Admin</p>
-              </div>
+              <Link to="/admin/dashboard" className="flex items-center gap-2.5">
+                <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400 text-xs font-black text-slate-950" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-white">{pageTitle}</p>
+                  <p className="truncate text-[11px] font-semibold text-slate-500">AWT Admin</p>
+                </div>
+              </Link>
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5">
