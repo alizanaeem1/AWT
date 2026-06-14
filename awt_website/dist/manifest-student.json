@@ -1,6 +1,6 @@
 {
-  "name": "AWT Student Portal",
-  "short_name": "AWT Student",
+  "name": "AWT Lectures",
+  "short_name": "AWT Lectures",
   "description": "Student app for AWT lectures, labs, code examples, and learning progress.",
   "start_url": "/student/dashboard",
   "scope": "/",
