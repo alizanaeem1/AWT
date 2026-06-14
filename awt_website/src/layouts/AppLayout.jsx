@@ -10,6 +10,7 @@ import SearchDialog from '../components/SearchDialog.jsx'
 import { docsHeadings, lectureHeadings } from '../data/docsNavigation.js'
 import { examLabHeadings, labHeadings } from '../data/labs.js'
 import { useDocsContent } from '../hooks/useDocsContent.js'
+import { useSEO } from '../hooks/useSEO.js'
 
 export default function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -17,6 +18,12 @@ export default function AppLayout() {
   const [searchQuery, setSearchQuery] = useState('')
   const content = useDocsContent()
   const location = useLocation()
+  const routeTitle = getPublicRouteTitle(location.pathname)
+
+  useSEO({
+    title: `${routeTitle} | AWT Lectures`,
+    description: 'Study Advanced Web Technologies with clean lecture notes, lab guides, code examples, and student-friendly explanations.'
+  })
 
   const sortedContent = useMemo(
     () => [...content].sort((first, second) => {
@@ -92,4 +99,10 @@ export default function AppLayout() {
       </div>
     </div>
   )
+}
+
+function getPublicRouteTitle(pathname) {
+  if (pathname.includes('/labs/')) return 'AWT Practical Lab'
+  if (pathname.includes('/lectures/')) return 'AWT Lecture'
+  return 'AWT Learning Resources'
 }

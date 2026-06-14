@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useSEO } from '../hooks/useSEO.js'
 import { useTheme } from '../hooks/useTheme.js'
 import {
   fetchNotifications,
@@ -38,6 +39,12 @@ export default function StudentLayout() {
 
   const unreadNotifications = useMemo(() => notifications.filter((notification) => !notification.is_read), [notifications])
   const pageTitle = getStudentPageTitle(location.pathname)
+
+  useSEO({
+    title: `${pageTitle} | AWT Lectures Student Portal`,
+    description: 'Student portal for AWT lectures, labs, analytics, profile, and learning progress.',
+    robots: 'noindex, nofollow'
+  })
 
   useEffect(() => {
     setManifest('student')

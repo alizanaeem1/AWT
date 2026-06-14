@@ -2,12 +2,19 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ChevronLeft, Home } from 'lucide-react'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useSEO } from '../hooks/useSEO.js'
 import { useTheme } from '../hooks/useTheme.js'
 
 export default function PublicViewerLayout() {
   const { user } = useAuth()
   const { websiteTitle } = useTheme()
   const location = useLocation()
+  const isLab = location.pathname.startsWith('/labs/')
+
+  useSEO({
+    title: `${isLab ? 'AWT Lab' : 'AWT Lecture'} | AWT Lectures`,
+    description: 'Open AWT lecture and lab content with practical examples, steps, outputs, and learning guidance.'
+  })
 
   return (
     <div className="min-h-screen bg-[#0b1422] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-300">

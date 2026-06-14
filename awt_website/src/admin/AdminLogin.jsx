@@ -2,6 +2,7 @@ import { Eye, EyeOff, Lock } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
+import { useSEO } from '../hooks/useSEO.js'
 import { useTheme } from '../hooks/useTheme.js'
 import { TextInput } from './AdminShell.jsx'
 
@@ -10,6 +11,12 @@ export default function AdminLogin() {
   const location = useLocation()
   const { isAdmin, isLoading, profile, signIn, signOut, user } = useAuth()
   const { websiteTitle } = useTheme()
+
+  useSEO({
+    title: 'Admin Login | AWT Lectures',
+    description: 'Secure admin login for AWT Lectures content management.',
+    robots: 'noindex, nofollow'
+  })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)

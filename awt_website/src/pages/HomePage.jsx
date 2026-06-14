@@ -25,6 +25,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { usePWAInstall } from '../hooks/usePWAInstall.js'
+import { useSEO } from '../hooks/useSEO.js'
 import { getPublishedLabs, getPublishedLectures } from '../lib/contentRepository.js'
 import { setManifest } from '../lib/pwa.js'
 
@@ -62,12 +63,34 @@ const navItems = [
 
 const socialItems = [Globe2, Video, User]
 
+const contributors = [
+  {
+    name: 'Muhammad Abdullah',
+    role: 'Super Admin & Lead Developer',
+    description: 'Project architecture, full-stack integration, and team leadership.',
+    portfolio: 'https://muhammadabdullahwali.vercel.app/',
+    image: '/contributors/muhammad-abdullah.jpeg'
+  },
+  {
+    name: 'Aliza Naeem',
+    role: 'Lead Developer',
+    description: 'Frontend, backend integration, responsive UI, and platform development.',
+    portfolio: 'https://alizanaeem-portfolio.vercel.app/',
+    image: '/contributors/aliza-naeem.jpeg'
+  }
+]
+
 export default function HomePage() {
   const [lectures, setLectures] = useState([])
   const [labs, setLabs] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [installNotice, setInstallNotice] = useState('')
   const { canInstall, installApp, installResult, isIOS, isStandalone } = usePWAInstall()
+
+  useSEO({
+    title: 'AWT Lectures | Learn Advanced Web Technologies',
+    description: 'Browse interactive Advanced Web Technologies lectures, practical labs, code examples, and learning resources for web development students.'
+  })
 
   useEffect(() => {
     setManifest('student')
@@ -233,6 +256,8 @@ export default function HomePage() {
             {featureItems.map((feature) => <FeatureItem key={feature.title} feature={feature} />)}
           </div>
         </section>
+
+        <ProjectContributors />
 
         <LandingFooter />
       </div>
@@ -565,6 +590,63 @@ function FeatureItem({ feature }) {
 }
 
 /* ─────────────── FOOTER ─────────────── */
+function ProjectContributors() {
+  return (
+    <section className="mx-auto max-w-7xl px-6 py-14 sm:px-7 lg:py-20">
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="text-sm font-black uppercase tracking-widest text-emerald-300">Project Contributors</p>
+        <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Project Contributors</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-400 sm:text-base">
+          Meet the developers behind the AWT Interactive Learning Platform.
+        </p>
+      </div>
+
+      <div className="mx-auto mt-12 flex max-w-4xl flex-col items-center justify-center gap-8 md:flex-row md:items-stretch">
+        {contributors.map((contributor) => (
+          <ContributorCard key={contributor.name} contributor={contributor} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ContributorCard({ contributor }) {
+  return (
+    <article className="group relative flex min-h-[480px] w-full max-w-[380px] flex-col items-center overflow-hidden rounded-[28px] border border-emerald-400/20 bg-slate-900/65 p-8 text-center shadow-2xl shadow-black/25 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-cyan-300/50 hover:bg-slate-900/85 hover:shadow-cyan-950/30 md:w-[380px] lg:max-w-[420px]">
+      <div className="pointer-events-none absolute inset-x-8 -top-20 h-44 rounded-full bg-emerald-400/12 blur-3xl transition group-hover:bg-cyan-400/15" />
+      <div className="pointer-events-none absolute -bottom-24 left-1/2 h-52 w-52 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
+
+      <div className="relative flex flex-1 flex-col items-center">
+        <div className="rounded-full bg-gradient-to-br from-emerald-300/50 via-cyan-300/35 to-slate-700/40 p-1.5 shadow-xl shadow-emerald-950/30">
+          <div className="rounded-full bg-slate-950 p-1.5">
+            <img
+              src={contributor.image}
+              alt={contributor.name}
+              className="h-[140px] w-[140px] rounded-full object-cover"
+            />
+          </div>
+        </div>
+
+        <h3 className="mt-7 text-center text-2xl font-black text-white">{contributor.name}</h3>
+        <span className="mx-auto mt-4 inline-flex justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1.5 text-xs font-black text-cyan-300 shadow-lg shadow-cyan-950/10">
+          {contributor.role}
+        </span>
+        <p className="mx-auto mt-5 max-w-xs flex-1 text-center text-sm leading-7 text-slate-300">{contributor.description}</p>
+      </div>
+
+      <a
+        href={contributor.portfolio}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative mx-auto mt-8 inline-flex h-12 min-w-44 items-center justify-center gap-2 rounded-2xl border border-emerald-400/35 bg-emerald-400/10 px-5 text-sm font-black text-emerald-300 transition hover:border-emerald-300 hover:bg-emerald-400 hover:text-slate-950"
+      >
+        View Portfolio
+        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+      </a>
+    </article>
+  )
+}
+
 function LandingFooter() {
   return (
     <footer className="mt-8 border-t border-slate-900 bg-slate-900/55">

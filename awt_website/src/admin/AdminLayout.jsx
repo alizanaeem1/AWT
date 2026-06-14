@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import BrandLogo from '../components/BrandLogo.jsx'
 import { ToastProvider } from '../context/ToastContext.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useSEO } from '../hooks/useSEO.js'
 import { useTheme } from '../hooks/useTheme.js'
 import { setManifest } from '../lib/pwa.js'
 
@@ -30,6 +31,12 @@ export default function AdminLayout() {
   const profileRef = useRef(null)
   const notifRef = useRef(null)
   const pageTitle = getAdminPageTitle(location.pathname)
+
+  useSEO({
+    title: `${pageTitle} | AWT Admin Portal`,
+    description: 'Admin portal for managing AWT lectures, labs, users, notifications, and platform settings.',
+    robots: 'noindex, nofollow'
+  })
 
   useEffect(() => {
     setManifest('admin')

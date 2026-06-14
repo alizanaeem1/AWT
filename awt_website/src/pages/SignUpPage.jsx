@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useSEO } from '../hooks/useSEO.js'
 import { useTheme } from '../hooks/useTheme.js'
 
 /* Force dark rendering regardless of site theme */
@@ -18,6 +19,12 @@ export default function SignUpPage() {
   const navigate = useNavigate()
   const { user, profile, isLoading, signUp } = useAuth()
   const { websiteTitle } = useTheme()
+
+  useSEO({
+    title: 'Create Account | AWT Lectures',
+    description: 'Create an AWT Lectures student account to track lectures, labs, scores, and learning progress.',
+    robots: 'noindex, nofollow'
+  })
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')

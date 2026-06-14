@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useSEO } from '../hooks/useSEO.js'
 import { useTheme } from '../hooks/useTheme.js'
 
 /* Force dark rendering regardless of site theme */
@@ -13,6 +14,12 @@ export default function SignInPage() {
   const location = useLocation()
   const { user, profile, isLoading, signIn, signOut } = useAuth()
   const { websiteTitle } = useTheme()
+
+  useSEO({
+    title: 'Sign In | AWT Lectures',
+    description: 'Sign in to AWT Lectures to track completed lectures, labs, scores, and learning progress.',
+    robots: 'noindex, nofollow'
+  })
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
