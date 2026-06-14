@@ -8,30 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
-      manifest: {
-        name: 'AWT Student Portal',
-        short_name: 'AWT Student',
-        description: 'Student app for AWT lectures, labs, code examples, and learning progress.',
-        theme_color: '#020b16',
-        background_color: '#020b16',
-        display: 'standalone',
-        start_url: '/student/dashboard',
-        scope: '/',
-        icons: [
-          {
-            src: '/pwa-192x192.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/pwa-512x512.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          }
-        ]
-      },
+      manifest: false,
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,json,webmanifest}'],
         navigateFallback: '/index.html',

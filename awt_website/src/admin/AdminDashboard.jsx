@@ -8,6 +8,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ lectures: 0, labs: 0, activities: 0, students: 0 })
   const [recentLectures, setRecentLectures] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [installNotice, setInstallNotice] = useState('')
   const { canInstall, installApp, installResult, isIOS, isStandalone } = usePWAInstall()
 
   useEffect(() => {
@@ -33,6 +34,24 @@ export default function AdminDashboard() {
     { label: 'Total Activities', value: stats.activities, icon: Activity, color: 'text-amber-400', bg: 'bg-amber-500/10', ring: 'ring-amber-500/20', from: 'from-amber-500/5', to: 'to-orange-500/5' },
     { label: 'Total Students', value: stats.students, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/20', from: 'from-emerald-500/5', to: 'to-cyan-500/5' }
   ]
+
+  async function handleAdminInstall() {
+    if (canInstall) {
+      const result = await installApp('admin')
+      if (result.outcome === 'accepted') {
+        setInstallNotice('Admin app installation started.')
+      } else if (result.outcome === 'dismissed') {
+        setInstallNotice('Install was dismissed. You can install later from the browser menu.')
+      }
+      return
+    }
+
+    setInstallNotice(
+      isIOS
+        ? 'To install, tap Share then Add to Home Screen.'
+        : 'Install is not available yet. Open the browser menu and choose Install app, or reload after the page finishes loading.'
+    )
+  }
 
   return (
     <div className="space-y-6 stagger-children">
@@ -60,24 +79,24 @@ export default function AdminDashboard() {
             <p className="mt-1 text-sm font-semibold text-slate-300">
               {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-            {canInstall && (
+            {!isStandalone && (
               <button
                 type="button"
-                onClick={() => installApp('admin')}
+                onClick={handleAdminInstall}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-400/35 bg-emerald-400/10 px-4 text-sm font-black text-emerald-300 transition hover:border-emerald-300 hover:bg-emerald-400/15"
               >
                 <Download className="h-4 w-4" />
                 Install Admin App
               </button>
             )}
-            {!isStandalone && isIOS && (
+            {!isStandalone && isIOS && !installNotice && (
               <p className="max-w-xs text-xs font-semibold text-slate-500 sm:ml-auto">
                 To install, tap Share then Add to Home Screen.
               </p>
             )}
-            {installResult === 'dismissed' && (
+            {(installNotice || installResult === 'dismissed') && (
               <p className="max-w-xs text-xs font-semibold text-slate-500 sm:ml-auto">
-                Install was dismissed. You can install later from the browser menu.
+                {installNotice || 'Install was dismissed. You can install later from the browser menu.'}
               </p>
             )}
           </div>

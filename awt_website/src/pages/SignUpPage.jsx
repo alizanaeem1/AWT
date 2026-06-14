@@ -199,16 +199,17 @@ export default function SignUpPage() {
 
         {/* ── FORM PANEL ── */}
         <main className="relative flex w-full flex-col items-center justify-center px-5 py-12 lg:w-1/2 lg:px-16">
-          {/* Top Right Back to Home */}
+          {/* Back to Home — visible on all screen sizes */}
           <Link
             to="/"
-            className="absolute right-6 top-6 hidden items-center gap-2 rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-2 text-sm font-semibold text-slate-400 backdrop-blur transition hover:bg-slate-800 hover:text-white sm:flex"
+            className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-lg border border-slate-800/60 bg-slate-900/50 px-3 py-2 text-sm font-semibold text-slate-300 backdrop-blur transition hover:bg-slate-800 hover:text-white sm:left-6 sm:top-6 sm:px-4"
           >
-            ← Back to Home
+            <span aria-hidden="true">←</span>
+            <span>Back to Home</span>
           </Link>
 
-          {/* Mobile brand */}
-          <Link to="/" className="mb-10 flex items-center gap-3 lg:hidden">
+          {/* Mobile brand — push down to avoid back button overlap */}
+          <Link to="/" className="mb-10 mt-10 flex items-center gap-3 lg:hidden">
             <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400 text-[10px] font-black text-slate-950" />
             <span className="text-xl font-black">AWT</span>
           </Link>

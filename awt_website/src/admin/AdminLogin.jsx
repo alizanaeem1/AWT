@@ -41,6 +41,15 @@ export default function AdminLogin() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#070e17] px-4 py-12 text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-300">
+      {/* Back to Home button — top left, always visible */}
+      <Link
+        to="/"
+        className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-lg border border-slate-800/60 bg-slate-900/50 px-3 py-2 text-sm font-semibold text-slate-300 backdrop-blur transition hover:bg-slate-800 hover:text-white sm:left-6 sm:top-6 sm:px-4"
+      >
+        <span aria-hidden="true">←</span>
+        <span>Back to Home</span>
+      </Link>
+
       {/* Dynamic Background Blur Blobs */}
       <div className="absolute top-1/4 left-1/4 h-[350px] w-[350px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[80px]" />
       <div className="absolute bottom-1/4 right-1/4 h-[350px] w-[350px] translate-x-1/2 rounded-full bg-cyan-500/10 blur-[80px]" />
@@ -122,13 +131,6 @@ export default function AdminLogin() {
               Sign out current account
             </button>
           ) : null}
-
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 transition hover:text-white"
-          >
-            Back to website
-          </Link>
         </div>
       </section>
     </main>

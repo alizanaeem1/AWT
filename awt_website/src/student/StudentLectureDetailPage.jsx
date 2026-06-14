@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useParams, useLocation } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import LecturePreview from '../components/LecturePreview.jsx'
+import { useLanguage } from '../hooks/useLanguage.js'
 import { useProgress } from '../hooks/useProgress.js'
 import { fetchPublishedLectureBySlug } from '../lib/contentDetailsRepository.js'
 import { getItemProgress } from './studentProgress.js'
@@ -8,8 +9,10 @@ import { getItemProgress } from './studentProgress.js'
 export default function StudentLectureDetailPage() {
   const { slug } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const isPublic = !location.pathname.startsWith('/student')
   const { markLectureRead, progressMessage, records, readIds } = useProgress()
+  const { isRomanUrdu } = useLanguage()
   const [lecture, setLecture] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)

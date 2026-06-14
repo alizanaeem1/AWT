@@ -66,6 +66,7 @@ export default function HomePage() {
   const [lectures, setLectures] = useState([])
   const [labs, setLabs] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [installNotice, setInstallNotice] = useState('')
   const { canInstall, installApp, installResult, isIOS, isStandalone } = usePWAInstall()
 
   useEffect(() => {
@@ -105,6 +106,24 @@ export default function HomePage() {
     { label: 'Students Learning', value: '5K+', text: 'Join our community', icon: User, color: 'yellow' }
   ], [])
 
+  async function handleStudentInstall() {
+    if (canInstall) {
+      const result = await installApp('student')
+      if (result.outcome === 'accepted') {
+        setInstallNotice('Student app installation started.')
+      } else if (result.outcome === 'dismissed') {
+        setInstallNotice('Install was dismissed. You can install later from the browser menu.')
+      }
+      return
+    }
+
+    setInstallNotice(
+      isIOS
+        ? 'To install, tap Share then Add to Home Screen.'
+        : 'Install is not available yet. Open the browser menu and choose Install app, or reload after the page finishes loading.'
+    )
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#020817] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_84%_12%,rgba(16,185,129,0.16),transparent_28rem),radial-gradient(circle_at_10%_0%,rgba(14,165,233,0.12),transparent_24rem)]" />
@@ -139,10 +158,10 @@ export default function HomePage() {
                 <User className="h-4 w-4" />
                 Sign In to Track Progress
               </Link>
-              {canInstall && (
+              {!isStandalone && (
                 <button
                   type="button"
-                  onClick={() => installApp('student')}
+                  onClick={handleStudentInstall}
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-6 text-sm font-black text-emerald-300 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-400/15 sm:h-14 sm:w-auto sm:px-7"
                 >
                   <Download className="h-4 w-4" />
@@ -150,14 +169,14 @@ export default function HomePage() {
                 </button>
               )}
             </div>
-            {!isStandalone && isIOS && (
+            {!isStandalone && isIOS && !installNotice && (
               <p className="mt-3 text-xs font-semibold text-slate-400">
                 To install, tap Share then Add to Home Screen.
               </p>
             )}
-            {installResult === 'dismissed' && (
+            {(installNotice || installResult === 'dismissed') && (
               <p className="mt-3 text-xs font-semibold text-slate-400">
-                Install was dismissed. You can install later from the browser menu.
+                {installNotice || 'Install was dismissed. You can install later from the browser menu.'}
               </p>
             )}
 
