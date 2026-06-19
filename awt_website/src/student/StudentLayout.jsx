@@ -120,8 +120,9 @@ export default function StudentLayout() {
         <div className="flex h-full flex-col p-3">
           <div className="flex items-center gap-3 px-2 py-4">
             <BrandLogo
-              className="h-12 w-12 flex-shrink-0 rounded-xl bg-emerald-400/15 text-sm font-black text-emerald-600 ring-1 ring-emerald-400/30 dark:text-emerald-300 lg:h-9 lg:w-9 lg:rounded-lg"
+              className="h-12 w-12 flex-shrink-0 rounded-xl bg-emerald-400/15 text-xs font-black text-slate-950 ring-1 ring-emerald-400/30 dark:text-slate-950 lg:h-9 lg:w-9 lg:rounded-lg lg:text-[10px]"
               imageClassName="object-contain"
+              fallbackClassName="!w-12 !max-w-12 lg:!w-9 lg:!max-w-9"
             />
             <div className="min-w-0 flex-1">
               <p className="whitespace-normal text-lg font-bold leading-snug text-white lg:text-sm lg:font-black lg:text-slate-900 lg:dark:text-white">AWT Lectures</p>
@@ -168,14 +169,22 @@ export default function StudentLayout() {
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between rounded-b-2xl border-b border-slate-200 bg-white/90 px-3 shadow-sm backdrop-blur-md print:hidden dark:border-white/5 dark:bg-[#07111e]/90 dark:shadow-md dark:shadow-black/20 lg:h-auto lg:rounded-none lg:px-4 lg:py-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
-              <BrandLogo className="h-10 w-10 rounded-xl bg-emerald-400/15 text-xs font-black text-emerald-600 ring-1 ring-emerald-400/30 dark:text-emerald-300" />
+              <BrandLogo
+                className="h-10 w-10 rounded-xl bg-emerald-400/15 text-xs font-black text-slate-950 ring-1 ring-emerald-400/30 dark:text-slate-950"
+                imageClassName="object-contain"
+                fallbackClassName="!w-10 !max-w-10"
+              />
               <div className="min-w-0">
                 <p className="truncate text-sm font-black text-slate-900 dark:text-white">{pageTitle}</p>
                 <p className="truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">Student Portal</p>
               </div>
             </div>
             <div className="hidden items-center gap-2 lg:flex">
-              <BrandLogo className="h-7 w-7 rounded-md bg-emerald-400/15 text-[10px] font-black text-emerald-600 ring-1 ring-emerald-400/30 dark:text-emerald-300" />
+              <BrandLogo
+                className="h-7 w-7 rounded-md bg-emerald-400/15 text-[9px] font-black text-slate-950 ring-1 ring-emerald-400/30 dark:text-slate-950"
+                imageClassName="object-contain"
+                fallbackClassName="!w-7 !max-w-7"
+              />
               <span className="bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-sm font-black text-transparent dark:from-emerald-300 dark:to-cyan-300">Student Portal</span>
             </div>
           </div>

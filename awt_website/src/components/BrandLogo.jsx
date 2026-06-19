@@ -33,14 +33,15 @@ export default function BrandLogo({ className = '', imageClassName = '', fallbac
   // Remove override text classes if they interfere, and render with a premium gradient
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center font-black tracking-wider text-white shadow-lg bg-gradient-to-tr from-emerald-500 to-cyan-500 hover:brightness-110 active:scale-95 transition-all duration-200 ${className} ${fallbackClassName}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden font-black tracking-wider shadow-lg bg-gradient-to-tr from-emerald-500 to-cyan-500 hover:brightness-110 active:scale-95 transition-all duration-200 ${className} ${fallbackClassName}`}
       style={{
+        color: '#020617',
         textShadow: '0 1px 2px rgba(0,0,0,0.2)',
         ...fallbackStyle
       }}
       title={fallbackText}
     >
-      <span className="block max-w-full whitespace-nowrap px-1.5 text-center leading-none uppercase" style={textStyle}>
+      <span className="block max-w-full truncate whitespace-nowrap px-1 text-center leading-none uppercase" style={textStyle}>
         {fallbackText}
       </span>
     </span>
