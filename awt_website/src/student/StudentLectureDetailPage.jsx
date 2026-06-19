@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import LecturePreview from '../components/LecturePreview.jsx'

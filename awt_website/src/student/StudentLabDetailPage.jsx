@@ -1,6 +1,6 @@
-import { Download } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Navigate, useParams, useLocation } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import LabPreview, { LabPreviewCompleteButton } from '../components/LabPreview.jsx'
 import { useProgress } from '../hooks/useProgress.js'
 import { fetchPublishedLabBySlug } from '../lib/contentDetailsRepository.js'
@@ -9,6 +9,7 @@ import { getItemProgress } from './studentProgress.js'
 export default function StudentLabDetailPage() {
   const { slug } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const isPublic = !location.pathname.startsWith('/student')
   const { progressMessage, records, readIds, saveLabSteps } = useProgress()
   const [lab, setLab] = useState(null)
@@ -77,6 +78,19 @@ export default function StudentLabDetailPage() {
 
   return (
     <article className="mx-auto max-w-5xl print:max-w-none">
+      {/* Back button */}
+      {!isPublic && (
+        <div className="mb-4 print:hidden">
+          <button
+            type="button"
+            onClick={() => navigate('/student/labs')}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-2.5 text-sm font-bold text-slate-300 transition hover:border-emerald-400/50 hover:bg-slate-800 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Labs
+          </button>
+        </div>
+      )}
       <LabPreview
         lab={current}
         headerAside={isPublic ? null : (
