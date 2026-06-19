@@ -80,6 +80,19 @@ export default function StudentLectureDetailPage() {
 
   return (
     <article className="mx-auto max-w-5xl print:max-w-none">
+      {/* Back button */}
+      {!isPublic && (
+        <div className="mb-4 print:hidden">
+          <button
+            type="button"
+            onClick={() => navigate('/student/lectures')}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-2.5 text-sm font-bold text-slate-300 transition hover:border-emerald-400/50 hover:bg-slate-800 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Lectures
+          </button>
+        </div>
+      )}
       <LecturePreview
         lecture={previewLecture}
         progress={isPublic ? undefined : percent}
